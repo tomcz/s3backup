@@ -1,0 +1,6 @@
+*.pem
+*.pub
+.DS_Store
+.idea/
+bin/
+pkg/
