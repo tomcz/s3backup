@@ -59,12 +59,6 @@ func (c *rsaCipher) Encrypt(plainTextFile, cipherTextFile string) error {
 		return err
 	}
 
-	inFile, err := os.Open(plainTextFile)
-	if err != nil {
-		return err
-	}
-	defer inFile.Close()
-
 	outFile, err := os.Create(cipherTextFile)
 	if err != nil {
 		return err
@@ -83,6 +77,12 @@ func (c *rsaCipher) Encrypt(plainTextFile, cipherTextFile string) error {
 	if _, err := outFile.Write(iv); err != nil {
 		return err
 	}
+
+	inFile, err := os.Open(plainTextFile)
+	if err != nil {
+		return err
+	}
+	defer inFile.Close()
 
 	stream := cipher.NewCTR(block, iv)
 	writer := &cipher.StreamWriter{S: stream, W: outFile}
