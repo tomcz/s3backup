@@ -21,6 +21,9 @@ func TestGetRemoteFileWithoutDecryption(t *testing.T) {
 	hash.On("Verify", "bar.txt", "muahahaha").Return(nil)
 
 	assert.NoError(t, c.GetRemoteFile("s3://foo/bar.txt", "bar.txt"))
+
+	hash.AssertExpectations(t)
+	store.AssertExpectations(t)
 }
 
 func TestGetRemoteFileWithDecryption(t *testing.T) {
@@ -39,6 +42,10 @@ func TestGetRemoteFileWithDecryption(t *testing.T) {
 	cipher.On("Decrypt", "bar.txt.tmp", "bar.txt").Return(nil)
 
 	assert.NoError(t, c.GetRemoteFile("s3://foo/bar.txt", "bar.txt"))
+
+	hash.AssertExpectations(t)
+	store.AssertExpectations(t)
+	cipher.AssertExpectations(t)
 }
 
 func TestPutLocalFileWithoutEncryption(t *testing.T) {
@@ -54,6 +61,9 @@ func TestPutLocalFileWithoutEncryption(t *testing.T) {
 	store.On("UploadFile", "s3://foo/bar.txt", "bar.txt", "woahahaha").Return(nil)
 
 	assert.NoError(t, c.PutLocalFile("s3://foo/bar.txt", "bar.txt"))
+
+	hash.AssertExpectations(t)
+	store.AssertExpectations(t)
 }
 
 func TestPutLocalFileWithEncryption(t *testing.T) {
@@ -72,4 +82,8 @@ func TestPutLocalFileWithEncryption(t *testing.T) {
 	store.On("UploadFile", "s3://foo/bar.txt", "bar.txt.tmp", "woahahaha").Return(nil)
 
 	assert.NoError(t, c.PutLocalFile("s3://foo/bar.txt", "bar.txt"))
+
+	hash.AssertExpectations(t)
+	store.AssertExpectations(t)
+	cipher.AssertExpectations(t)
 }
