@@ -15,6 +15,8 @@ import (
 
 const checksumKey = "S3-Backup-Checksum"
 
+var s3PathPattern = regexp.MustCompile(`^s3://([^/]+)/(.+)$`)
+
 type Store interface {
 	UploadFile(remotePath, localPath, checksum string) error
 	DownloadFile(remotePath, localPath string) (string, error)
@@ -107,7 +109,6 @@ func (s *s3store) DownloadFile(remotePath, localPath string) (string, error) {
 }
 
 func splitRemotePath(remotePath string) (bucket string, objectKey string, err error) {
-	s3PathPattern := regexp.MustCompile(`^s3://([^/]+)/(.+)$`)
 	if md := s3PathPattern.FindStringSubmatch(remotePath); md != nil {
 		bucket = md[1]
 		objectKey = md[2]
