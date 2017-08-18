@@ -57,7 +57,7 @@ Usage: ./bin/s3backup [options] s3://bucket/objectkey local_file_path
   -secretKey string
         AWS Secret Key (required if accessKey provided)
   -token string
-        AWS Token (required if accessKey provided)
+        AWS Token (possibly required if accessKey provided)
   -region string
         AWS Region (required if accessKey provided)
 ```
