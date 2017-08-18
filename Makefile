@@ -14,6 +14,18 @@ install:
 	GOPATH=${GOPATH} go install -ldflags "${LDFLAGS}" s3backup/cmd/s3backup
 	GOPATH=${GOPATH} go install -ldflags "${LDFLAGS}" s3backup/cmd/s3keygen
 
+clean:
+	rm -rf target
+
+target:
+	mkdir target
+
+build: target
+	GOOS=linux  GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o target/s3backup-linux64 s3backup/cmd/s3backup
+	GOOS=darwin GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o target/s3backup-darwin  s3backup/cmd/s3backup
+	GOOS=linux  GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o target/s3keygen-linux64 s3backup/cmd/s3keygen
+	GOOS=darwin GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o target/s3keygen-darwin  s3backup/cmd/s3keygen
+
 generate-aes-key: install
 	./bin/s3keygen -t aes
 
