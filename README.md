@@ -55,11 +55,13 @@ Usage: ./bin/s3backup [options] s3://bucket/objectkey local_file_path
   -accessKey string
         AWS Access Key ID (if not using default AWS credentials)
   -secretKey string
-        AWS Secret Key (required if accessKey provided)
+        AWS Secret Key (required when accessKey is provided)
   -token string
-        AWS Token (possibly required if accessKey provided)
+        AWS Token (effective only when accessKey is provided, depends on your AWS setup)
   -region string
-        AWS Region (required if accessKey provided)
+        AWS Region (effective only when accessKey is provided)
+  -endpoint string
+        Custom AWS Endpoint (effective only when accessKey is provided)
 ```
 
 [Click here](https://docs.aws.amazon.com/sdk-for-go/v1/developer-guide/configuring-sdk.html)

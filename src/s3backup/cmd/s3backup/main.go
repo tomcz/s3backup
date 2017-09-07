@@ -18,9 +18,10 @@ var (
 	symKey       = flag.String("symKey", "", "Base64-encoded 256-bit symmetric key (optional)")
 	pemKeyFile   = flag.String("pemKey", "", "Path to PEM-encoded public or private key file (optional)")
 	awsAccessKey = flag.String("accessKey", "", "AWS Access Key ID (if not using default AWS credentials)")
-	awsSecretKey = flag.String("secretKey", "", "AWS Secret Key (required if accessKey provided)")
-	awsToken     = flag.String("token", "", "AWS Token (required if accessKey provided)")
-	awsRegion    = flag.String("region", "", "AWS Region (required if accessKey provided)")
+	awsSecretKey = flag.String("secretKey", "", "AWS Secret Key (required when accessKey is provided)")
+	awsToken     = flag.String("token", "", "AWS Token (effective only when accessKey is provided, depends on your AWS setup)")
+	awsRegion    = flag.String("region", "us-east-1", "AWS Region (effective only when accessKey is provided)")
+	awsEndpoint  = flag.String("endpoint", "", "Custom AWS Endpoint (effective only when accessKey is provided)")
 )
 
 func printUsage() {
@@ -74,6 +75,7 @@ func newClient() (*client.Client, error) {
 		*awsSecretKey,
 		*awsToken,
 		*awsRegion,
+		*awsEndpoint,
 	)
 	if err != nil {
 		return nil, err

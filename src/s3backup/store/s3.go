@@ -26,7 +26,7 @@ type s3store struct {
 	client *s3.S3
 }
 
-func NewS3Store(awsAccessKey, awsSecretKey, awsToken, awsRegion string) (Store, error) {
+func NewS3Store(awsAccessKey, awsSecretKey, awsToken, awsRegion, awsEndpoint string) (Store, error) {
 	var sess *session.Session
 	var err error
 
@@ -35,13 +35,21 @@ func NewS3Store(awsAccessKey, awsSecretKey, awsToken, awsRegion string) (Store, 
 		sess, err = session.NewSession()
 	} else {
 		log.Println("Using AWS credentials from command line arguments")
+		var endpoint *string
+		var forcePathStyle *bool
+		if awsEndpoint != "" {
+			endpoint = aws.String(awsEndpoint)
+			forcePathStyle = aws.Bool(true)
+		}
 		sess, err = session.NewSession(&aws.Config{
 			Credentials: credentials.NewStaticCredentials(
 				awsAccessKey,
 				awsSecretKey,
 				awsToken,
 			),
-			Region: aws.String(awsRegion),
+			Region:           aws.String(awsRegion),
+			S3ForcePathStyle: forcePathStyle,
+			Endpoint:         endpoint,
 		})
 	}
 	if err != nil {
