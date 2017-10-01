@@ -78,12 +78,17 @@ To make things easier, this project also provides `s3keygen` to create 256-bit s
 and 2048-bit RSA private/public key pairs for use by `s3backup`.
 
 ```
-Usage of ./bin/s3keygen:
-  -v    Show version and exit
-  -t string
-        Key type: aes or rsa (default "aes")
-  -priv string
-        Private key file for rsa key pair (default "private.pem")
-  -pub string
-        Public key file for rsa key pair (default "public.pem")
+Usage:
+  s3keygen [command]
+
+Available Commands:
+  aes         Print generated AES key
+  help        Help about any command
+  rsa         Generate RSA key pair
+  version     Print version
+
+Flags:
+  -h, --help   help for s3keygen
+
+Use "s3keygen [command] --help" for more information about a command.
 ```

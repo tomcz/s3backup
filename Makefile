@@ -27,7 +27,7 @@ build: target
 	GOOS=darwin GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o target/s3keygen-darwin  s3backup/cmd/s3keygen
 
 generate-aes-key: install
-	./bin/s3keygen -t aes
+	./bin/s3keygen aes
 
 generate-rsa-keys: install
-	./bin/s3keygen -t rsa
+	./bin/s3keygen rsa
