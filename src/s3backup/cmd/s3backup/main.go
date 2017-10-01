@@ -135,31 +135,6 @@ func vaultGet(cmd *cobra.Command, args []string) error {
 func initWithVault() error {
 	log.Println("Fetching configuration from vault")
 
-	if vaultAddr == "" {
-		addr, ok := os.LookupEnv("VAULT_ADDR")
-		if ok && addr != "" {
-			vaultAddr = addr
-		}
-	}
-
-	if vaultCaCert == "" {
-		cert, ok := os.LookupEnv("VAULT_CACERT")
-		if ok && cert != "" {
-			vaultCaCert = cert
-		}
-	}
-
-	if vaultToken == "" {
-		tok, ok := os.LookupEnv("VAULT_TOKEN")
-		if ok && tok != "" {
-			vaultToken = tok
-		}
-	}
-
-	if vaultAddr == "" {
-		return errors.New("no vault address provided")
-	}
-
 	if vaultPath == "" {
 		return errors.New("no vault secret path provided")
 	}
@@ -170,12 +145,10 @@ func initWithVault() error {
 	}
 
 	var cfg *config.Config
-	if vaultToken != "" {
-		cfg, err = vault.LookupWithToken(vaultToken, vaultPath)
-	} else if vaultRoleID != "" && vaultSecretID != "" {
-		cfg, err = vault.LookupWithIDs(vaultRoleID, vaultSecretID, vaultPath)
+	if vaultRoleID != "" && vaultSecretID != "" {
+		cfg, err = vault.LookupWithAppRole(vaultRoleID, vaultSecretID, vaultPath)
 	} else {
-		err = errors.New("no vault token or role/secret provided")
+		cfg, err = vault.LookupWithToken(vaultToken, vaultPath)
 	}
 	if err != nil {
 		return err
