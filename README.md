@@ -3,7 +3,7 @@
 Provides a standard way of backing up an archive to a S3 bucket, and restoring the backed up
 archive from its S3 bucket. No more custom backup scripts please ...
 
-## Upload process:
+## Upload process
 
 1. Encrypt file to be backed up (optional but highly recommended). `s3backup` encrypts using
 AES-CTR and can use either a 256-bit Base64-encoded symmetric key, or a PEM-encoded RSA public
@@ -16,7 +16,7 @@ is calculated on the encrypted file.
 3. Upload to AWS S3 using concurrent uploads to handle large files and store the checksum with
 the uploaded file.
 
-## Download process:
+## Download process
 
 1. Download file from AWS S3 using concurrent downloads to handle large files and retrieve the
 stored checksum of the uploaded file.
@@ -25,6 +25,12 @@ stored checksum of the uploaded file.
 
 3. Optionally, decrypt the downloaded file using either the same symmetric key that was used
 to encrypt it, or the RSA private key matching the RSA public key that was used for encryption.
+
+## HashiCorp Vault
+
+`s3backup` provides `vault-get` and `vault-put` commands that allow it to be configured using
+secrets held by a [vault](https://www.vaultproject.io/) instance so that you can store encryption
+keys and AWS credentials in a secure manner.  
 
 ## Installation
 
@@ -43,25 +49,21 @@ make install
 ## Usage
 
 ```
-Usage: ./bin/s3backup [options] s3://bucket/objectkey local_file_path
-  -v    Show version and exit
-  -get  Get remote file from s3 bucket (send by default)
-  -symKey string
-        Base64-encoded 256-bit symmetric key
-        (for optional, but recommended, client-side encryption & decryption)
-  -pemKey string
-        Path to PEM-encoded public or private key file
-        (for optional, but recommended, client-side encryption & decryption)
-  -accessKey string
-        AWS Access Key ID (if not using default AWS credentials)
-  -secretKey string
-        AWS Secret Key (required when accessKey is provided)
-  -token string
-        AWS Token (effective only when accessKey is provided, depends on your AWS setup)
-  -region string
-        AWS Region (effective only when accessKey is provided)
-  -endpoint string
-        Custom AWS Endpoint (effective only when accessKey is provided)
+Usage:
+  s3backup [command]
+
+Available Commands:
+  get         Get local file from S3 bucket using local credentials
+  help        Help about any command
+  put         Put local file to S3 bucket using local credentials
+  vault-get   Get local file from S3 bucket using credentials from vault
+  vault-put   Put local file to S3 bucket using credentials from vault
+  version     Print version and exit
+
+Flags:
+  -h, --help   help for s3backup
+
+Use "s3backup [command] --help" for more information about a command.
 ```
 
 [Click here](https://docs.aws.amazon.com/sdk-for-go/v1/developer-guide/configuring-sdk.html)

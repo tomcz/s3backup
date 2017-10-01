@@ -17,16 +17,11 @@ const checksumKey = "S3-Backup-Checksum"
 
 var s3PathPattern = regexp.MustCompile(`^s3://([^/]+)/(.+)$`)
 
-type Store interface {
-	UploadFile(remotePath, localPath, checksum string) error
-	DownloadFile(remotePath, localPath string) (string, error)
-}
-
 type s3store struct {
 	client *s3.S3
 }
 
-func NewS3Store(awsAccessKey, awsSecretKey, awsToken, awsRegion, awsEndpoint string) (Store, error) {
+func NewS3(awsAccessKey, awsSecretKey, awsToken, awsRegion, awsEndpoint string) (Store, error) {
 	var sess *session.Session
 	var err error
 

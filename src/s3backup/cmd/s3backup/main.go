@@ -1,91 +1,183 @@
 package main
 
 import (
-	"flag"
+	"errors"
 	"fmt"
 	"log"
 	"os"
 
 	"s3backup/client"
+	"s3backup/config"
 	"s3backup/crypto"
 	"s3backup/store"
 	"s3backup/version"
+
+	"github.com/spf13/cobra"
 )
 
 var (
-	showVersion  = flag.Bool("v", false, "Show version and exit")
-	doGet        = flag.Bool("get", false, "Get remote file from s3 bucket (send by default)")
-	symKey       = flag.String("symKey", "", "Base64-encoded 256-bit symmetric key (optional)")
-	pemKeyFile   = flag.String("pemKey", "", "Path to PEM-encoded public or private key file (optional)")
-	awsAccessKey = flag.String("accessKey", "", "AWS Access Key ID (if not using default AWS credentials)")
-	awsSecretKey = flag.String("secretKey", "", "AWS Secret Key (required when accessKey is provided)")
-	awsToken     = flag.String("token", "", "AWS Token (effective only when accessKey is provided, depends on your AWS setup)")
-	awsRegion    = flag.String("region", "us-east-1", "AWS Region (effective only when accessKey is provided)")
-	awsEndpoint  = flag.String("endpoint", "", "Custom AWS Endpoint (effective only when accessKey is provided)")
+	symKey        string
+	pemKeyFile    string
+	awsAccessKey  string
+	awsSecretKey  string
+	awsToken      string
+	awsRegion     string
+	awsEndpoint   string
+	vaultRoleID   string
+	vaultSecretID string
+	vaultToken    string
+	vaultPath     string
+	vaultAddr     string
+	vaultCaCert   string
 )
 
-func printUsage() {
-	fmt.Printf("Usage: %v [options] s3://bucket/objectkey local_file_path\n", os.Args[0])
-	flag.PrintDefaults()
-}
-
 func main() {
-	remotePath, localPath := parseFlags()
-
-	c, err := newClient()
-	if err != nil {
-		log.Fatal("Cannot create S3 client, error is:", err)
+	var cmdVersion = &cobra.Command{
+		Use:   "version",
+		Short: "Print version and exit",
+		Run:   printVersion,
 	}
-
-	if *doGet {
-		if err := c.GetRemoteFile(remotePath, localPath); err != nil {
-			log.Fatalln("Failed to get remote file, error is:", err)
-		}
-	} else {
-		if err := c.PutLocalFile(remotePath, localPath); err != nil {
-			log.Fatalln("Failed to put local file, error is:", err)
-		}
+	var cmdBasicPut = &cobra.Command{
+		Use:   "put [s3://bucket/objectkey] [local_file_path]",
+		Short: "Put local file to S3 bucket using local credentials",
+		Args:  cobra.ExactArgs(2),
+		RunE:  basicPut,
 	}
-	log.Println("Success")
-}
-
-func parseFlags() (remotePath, localPath string) {
-	flag.Usage = printUsage
-	flag.Parse()
-
-	if *showVersion {
-		fmt.Println(version.Commit())
-		os.Exit(0)
+	var cmdBasicGet = &cobra.Command{
+		Use:   "get [s3://bucket/objectkey] [local_file_path]",
+		Short: "Get local file from S3 bucket using local credentials",
+		Args:  cobra.ExactArgs(2),
+		RunE:  basicGet,
 	}
-
-	remotePath = flag.Arg(0)
-	localPath = flag.Arg(1)
-
-	if remotePath == "" || localPath == "" {
-		fmt.Println("Need both remote_file_path and local_file_path")
-		printUsage()
+	var cmdVaultPut = &cobra.Command{
+		Use:   "vault-put [s3://bucket/objectkey] [local_file_path]",
+		Short: "Put local file to S3 bucket using credentials from vault",
+		Args:  cobra.ExactArgs(2),
+		RunE:  vaultPut,
+	}
+	var cmdVaultGet = &cobra.Command{
+		Use:   "vault-get [s3://bucket/objectkey] [local_file_path]",
+		Short: "Get local file from S3 bucket using credentials from vault",
+		Args:  cobra.ExactArgs(2),
+		RunE:  vaultGet,
+	}
+	var rootCmd = &cobra.Command{Use: "s3backup"}
+	rootCmd.AddCommand(
+		cmdVersion,
+		basicFlags(cmdBasicPut),
+		basicFlags(cmdBasicGet),
+		vaultFlags(cmdVaultPut),
+		vaultFlags(cmdVaultGet),
+	)
+	if err := rootCmd.Execute(); err != nil {
+		log.Fatalln(err)
 		os.Exit(1)
 	}
-	return // remotePath, localPath
+}
+
+func basicFlags(cmd *cobra.Command) *cobra.Command {
+	flags := cmd.Flags()
+	flags.StringVar(&symKey, "symKey", "", "Base64-encoded 256-bit symmetric key (optional)")
+	flags.StringVar(&pemKeyFile, "pemKey", "", "Path to PEM-encoded public or private key file (optional)")
+	flags.StringVar(&awsAccessKey, "accessKey", "", "AWS Access Key ID (if not using default AWS credentials)")
+	flags.StringVar(&awsSecretKey, "secretKey", "", "AWS Secret Key (required when accessKey is provided)")
+	flags.StringVar(&awsToken, "token", "", "AWS Token (effective only when accessKey is provided, depends on your AWS setup)")
+	flags.StringVar(&awsRegion, "region", "us-east-1", "AWS Region (effective only when accessKey is provided)")
+	flags.StringVar(&awsEndpoint, "endpoint", "", "Custom AWS Endpoint (effective only when accessKey is provided)")
+	return cmd
+}
+
+func vaultFlags(cmd *cobra.Command) *cobra.Command {
+	flag := cmd.Flags()
+	flag.StringVar(&vaultRoleID, "role", "", "Vault role_id to retrieve backup credentials")
+	flag.StringVar(&vaultSecretID, "secret", "", "Vault secret_id to retrieve backup credentials")
+	flag.StringVar(&vaultToken, "token", "", "Vault token to retrieve backup credentials")
+	flag.StringVar(&vaultPath, "path", "", "Vault secret path containing backup credentials")
+	flag.StringVar(&vaultCaCert, "caCert", "", "Vault root certificate file")
+	flag.StringVar(&vaultAddr, "vault", "", "Vault service address")
+	return cmd
+}
+
+func printVersion(_ *cobra.Command, _ []string) {
+	fmt.Println(version.Commit())
+}
+
+func basicPut(_ *cobra.Command, args []string) error {
+	c, err := newClient()
+	if err != nil {
+		return err
+	}
+	return c.PutLocalFile(args[0], args[1])
+}
+
+func basicGet(_ *cobra.Command, args []string) error {
+	c, err := newClient()
+	if err != nil {
+		return err
+	}
+	return c.GetRemoteFile(args[0], args[1])
+}
+
+func vaultPut(cmd *cobra.Command, args []string) error {
+	if err := initWithVault(); err != nil {
+		return err
+	}
+	return basicPut(cmd, args)
+}
+
+func vaultGet(cmd *cobra.Command, args []string) error {
+	if err := initWithVault(); err != nil {
+		return err
+	}
+	return basicGet(cmd, args)
+}
+
+func initWithVault() error {
+	log.Println("Fetching configuration from vault")
+	vault, err := config.NewVault(vaultAddr, vaultCaCert)
+	if err != nil {
+		return err
+	}
+	if vaultPath == "" {
+		return errors.New("no vault secret path provided")
+	}
+	var cfg *config.Config
+	if vaultRoleID != "" && vaultSecretID != "" {
+		cfg, err = vault.LookupWithIDs(vaultRoleID, vaultSecretID, vaultPath)
+	} else if vaultToken != "" {
+		cfg, err = vault.LookupWithToken(vaultToken, vaultPath)
+	} else {
+		err = errors.New("no vault role/secret or token provided")
+	}
+	if err != nil {
+		return err
+	}
+	symKey = cfg.CipherKey
+	awsAccessKey = cfg.S3AccessKey
+	awsSecretKey = cfg.S3SecretKey
+	awsToken = cfg.S3Token
+	awsRegion = cfg.S3Region
+	awsEndpoint = cfg.S3Endpoint
+	return nil
 }
 
 func newClient() (*client.Client, error) {
-	s3, err := store.NewS3Store(
-		*awsAccessKey,
-		*awsSecretKey,
-		*awsToken,
-		*awsRegion,
-		*awsEndpoint,
+	s3, err := store.NewS3(
+		awsAccessKey,
+		awsSecretKey,
+		awsToken,
+		awsRegion,
+		awsEndpoint,
 	)
 	if err != nil {
 		return nil, err
 	}
 	var cipher crypto.Cipher
-	if *symKey != "" {
-		cipher, err = crypto.NewAESCipher(*symKey)
+	if symKey != "" {
+		cipher, err = crypto.NewAESCipher(symKey)
 	}
-	if *pemKeyFile != "" {
-		cipher, err = crypto.NewRSACipher(*pemKeyFile)
+	if pemKeyFile != "" {
+		cipher, err = crypto.NewRSACipher(pemKeyFile)
 	}
 	if err != nil {
 		return nil, err
