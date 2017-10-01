@@ -71,8 +71,7 @@ func testHandler() http.Handler {
 	r := mux.NewRouter()
 
 	r.HandleFunc("/v1/auth/approle/login", checkLogin).
-		Headers("Content-Type", "application/json").
-		Methods("POST")
+		Methods("PUT")
 
 	r.HandleFunc("/v1/secret/myteam/backup", respondWith(secretJSON)).
 		Headers("X-Vault-Token", "5b1a0318-679c-9c45-e5c6-d1b9a9035d49").
@@ -85,12 +84,10 @@ func TestVaultLookup(t *testing.T) {
 	ts := httptest.NewServer(testHandler())
 	defer ts.Close()
 
-	v := &vault{
-		client:    ts.Client(),
-		vaultAddr: ts.URL,
-	}
+	v, err := NewVault(ts.URL, "")
+	require.NoError(t, err)
 
-	cfg, err := v.LookupWithIDs("test-role", "test-secret", "secret/myteam/backup")
+	cfg, err := v.LookupWithAppRole("test-role", "test-secret", "secret/myteam/backup")
 	require.NoError(t, err)
 
 	assert.Equal(t, "use me to encrypt", cfg.CipherKey)
