@@ -30,7 +30,16 @@ to encrypt it, or the RSA private key matching the RSA public key that was used 
 
 `s3backup` provides `vault-get` and `vault-put` commands that allow it to be configured using
 secrets held by a [vault](https://www.vaultproject.io/) instance so that you can store encryption
-keys and AWS credentials in a secure manner.  
+keys and AWS credentials in a secure manner.
+
+Along with command-line arguments, vault integration can also use the following environment
+variables, with command-line arguments taking precedence:
+
+| Variable Name | Arg Name | Value                                                                                 |
+| ------------- | -------- | ------------------------------------------------------------------------------------- |
+| VAULT_ADDR    | --vault  | The address of the Vault server expressed as a URL and port.                          |
+| VAULT_CACERT  | --caCert | Path to a PEM-encoded CA cert file to use to verify the Vault server SSL certificate. |
+| VAULT_TOKEN   | --token  | The Vault authentication token.                                                       |
 
 ## Installation
 

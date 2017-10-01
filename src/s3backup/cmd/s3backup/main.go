@@ -134,30 +134,60 @@ func vaultGet(cmd *cobra.Command, args []string) error {
 
 func initWithVault() error {
 	log.Println("Fetching configuration from vault")
+
+	if vaultAddr == "" {
+		addr, ok := os.LookupEnv("VAULT_ADDR")
+		if ok && addr != "" {
+			vaultAddr = addr
+		}
+	}
+
+	if vaultCaCert == "" {
+		cert, ok := os.LookupEnv("VAULT_CACERT")
+		if ok && cert != "" {
+			vaultCaCert = cert
+		}
+	}
+
+	if vaultToken == "" {
+		tok, ok := os.LookupEnv("VAULT_TOKEN")
+		if ok && tok != "" {
+			vaultToken = tok
+		}
+	}
+
+	if vaultAddr == "" {
+		return errors.New("no vault address provided")
+	}
+
+	if vaultPath == "" {
+		return errors.New("no vault secret path provided")
+	}
+
 	vault, err := config.NewVault(vaultAddr, vaultCaCert)
 	if err != nil {
 		return err
 	}
-	if vaultPath == "" {
-		return errors.New("no vault secret path provided")
-	}
+
 	var cfg *config.Config
-	if vaultRoleID != "" && vaultSecretID != "" {
-		cfg, err = vault.LookupWithIDs(vaultRoleID, vaultSecretID, vaultPath)
-	} else if vaultToken != "" {
+	if vaultToken != "" {
 		cfg, err = vault.LookupWithToken(vaultToken, vaultPath)
+	} else if vaultRoleID != "" && vaultSecretID != "" {
+		cfg, err = vault.LookupWithIDs(vaultRoleID, vaultSecretID, vaultPath)
 	} else {
-		err = errors.New("no vault role/secret or token provided")
+		err = errors.New("no vault token or role/secret provided")
 	}
 	if err != nil {
 		return err
 	}
+
 	symKey = cfg.CipherKey
 	awsAccessKey = cfg.S3AccessKey
 	awsSecretKey = cfg.S3SecretKey
 	awsToken = cfg.S3Token
 	awsRegion = cfg.S3Region
 	awsEndpoint = cfg.S3Endpoint
+
 	return nil
 }
 
