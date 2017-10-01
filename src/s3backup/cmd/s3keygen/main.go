@@ -1,46 +1,57 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"log"
 	"os"
 
 	"s3backup/crypto"
 	"s3backup/version"
-)
 
-var (
-	showVersion = flag.Bool("v", false, "Show version and exit")
-	keyType     = flag.String("t", "aes", "Key type: aes or rsa")
-	privKeyFile = flag.String("priv", "private.pem", "Private key file for rsa key pair")
-	pubKeyFile  = flag.String("pub", "public.pem", "Public key file for rsa key pair")
+	"github.com/spf13/cobra"
 )
 
 func main() {
-	flag.Parse()
-
-	if *showVersion {
-		fmt.Println(version.Commit())
-		os.Exit(0)
+	var cmdVersion = &cobra.Command{
+		Use:   "version",
+		Short: "Print version",
+		Run: func(_ *cobra.Command, _ []string) {
+			fmt.Println(version.Commit())
+		},
 	}
 
-	var key string
-	var err error
-
-	switch *keyType {
-	case "aes":
-		key, err = crypto.GenerateAESKeyString()
-		if err == nil {
-			log.Println(key)
-		}
-	case "rsa":
-		err = crypto.GenerateRSAKeyPair(*privKeyFile, *pubKeyFile)
-	default:
-		log.Fatalln("Unknown key type:", *keyType)
+	var cmdGenAES = &cobra.Command{
+		Use:   "aes",
+		Short: "Print generated AES key",
+		RunE: func(_ *cobra.Command, _ []string) error {
+			key, err := crypto.GenerateAESKeyString()
+			if err != nil {
+				return err
+			}
+			fmt.Println(key)
+			return nil
+		},
 	}
 
-	if err != nil {
-		log.Fatalln("Failed, error is:", err)
+	var privKeyFile, pubKeyFile string
+
+	var cmdGenRSA = &cobra.Command{
+		Use:   "rsa",
+		Short: "Generate RSA key pair",
+		RunE: func(_ *cobra.Command, _ []string) error {
+			return crypto.GenerateRSAKeyPair(privKeyFile, pubKeyFile)
+		},
+	}
+
+	flags := cmdGenRSA.Flags()
+	flags.StringVar(&privKeyFile, "priv", "private.pem", "Private key file for rsa key pair")
+	flags.StringVar(&pubKeyFile, "pub", "public.pem", "Public key file for rsa key pair")
+
+	var rootCmd = &cobra.Command{Use: "s3keygen"}
+	rootCmd.AddCommand(cmdVersion, cmdGenAES, cmdGenRSA)
+
+	if err := rootCmd.Execute(); err != nil {
+		log.Fatalln(err)
+		os.Exit(1)
 	}
 }
