@@ -38,25 +38,25 @@ func main() {
 		Run:   printVersion,
 	}
 	var cmdBasicPut = &cobra.Command{
-		Use:   "put [s3://bucket/objectkey] [local_file_path]",
+		Use:   "put s3://bucket/objectkey local_file_path",
 		Short: "Put local file to S3 bucket using local credentials",
 		Args:  cobra.ExactArgs(2),
 		RunE:  basicPut,
 	}
 	var cmdBasicGet = &cobra.Command{
-		Use:   "get [s3://bucket/objectkey] [local_file_path]",
+		Use:   "get s3://bucket/objectkey local_file_path",
 		Short: "Get local file from S3 bucket using local credentials",
 		Args:  cobra.ExactArgs(2),
 		RunE:  basicGet,
 	}
 	var cmdVaultPut = &cobra.Command{
-		Use:   "vault-put [s3://bucket/objectkey] [local_file_path]",
+		Use:   "vault-put s3://bucket/objectkey local_file_path",
 		Short: "Put local file to S3 bucket using credentials from vault",
 		Args:  cobra.ExactArgs(2),
 		RunE:  vaultPut,
 	}
 	var cmdVaultGet = &cobra.Command{
-		Use:   "vault-get [s3://bucket/objectkey] [local_file_path]",
+		Use:   "vault-get s3://bucket/objectkey local_file_path",
 		Short: "Get local file from S3 bucket using credentials from vault",
 		Args:  cobra.ExactArgs(2),
 		RunE:  vaultGet,
