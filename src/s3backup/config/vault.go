@@ -12,8 +12,7 @@ type Vault interface {
 }
 
 type vault struct {
-	client    *api.Client
-	vaultAddr string
+	client *api.Client
 }
 
 func NewVault(vaultAddr, caCertFile string) (Vault, error) {
@@ -34,10 +33,7 @@ func NewVault(vaultAddr, caCertFile string) (Vault, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &vault{
-		client:    client,
-		vaultAddr: vaultAddr,
-	}, nil
+	return &vault{client}, nil
 }
 
 func (v *vault) LookupWithAppRole(roleID, secretID, path string) (*Config, error) {
