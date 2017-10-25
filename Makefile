@@ -26,12 +26,6 @@ build: target
 	GOOS=linux  GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o target/s3keygen-linux64 s3backup/cmd/s3keygen
 	GOOS=darwin GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o target/s3keygen-darwin  s3backup/cmd/s3keygen
 
-deploy:
-	artifactctl store --path /security/s3backup/${GITCOMMIT}/s3backup-linux64 --filepath target/s3backup-linux64
-	artifactctl store --path /security/s3backup/${GITCOMMIT}/s3backup-darwin  --filepath target/s3backup-darwin
-	artifactctl store --path /security/s3backup/${GITCOMMIT}/s3keygen-linux64 --filepath target/s3keygen-linux64
-	artifactctl store --path /security/s3backup/${GITCOMMIT}/s3keygen-darwin  --filepath target/s3keygen-darwin
-
 generate-aes-key: install
 	./bin/s3keygen aes
 
