@@ -1,9 +1,8 @@
 package config
 
 import (
-	"fmt"
-
 	"github.com/hashicorp/vault/api"
+	"github.com/mitchellh/mapstructure"
 )
 
 type Vault interface {
@@ -56,20 +55,9 @@ func (v *vault) LookupWithToken(token, path string) (*Config, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Config{
-		CipherKey:   get(secret.Data, "cipher_key"),
-		S3AccessKey: get(secret.Data, "s3_access_key"),
-		S3SecretKey: get(secret.Data, "s3_secret_key"),
-		S3Token:     get(secret.Data, "s3_token"),
-		S3Region:    get(secret.Data, "s3_region"),
-		S3Endpoint:  get(secret.Data, "s3_endpoint"),
-	}, nil
-}
-
-func get(m map[string]interface{}, key string) string {
-	val, ok := m[key]
-	if !ok {
-		return ""
+	var cfg Config
+	if err = mapstructure.Decode(secret.Data, &cfg); err != nil {
+		return nil, err
 	}
-	return fmt.Sprint(val)
+	return &cfg, nil
 }
