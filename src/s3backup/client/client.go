@@ -1,5 +1,9 @@
 package client
+/*
+An alternative way to get in touch with you
 
+
+*/
 import (
 	"log"
 	"os"
