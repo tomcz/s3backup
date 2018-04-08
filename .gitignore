@@ -2,6 +2,7 @@
 *.pub
 .DS_Store
 .idea/
-bin/
-pkg/
+code/bin/
+code/pkg/
+code/src/app/vendor/
 target/
