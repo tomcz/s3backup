@@ -37,7 +37,7 @@ keys and AWS credentials in a secure manner.
 Vault integration in `s3backup` can be configured from the command line and using vault's own
 [environment variables](https://www.vaultproject.io/docs/commands/environment.html).
 
-## Installation
+## Build
 
 Clone this repository
 
@@ -45,10 +45,10 @@ Clone this repository
 git clone git@github.com:tomcz/s3backup.git
 ```
 
-Install `s3backup` and `s3keygen` into `$GOPATH/bin`
+Build the binaries
 
 ```
-make install
+make build
 ```
 
 ## Usage

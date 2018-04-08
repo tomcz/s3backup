@@ -1,3 +1,14 @@
 language: go
 go:
-  - 1.9.x
+  - 1.10.x
+script:
+  - make travis
+deploy:
+  provider: releases
+  api_key:
+    secure: EVgMJz8z1gELgzOKr0YhgjWSbtTOxSj5eVuuuOQ7+JC2gq/xFiLXS+yb6qR9lLIH3OCT0v57bSrR3AQaVdqH58cvFcxUgFWwc3wOU/j8/gu3NGImq+Q3iYsJ41a/OTtY1xztEn3LN4L19TYWeYyDDGFNNstR8DyOjN+VFmibkEV0ZzFUatK9vRo6yG32GEmLD9mkyAmYvtwVXueJsraABmLH75pNGAL8TQixOY9sUYH7Q3vj+TC23McUDTkosQyJ+DiPhykl0YOz4BQva6vPqm8156ovxFZh6Uz+Ze+VeUHduKUPKozcQXfhsrmnjGKkusR3jgXH1mnsNh6bX265S3WZki+wUBvwF/HM2ZHsqPF6Zfdo6JjcRnjNJ/wMIskWkubQJXPI4G9cmnEEimJjdd4hz5lUVHpO1t6Kl9EPZAKPoOoYb/R08jGjkTG8n6rVu1Jl7gjo6H6h1Rzql2cRPCC3F/ozWM9o21M5bmFXB6was0Mwp1jINwq11zOtusxoEDdnxWXHJWVNp8GUPNkmLBaQtGj9YpPHn6iWYcg8TzSMiFdbwqWGHyC1fh+k5e3jkzExZ2vpmBYjbzfYdFa/OhJxExcdgnSIEewmjlhMgFoG7IYIXGSGNjc9rJeDTiiqqh7uh/6ilVYpQqmoM820M0U0YQ6+6ymG8ygm85GkPvs=
+  file_glob: true
+  file: target/*
+  skip_cleanup: true
+  on:
+    tags: true
