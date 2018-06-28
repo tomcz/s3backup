@@ -5,6 +5,8 @@
 Provides a standard way of backing up an archive to a S3 bucket, and restoring the backed up
 archive from its S3 bucket. No more custom backup scripts please ...
 
+You can download the latest release from [here](https://github.com/tomcz/s3backup/releases).
+
 ## Upload process
 
 1. Encrypt file to be backed up (optional but highly recommended). `s3backup` encrypts using
