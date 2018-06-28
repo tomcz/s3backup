@@ -30,15 +30,6 @@ stored checksum of the uploaded file.
 3. Optionally, decrypt the downloaded file using either the same symmetric key that was used
 to encrypt it, or the RSA private key matching the RSA public key that was used for encryption.
 
-## HashiCorp Vault
-
-`s3backup` provides `vault-get` and `vault-put` commands that allow it to be configured using
-secrets held by a [vault](https://www.vaultproject.io/) instance so that you can store encryption
-keys and AWS credentials in a secure manner.
-
-Vault integration in `s3backup` can be configured from the command line and using vault's own
-[environment variables](https://www.vaultproject.io/docs/commands/environment.html).
-
 ## Build
 
 Clone this repository
@@ -74,6 +65,15 @@ Use "s3backup [command] --help" for more information about a command.
 ```
 
 [Click here](https://docs.aws.amazon.com/sdk-for-go/v1/developer-guide/configuring-sdk.html) for details about using default AWS credentials. Please note that if you choose to use environment variables you must specify the `AWS_REGION`.
+
+### HashiCorp Vault
+
+`s3backup` provides `vault-get` and `vault-put` commands that allow it to be configured using
+secrets held by a [vault](https://www.vaultproject.io/) instance so that you can store encryption
+keys and AWS credentials in a secure manner.
+
+Vault integration in `s3backup` can be configured from the command line and using vault's own
+[environment variables](https://www.vaultproject.io/docs/commands/environment.html).
 
 ## Backup key generation
 
