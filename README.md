@@ -56,9 +56,7 @@ Use "s3backup [command] --help" for more information about a command.
 
 ### HashiCorp Vault
 
-`s3backup` provides `vault-get` and `vault-put` commands that allow it to be configured using
-secrets held by a [vault](https://www.vaultproject.io/) instance so that you can store encryption
-keys and AWS credentials in a secure manner.
+`s3backup` provides `vault-get` and `vault-put` commands that allow it to be configured using secrets held by a [vault](https://www.vaultproject.io/) instance so that you can store encryption keys and AWS credentials in a secure manner. The secrets that you need to hold in vault for `s3backup` are described [here](https://github.com/tomcz/s3backup/blob/master/code/src/app/s3backup/config/config.go).
 
 Vault integration in `s3backup` can be configured from the command line and using vault's own
 [environment variables](https://www.vaultproject.io/docs/commands/environment.html).
