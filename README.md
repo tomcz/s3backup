@@ -64,7 +64,9 @@ Flags:
 Use "s3backup [command] --help" for more information about a command.
 ```
 
-[Click here](https://docs.aws.amazon.com/sdk-for-go/v1/developer-guide/configuring-sdk.html) for details about using default AWS credentials. Please note that if you choose to use environment variables you must specify the `AWS_REGION`.
+### AWS S3 Credentials
+
+[Click here](https://docs.aws.amazon.com/sdk-for-go/v1/developer-guide/configuring-sdk.html) for details about using default AWS credentials. Please note that if you choose to use AWS environment variables you **must** specify the `AWS_REGION`.
 
 ### HashiCorp Vault
 
