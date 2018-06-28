@@ -30,20 +30,6 @@ stored checksum of the uploaded file.
 3. Optionally, decrypt the downloaded file using either the same symmetric key that was used
 to encrypt it, or the RSA private key matching the RSA public key that was used for encryption.
 
-## Build
-
-Clone this repository
-
-```
-git clone git@github.com:tomcz/s3backup.git
-```
-
-Build the binaries
-
-```
-make build
-```
-
 ## Usage
 
 ```
@@ -96,4 +82,18 @@ Flags:
   -h, --help   help for s3keygen
 
 Use "s3keygen [command] --help" for more information about a command.
+```
+
+## Build
+
+Clone this repository
+
+```
+git clone git@github.com:tomcz/s3backup.git
+```
+
+Build the binaries
+
+```
+make build
 ```
