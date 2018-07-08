@@ -84,14 +84,8 @@ Use "s3keygen [command] --help" for more information about a command.
 
 ## Build
 
-Clone this repository
-
-```
-git clone git@github.com:tomcz/s3backup.git
-```
-
-Build the binaries
-
-```
-make build
-```
+1. Install Go from https://golang.org/
+2. Install `dep` from https://github.com/golang/dep
+3. Clone this repository and `cd` into its root.
+4. Fetch the third-party libraries: `make deps`
+5. Build the binary: `make build`
