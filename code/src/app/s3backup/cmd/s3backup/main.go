@@ -29,6 +29,7 @@ var (
 	vaultPath     string
 	vaultAddr     string
 	vaultCaCert   string
+	skipHash      bool
 )
 
 func main() {
@@ -84,17 +85,19 @@ func basicFlags(cmd *cobra.Command) *cobra.Command {
 	flags.StringVar(&awsToken, "token", "", "AWS Token (effective only when accessKey is provided, depends on your AWS setup)")
 	flags.StringVar(&awsRegion, "region", "us-east-1", "AWS Region (effective only when accessKey is provided)")
 	flags.StringVar(&awsEndpoint, "endpoint", "", "Custom AWS Endpoint (effective only when accessKey is provided)")
+	flags.BoolVar(&skipHash, "nocheck", false, "Do not create or verify backup checksums")
 	return cmd
 }
 
 func vaultFlags(cmd *cobra.Command) *cobra.Command {
-	flag := cmd.Flags()
-	flag.StringVar(&vaultRoleID, "role", "", "Vault role_id to retrieve backup credentials")
-	flag.StringVar(&vaultSecretID, "secret", "", "Vault secret_id to retrieve backup credentials")
-	flag.StringVar(&vaultToken, "token", "", "Vault token to retrieve backup credentials")
-	flag.StringVar(&vaultPath, "path", "", "Vault secret path containing backup credentials")
-	flag.StringVar(&vaultCaCert, "caCert", "", "Vault root certificate file")
-	flag.StringVar(&vaultAddr, "vault", "", "Vault service address")
+	flags := cmd.Flags()
+	flags.StringVar(&vaultRoleID, "role", "", "Vault role_id to retrieve backup credentials")
+	flags.StringVar(&vaultSecretID, "secret", "", "Vault secret_id to retrieve backup credentials")
+	flags.StringVar(&vaultToken, "token", "", "Vault token to retrieve backup credentials")
+	flags.StringVar(&vaultPath, "path", "", "Vault secret path containing backup credentials")
+	flags.StringVar(&vaultCaCert, "caCert", "", "Vault root certificate file")
+	flags.StringVar(&vaultAddr, "vault", "", "Vault service address")
+	flags.BoolVar(&skipHash, "nocheck", false, "Do not create or verify backup checksums")
 	return cmd
 }
 
@@ -185,8 +188,12 @@ func newClient() (*client.Client, error) {
 	if err != nil {
 		return nil, err
 	}
+	var hash crypto.Hash
+	if !skipHash {
+		hash = crypto.NewHash()
+	}
 	return &client.Client{
-		Hash:   crypto.NewHash(),
+		Hash:   hash,
 		Cipher: cipher,
 		Store:  s3,
 	}, nil

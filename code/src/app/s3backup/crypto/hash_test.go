@@ -46,3 +46,9 @@ func TestVerifyHashOnDifferentFiles(t *testing.T) {
 
 	assert.Error(t, hash.Verify(file2, checksum), "Unexpected match")
 }
+
+func TestVerifyHashBlank(t *testing.T) {
+	hash := NewHash()
+	err := hash.Verify("wibble", "")
+	assert.EqualError(t, err, "checksum error: expected is blank")
+}

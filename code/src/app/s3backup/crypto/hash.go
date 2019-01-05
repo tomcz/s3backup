@@ -35,12 +35,15 @@ func (h *shaHash) Calculate(filePath string) (string, error) {
 }
 
 func (h *shaHash) Verify(filePath, expectedChecksum string) error {
+	if expectedChecksum == "" {
+		return fmt.Errorf("checksum error: expected is blank")
+	}
 	actualChecksum, err := h.Calculate(filePath)
 	if err != nil {
 		return err
 	}
 	if expectedChecksum != actualChecksum {
-		return fmt.Errorf("Checksum mismatch: expected %v, actual %v", expectedChecksum, actualChecksum)
+		return fmt.Errorf("checksum mismatch: expected %v, actual %v", expectedChecksum, actualChecksum)
 	}
 	return nil
 }

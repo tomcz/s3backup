@@ -30,9 +30,11 @@ func (c *Client) GetRemoteFile(remotePath, localPath string) error {
 		return err
 	}
 
-	log.Println("Verifying", tempFile)
-	if err := c.Hash.Verify(tempFile, checksum); err != nil {
-		return err
+	if c.Hash != nil {
+		log.Println("Verifying", tempFile)
+		if err := c.Hash.Verify(tempFile, checksum); err != nil {
+			return err
+		}
 	}
 
 	if c.Cipher != nil {
@@ -53,16 +55,19 @@ func (c *Client) PutLocalFile(remotePath, localPath string) error {
 		defer remove(tempFile)
 
 		log.Println("Encrypting", localPath, "to", tempFile)
-		err := c.Cipher.Encrypt(localPath, tempFile)
-		if err != nil {
+		if err := c.Cipher.Encrypt(localPath, tempFile); err != nil {
 			return err
 		}
 	}
 
-	log.Println("Calculating checksum for", tempFile)
-	checksum, err := c.Hash.Calculate(tempFile)
-	if err != nil {
-		return err
+	var checksum string
+	if c.Hash != nil {
+		log.Println("Calculating checksum for", tempFile)
+		hash, err := c.Hash.Calculate(tempFile)
+		if err != nil {
+			return err
+		}
+		checksum = hash
 	}
 
 	log.Println("Uploading", tempFile, "as", remotePath)

@@ -66,21 +66,24 @@ func (s *s3store) UploadFile(remotePath, localPath, checksum string) error {
 	defer file.Close()
 
 	uploader := s3manager.NewUploaderWithClient(s.client)
-	_, err = uploader.Upload(&s3manager.UploadInput{
+	input := &s3manager.UploadInput{
 		Bucket: aws.String(bucket),
 		Key:    aws.String(objectKey),
 		Body:   file,
-		Metadata: map[string]*string{
+	}
+	if checksum != "" {
+		input.Metadata = map[string]*string{
 			checksumKey: aws.String(checksum),
-		},
-	})
+		}
+	}
+	_, err = uploader.Upload(input)
 	return err
 }
 
-func (s *s3store) DownloadFile(remotePath, localPath string) (string, error) {
+func (s *s3store) DownloadFile(remotePath, localPath string) (checksum string, err error) {
 	bucket, objectKey, err := splitRemotePath(remotePath)
 	if err != nil {
-		return "", err
+		return
 	}
 
 	res, err := s.client.HeadObject(&s3.HeadObjectInput{
@@ -88,17 +91,16 @@ func (s *s3store) DownloadFile(remotePath, localPath string) (string, error) {
 		Key:    aws.String(objectKey),
 	})
 	if err != nil {
-		return "", err
+		return
 	}
-
-	checksum, ok := res.Metadata[checksumKey]
-	if !ok {
-		return "", fmt.Errorf("%v metadata does not contain %v", remotePath, checksumKey)
+	hash, ok := res.Metadata[checksumKey]
+	if ok {
+		checksum = *hash
 	}
 
 	file, err := os.Create(localPath)
 	if err != nil {
-		return "", err
+		return
 	}
 	defer file.Close()
 
@@ -107,8 +109,7 @@ func (s *s3store) DownloadFile(remotePath, localPath string) (string, error) {
 		Bucket: aws.String(bucket),
 		Key:    aws.String(objectKey),
 	})
-
-	return *checksum, err
+	return // checksum, err
 }
 
 func splitRemotePath(remotePath string) (bucket string, objectKey string, err error) {
