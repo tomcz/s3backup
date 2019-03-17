@@ -1,5 +1,6 @@
 *.pem
 *.pub
+.env*
 .DS_Store
 .idea/
 code/bin/
