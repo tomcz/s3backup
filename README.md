@@ -9,10 +9,11 @@ You can download the latest release from [here](https://github.com/tomcz/s3backu
 
 ## Upload process
 
-1. Encrypt file to be backed up (optional but highly recommended). `s3backup` encrypts using
-AES-CTR and can use either a 256-bit Base64-encoded symmetric key, or a PEM-encoded RSA public
-key for encryption. If a public key is provided, `s3backup` will generate a random 256-bit
-symmetric key which will be encrypted using the public key and stored with the encrypted file.
+1. Encrypt file to be backed up (optional but highly recommended). `s3backup` uses AES encryption,
+and can use either a 256-bit Base64-encoded symmetric key, or a PEM-encoded RSA public key. If a
+public key is provided, `s3backup` will generate a random 256-bit symmetric key which will be
+encrypted using the public key and stored with the encrypted file. To make key creation easier,
+you can use the `s3keygen` tool, as outlined [below](#backup-key-generation).
 
 2. Calculate a SHA-256 checksum for the file to be uploaded. For encrypted uploads the checksum
 is calculated on the encrypted file.
@@ -27,7 +28,7 @@ stored checksum of the uploaded file.
 
 2. Verify that the stored checksum matches the downloaded file.
 
-3. Optionally, decrypt the downloaded file using either the same symmetric key that was used
+3. Optionally decrypt the downloaded file using either the same symmetric key that was used
 to encrypt it, or the RSA private key matching the RSA public key that was used for encryption.
 
 ## Usage
@@ -52,11 +53,16 @@ Use "s3backup [command] --help" for more information about a command.
 
 ### AWS S3 Credentials
 
-[Click here](https://docs.aws.amazon.com/sdk-for-go/v1/developer-guide/configuring-sdk.html) for details about using default AWS credentials. Please note that if you choose to use AWS environment variables you **must** specify the `AWS_REGION`.
+[Click here](https://docs.aws.amazon.com/sdk-for-go/v1/developer-guide/configuring-sdk.html) for details
+about using default AWS credentials. Please note that if you choose to use AWS environment variables you
+**must** specify the `AWS_REGION`.
 
 ### HashiCorp Vault
 
-`s3backup` provides `vault-get` and `vault-put` commands that allow it to be configured using secrets held by a [vault](https://www.vaultproject.io/) instance so that you can store encryption keys and AWS credentials in a secure manner. The secrets that you need to hold in vault for `s3backup` are described [here](https://github.com/tomcz/s3backup/blob/master/code/src/app/s3backup/config/config.go).
+`s3backup` provides `vault-get` and `vault-put` commands that allow it to be configured using secrets
+held by a [vault](https://www.vaultproject.io/) instance so that you can store encryption keys and AWS
+credentials in a secure manner. The secrets that you need to hold in vault for `s3backup` are described
+[here](https://github.com/tomcz/s3backup/blob/master/code/src/app/s3backup/config/config.go).
 
 Vault integration in `s3backup` can be configured from the command line and using vault's own
 [environment variables](https://www.vaultproject.io/docs/commands/environment.html).
