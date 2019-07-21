@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"os"
 
 	"app/s3backup/client"
 	"app/s3backup/config"
@@ -72,7 +71,6 @@ func main() {
 	)
 	if err := rootCmd.Execute(); err != nil {
 		log.Fatalln(err)
-		os.Exit(1)
 	}
 }
 
@@ -91,12 +89,12 @@ func basicFlags(cmd *cobra.Command) *cobra.Command {
 
 func vaultFlags(cmd *cobra.Command) *cobra.Command {
 	flags := cmd.Flags()
-	flags.StringVar(&vaultRoleID, "role", "", "Vault role_id to retrieve backup credentials")
-	flags.StringVar(&vaultSecretID, "secret", "", "Vault secret_id to retrieve backup credentials")
-	flags.StringVar(&vaultToken, "token", "", "Vault token to retrieve backup credentials")
-	flags.StringVar(&vaultPath, "path", "", "Vault secret path containing backup credentials")
-	flags.StringVar(&vaultCaCert, "caCert", "", "Vault root certificate file")
-	flags.StringVar(&vaultAddr, "vault", "", "Vault service address")
+	flags.StringVar(&vaultRoleID, "role", "", "Vault role_id to retrieve backup credentials (either role & secret, or token)")
+	flags.StringVar(&vaultSecretID, "secret", "", "Vault secret_id to retrieve backup credentials (either role & secret, or token)")
+	flags.StringVar(&vaultToken, "token", "", "Vault token to retrieve backup credentials (either role & secret, or token)")
+	flags.StringVar(&vaultPath, "path", "", "Vault secret path containing backup credentials (required)")
+	flags.StringVar(&vaultCaCert, "caCert", "", "Vault root certificate file (optional)")
+	flags.StringVar(&vaultAddr, "vault", "", "Vault service address (required)")
 	flags.BoolVar(&skipHash, "nocheck", false, "Do not create or verify backup checksums")
 	return cmd
 }
