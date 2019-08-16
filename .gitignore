@@ -3,7 +3,4 @@
 .env*
 .DS_Store
 .idea/
-code/bin/
-code/pkg/
-code/src/app/vendor/
 target/

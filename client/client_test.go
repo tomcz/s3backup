@@ -5,31 +5,35 @@ import (
 
 	"github.com/tomcz/s3backup/mocks"
 
+	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestGetRemoteFileWithoutDecryption(t *testing.T) {
-	hash := &mocks.Hash{}
-	store := &mocks.Store{}
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	hash := mocks.NewMockHash(ctrl)
+	store := mocks.NewMockStore(ctrl)
 
 	c := &Client{
 		Hash:  hash,
 		Store: store,
 	}
 
-	store.On("DownloadFile", "s3://foo/bar.txt", "bar.txt").Return("muahahaha", nil)
-	hash.On("Verify", "bar.txt", "muahahaha").Return(nil)
+	store.EXPECT().DownloadFile("s3://foo/bar.txt", "bar.txt").Return("muahahaha", nil)
+	hash.EXPECT().Verify("bar.txt", "muahahaha").Return(nil)
 
 	assert.NoError(t, c.GetRemoteFile("s3://foo/bar.txt", "bar.txt"))
-
-	hash.AssertExpectations(t)
-	store.AssertExpectations(t)
 }
 
 func TestGetRemoteFileWithDecryption(t *testing.T) {
-	hash := &mocks.Hash{}
-	store := &mocks.Store{}
-	cipher := &mocks.Cipher{}
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	hash := mocks.NewMockHash(ctrl)
+	store := mocks.NewMockStore(ctrl)
+	cipher := mocks.NewMockCipher(ctrl)
 
 	c := &Client{
 		Hash:   hash,
@@ -37,39 +41,38 @@ func TestGetRemoteFileWithDecryption(t *testing.T) {
 		Cipher: cipher,
 	}
 
-	store.On("DownloadFile", "s3://foo/bar.txt", "bar.txt.tmp").Return("muahahaha", nil)
-	hash.On("Verify", "bar.txt.tmp", "muahahaha").Return(nil)
-	cipher.On("Decrypt", "bar.txt.tmp", "bar.txt").Return(nil)
+	store.EXPECT().DownloadFile("s3://foo/bar.txt", "bar.txt.tmp").Return("muahahaha", nil)
+	hash.EXPECT().Verify("bar.txt.tmp", "muahahaha").Return(nil)
+	cipher.EXPECT().Decrypt("bar.txt.tmp", "bar.txt").Return(nil)
 
 	assert.NoError(t, c.GetRemoteFile("s3://foo/bar.txt", "bar.txt"))
-
-	hash.AssertExpectations(t)
-	store.AssertExpectations(t)
-	cipher.AssertExpectations(t)
 }
 
 func TestPutLocalFileWithoutEncryption(t *testing.T) {
-	hash := &mocks.Hash{}
-	store := &mocks.Store{}
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	hash := mocks.NewMockHash(ctrl)
+	store := mocks.NewMockStore(ctrl)
 
 	c := &Client{
 		Hash:  hash,
 		Store: store,
 	}
 
-	hash.On("Calculate", "bar.txt").Return("woahahaha", nil)
-	store.On("UploadFile", "s3://foo/bar.txt", "bar.txt", "woahahaha").Return(nil)
+	hash.EXPECT().Calculate("bar.txt").Return("woahahaha", nil)
+	store.EXPECT().UploadFile("s3://foo/bar.txt", "bar.txt", "woahahaha").Return(nil)
 
 	assert.NoError(t, c.PutLocalFile("s3://foo/bar.txt", "bar.txt"))
-
-	hash.AssertExpectations(t)
-	store.AssertExpectations(t)
 }
 
 func TestPutLocalFileWithEncryption(t *testing.T) {
-	hash := &mocks.Hash{}
-	store := &mocks.Store{}
-	cipher := &mocks.Cipher{}
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	hash := mocks.NewMockHash(ctrl)
+	store := mocks.NewMockStore(ctrl)
+	cipher := mocks.NewMockCipher(ctrl)
 
 	c := &Client{
 		Hash:   hash,
@@ -77,13 +80,9 @@ func TestPutLocalFileWithEncryption(t *testing.T) {
 		Cipher: cipher,
 	}
 
-	cipher.On("Encrypt", "bar.txt", "bar.txt.tmp").Return(nil)
-	hash.On("Calculate", "bar.txt.tmp").Return("woahahaha", nil)
-	store.On("UploadFile", "s3://foo/bar.txt", "bar.txt.tmp", "woahahaha").Return(nil)
+	cipher.EXPECT().Encrypt("bar.txt", "bar.txt.tmp").Return(nil)
+	hash.EXPECT().Calculate("bar.txt.tmp").Return("woahahaha", nil)
+	store.EXPECT().UploadFile("s3://foo/bar.txt", "bar.txt.tmp", "woahahaha").Return(nil)
 
 	assert.NoError(t, c.PutLocalFile("s3://foo/bar.txt", "bar.txt"))
-
-	hash.AssertExpectations(t)
-	store.AssertExpectations(t)
-	cipher.AssertExpectations(t)
 }
