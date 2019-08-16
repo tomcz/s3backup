@@ -107,7 +107,7 @@ func (c *rsaCipher) Decrypt(cipherTextFile, plainTextFile string) error {
 		return err
 	}
 	if !bytes.Equal(preamble, []byte(asymKeyVersion)) {
-		return fmt.Errorf("File does not start with %v", asymKeyVersion)
+		return fmt.Errorf("file does not start with %v", asymKeyVersion)
 	}
 
 	var encAesKeyLen uint64
@@ -146,7 +146,7 @@ func (c *rsaCipher) Decrypt(cipherTextFile, plainTextFile string) error {
 
 func (c *rsaCipher) decodePublicKey() (*rsa.PublicKey, error) {
 	if c.block.Type != "PUBLIC KEY" {
-		return nil, fmt.Errorf("Bad PEM block: expected PUBLIC KEY, actual %v", c.block.Type)
+		return nil, fmt.Errorf("bad PEM block: expected PUBLIC KEY, actual %v", c.block.Type)
 	}
 	pub, err := x509.ParsePKIXPublicKey(c.block.Bytes)
 	if err != nil {
@@ -161,7 +161,7 @@ func (c *rsaCipher) decodePublicKey() (*rsa.PublicKey, error) {
 
 func (c *rsaCipher) decodePrivateKey() (*rsa.PrivateKey, error) {
 	if c.block.Type != "PRIVATE KEY" {
-		return nil, fmt.Errorf("Bad PEM block: expected PRIVATE KEY, actual %v", c.block.Type)
+		return nil, fmt.Errorf("bad PEM block: expected PRIVATE KEY, actual %v", c.block.Type)
 	}
 	return x509.ParsePKCS1PrivateKey(c.block.Bytes)
 }

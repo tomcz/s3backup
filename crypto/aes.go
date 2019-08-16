@@ -20,7 +20,7 @@ func NewAESCipher(secretKey string) (Cipher, error) {
 		return nil, err
 	}
 	if len(key) != 32 {
-		return nil, fmt.Errorf("Not a 256 bit key: expected 32 bytes, got %v", len(key))
+		return nil, fmt.Errorf("not a 256 bit key: expected 32 bytes, got %v", len(key))
 	}
 	return &aesCipher{key}, nil
 }
@@ -78,7 +78,7 @@ func (c *aesCipher) Decrypt(cipherTextFile, plainTextFile string) error {
 		return err
 	}
 	if !bytes.Equal(preamble, []byte(symKeyVersion)) {
-		return fmt.Errorf("File does not start with %v", symKeyVersion)
+		return fmt.Errorf("file does not start with %v", symKeyVersion)
 	}
 
 	iv := make([]byte, block.BlockSize())

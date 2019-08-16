@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"log"
-	"os"
 
 	"github.com/tomcz/s3backup/crypto"
 	"github.com/tomcz/s3backup/version"
@@ -52,6 +51,5 @@ func main() {
 
 	if err := rootCmd.Execute(); err != nil {
 		log.Fatalln(err)
-		os.Exit(1)
 	}
 }
