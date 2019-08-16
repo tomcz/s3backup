@@ -3,7 +3,7 @@ LDFLAGS := -X github.com/tomcz/s3backup/version.commit=${GITCOMMIT}
 
 precommit: clean format test build
 
-travis: clean deps test build
+travis: clean test build
 
 clean:
 	rm -rf target
