@@ -3,7 +3,7 @@ package client
 import (
 	"testing"
 
-	"app/s3backup/mocks"
+	"github.com/tomcz/s3backup/mocks"
 
 	"github.com/stretchr/testify/assert"
 )

@@ -4,8 +4,8 @@ import (
 	"log"
 	"os"
 
-	"app/s3backup/crypto"
-	"app/s3backup/store"
+	"github.com/tomcz/s3backup/crypto"
+	"github.com/tomcz/s3backup/store"
 )
 
 const tempFileSuffix = ".tmp"

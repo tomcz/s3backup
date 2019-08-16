@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"log"
 
-	"app/s3backup/client"
-	"app/s3backup/config"
-	"app/s3backup/crypto"
-	"app/s3backup/store"
-	"app/s3backup/version"
+	"github.com/tomcz/s3backup/client"
+	"github.com/tomcz/s3backup/config"
+	"github.com/tomcz/s3backup/crypto"
+	"github.com/tomcz/s3backup/store"
+	"github.com/tomcz/s3backup/version"
 
 	"github.com/spf13/cobra"
 )

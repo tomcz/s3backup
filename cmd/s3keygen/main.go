@@ -5,8 +5,8 @@ import (
 	"log"
 	"os"
 
-	"app/s3backup/crypto"
-	"app/s3backup/version"
+	"github.com/tomcz/s3backup/crypto"
+	"github.com/tomcz/s3backup/version"
 
 	"github.com/spf13/cobra"
 )
