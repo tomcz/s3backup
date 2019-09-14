@@ -10,18 +10,18 @@ import (
 )
 
 func TestRoundTripRSAEncryptDecrypt(t *testing.T) {
-	expected, err := random(1024)
+	expected, err := Random(1024)
 	require.NoError(t, err, "Cannot create file contents")
 
-	file, err := createTempFile("rsa", expected)
+	file, err := CreateTempFile("rsa", expected)
 	require.NoError(t, err, "Cannot create file to encrypt")
 	defer os.Remove(file)
 
-	privFile, err := createTempFile("privkey", []byte{})
+	privFile, err := CreateTempFile("privkey", []byte{})
 	require.NoError(t, err, "Cannot create private key file")
 	defer os.Remove(privFile)
 
-	pubFile, err := createTempFile("pubkey", []byte{})
+	pubFile, err := CreateTempFile("pubkey", []byte{})
 	require.NoError(t, err, "Cannot create public key file")
 	defer os.Remove(pubFile)
 

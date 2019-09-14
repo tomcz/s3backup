@@ -9,10 +9,10 @@ import (
 )
 
 func TestVerifyHashOnSameFile(t *testing.T) {
-	buf, err := random(1024)
+	buf, err := Random(1024)
 	require.NoError(t, err, "Cannot create file contents")
 
-	file, err := createTempFile("hash", buf)
+	file, err := CreateTempFile("hash", buf)
 	require.NoError(t, err, "Cannot create file to hash")
 	defer os.Remove(file)
 
@@ -25,17 +25,17 @@ func TestVerifyHashOnSameFile(t *testing.T) {
 }
 
 func TestVerifyHashOnDifferentFiles(t *testing.T) {
-	buf1, err := random(1024)
+	buf1, err := Random(1024)
 	require.NoError(t, err, "Cannot create file contents")
 
-	file1, err := createTempFile("hash", buf1)
+	file1, err := CreateTempFile("hash", buf1)
 	require.NoError(t, err, "Cannot create file to hash")
 	defer os.Remove(file1)
 
-	buf2, err := random(1024)
+	buf2, err := Random(1024)
 	require.NoError(t, err, "Cannot create file contents")
 
-	file2, err := createTempFile("hash", buf2)
+	file2, err := CreateTempFile("hash", buf2)
 	require.NoError(t, err, "Cannot create file to hash")
 	defer os.Remove(file2)
 

@@ -54,7 +54,7 @@ func (c *rsaCipher) Encrypt(plainTextFile, cipherTextFile string) error {
 		return err
 	}
 
-	iv, err := random(block.BlockSize())
+	iv, err := Random(block.BlockSize())
 	if err != nil {
 		return err
 	}

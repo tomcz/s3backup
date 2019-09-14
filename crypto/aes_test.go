@@ -10,10 +10,10 @@ import (
 )
 
 func TestRoundTripAESEncryptDecrypt(t *testing.T) {
-	expected, err := random(1024)
+	expected, err := Random(1024)
 	require.NoError(t, err, "Cannot create file contents")
 
-	file, err := createTempFile("aes", expected)
+	file, err := CreateTempFile("aes", expected)
 	require.NoError(t, err, "Cannot create file to encrypt")
 	defer os.Remove(file)
 

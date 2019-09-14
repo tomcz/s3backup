@@ -11,7 +11,7 @@ import (
 )
 
 func GenerateAESKey() ([]byte, error) {
-	return random(32) // 256 bits
+	return Random(32) // 256 bits
 }
 
 func GenerateAESKeyString() (string, error) {

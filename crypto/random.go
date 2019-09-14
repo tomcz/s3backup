@@ -5,7 +5,7 @@ import (
 	"io/ioutil"
 )
 
-func random(length int) ([]byte, error) {
+func Random(length int) ([]byte, error) {
 	buf := make([]byte, length)
 	if _, err := rand.Read(buf); err != nil {
 		return nil, err
@@ -13,7 +13,7 @@ func random(length int) ([]byte, error) {
 	return buf, nil
 }
 
-func createTempFile(prefix string, body []byte) (string, error) {
+func CreateTempFile(prefix string, body []byte) (string, error) {
 	file, err := ioutil.TempFile("", prefix)
 	if err != nil {
 		return "", err
