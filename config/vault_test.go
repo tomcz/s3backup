@@ -85,7 +85,7 @@ func testHandler() http.Handler {
 	return r
 }
 
-func TestLookupWithAppRole_HTTP(t *testing.T) {
+func TestLookupWithAppRole(t *testing.T) {
 	ts := httptest.NewServer(testHandler())
 	defer ts.Close()
 
@@ -100,33 +100,16 @@ func TestLookupWithAppRole_HTTP(t *testing.T) {
 	assert.Equal(t, "https://spaces.test", cfg.S3Endpoint)
 }
 
-func TestLookupWithAppRole_HTTPS(t *testing.T) {
+func TestLookupWithToken(t *testing.T) {
 	ts := httptest.NewTLSServer(testHandler())
 	defer ts.Close()
 
-	encoded := pem.EncodeToMemory(&pem.Block{
-		Type:  "CERTIFICATE",
-		Bytes: ts.Certificate().Raw,
-	})
+	cert := ts.Certificate()
+	encoded := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: cert.Raw})
 	certFile, err := crypto.CreateTempFile("vault", encoded)
 	require.NoError(t, err)
 
-	cfg, err := LookupWithAppRole(ts.URL, certFile, "test-role", "test-secret", "secret/myteam/backup")
-	require.NoError(t, err)
-
-	assert.Equal(t, "use me to encrypt", cfg.CipherKey)
-	assert.Equal(t, "aws access", cfg.S3AccessKey)
-	assert.Equal(t, "aws secret", cfg.S3SecretKey)
-	assert.Equal(t, "aws token", cfg.S3Token)
-	assert.Equal(t, "us-east-1", cfg.S3Region)
-	assert.Equal(t, "https://spaces.test", cfg.S3Endpoint)
-}
-
-func TestLookupWithToken(t *testing.T) {
-	ts := httptest.NewServer(testHandler())
-	defer ts.Close()
-
-	cfg, err := LookupWithToken(ts.URL, "", "5b1a0318-679c-9c45-e5c6-d1b9a9035d49", "secret/myteam/backup")
+	cfg, err := LookupWithToken(ts.URL, certFile, "5b1a0318-679c-9c45-e5c6-d1b9a9035d49", "secret/myteam/backup")
 	require.NoError(t, err)
 
 	assert.Equal(t, "use me to encrypt", cfg.CipherKey)
