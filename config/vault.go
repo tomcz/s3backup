@@ -5,16 +5,34 @@ import (
 	"github.com/mitchellh/mapstructure"
 )
 
-type Vault interface {
-	LookupWithAppRole(roleID, secretID, path string) (*Config, error)
-	LookupWithToken(token, path string) (*Config, error)
+func LookupWithAppRole(vaultAddr, caCertFile, roleID, secretID, path string) (*Config, error) {
+	client, err := newClient(vaultAddr, caCertFile)
+	if err != nil {
+		return nil, err
+	}
+	body := map[string]interface{}{
+		"role_id":   roleID,
+		"secret_id": secretID,
+	}
+	secret, err := client.Logical().Write("auth/approle/login", body)
+	if err != nil {
+		return nil, err
+	}
+	client.SetToken(secret.Auth.ClientToken)
+	defer logout(client, secret.Auth.Renewable)
+	return lookup(client, path)
 }
 
-type vault struct {
-	client *api.Client
+func LookupWithToken(vaultAddr, caCertFile, token, path string) (*Config, error) {
+	client, err := newClient(vaultAddr, caCertFile)
+	if err != nil {
+		return nil, err
+	}
+	client.SetToken(token)
+	return lookup(client, path)
 }
 
-func NewVault(vaultAddr, caCertFile string) (Vault, error) {
+func newClient(vaultAddr, caCertFile string) (*api.Client, error) {
 	cfg := api.DefaultConfig()
 	if err := cfg.ReadEnvironment(); err != nil {
 		return nil, err
@@ -28,30 +46,11 @@ func NewVault(vaultAddr, caCertFile string) (Vault, error) {
 			return nil, err
 		}
 	}
-	client, err := api.NewClient(cfg)
-	if err != nil {
-		return nil, err
-	}
-	return &vault{client}, nil
+	return api.NewClient(cfg)
 }
 
-func (v *vault) LookupWithAppRole(roleID, secretID, path string) (*Config, error) {
-	body := map[string]interface{}{
-		"role_id":   roleID,
-		"secret_id": secretID,
-	}
-	secret, err := v.client.Logical().Write("auth/approle/login", body)
-	if err != nil {
-		return nil, err
-	}
-	return v.LookupWithToken(secret.Auth.ClientToken, path)
-}
-
-func (v *vault) LookupWithToken(token, path string) (*Config, error) {
-	if token != "" {
-		v.client.SetToken(token)
-	}
-	secret, err := v.client.Logical().Read(path)
+func lookup(client *api.Client, path string) (*Config, error) {
+	secret, err := client.Logical().Read(path)
 	if err != nil {
 		return nil, err
 	}
@@ -60,4 +59,10 @@ func (v *vault) LookupWithToken(token, path string) (*Config, error) {
 		return nil, err
 	}
 	return &cfg, nil
+}
+
+func logout(client *api.Client, shouldLogout bool) {
+	if shouldLogout {
+		client.Auth().Token().RevokeSelf("")
+	}
 }

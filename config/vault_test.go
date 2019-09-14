@@ -1,12 +1,17 @@
+// +build integration
+
 package config
 
 import (
+	"encoding/json"
+	"encoding/pem"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
-	"encoding/json"
+	"github.com/tomcz/s3backup/crypto"
+
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -80,14 +85,48 @@ func testHandler() http.Handler {
 	return r
 }
 
-func TestVaultLookup(t *testing.T) {
+func TestLookupWithAppRole_HTTP(t *testing.T) {
 	ts := httptest.NewServer(testHandler())
 	defer ts.Close()
 
-	v, err := NewVault(ts.URL, "")
+	cfg, err := LookupWithAppRole(ts.URL, "", "test-role", "test-secret", "secret/myteam/backup")
 	require.NoError(t, err)
 
-	cfg, err := v.LookupWithAppRole("test-role", "test-secret", "secret/myteam/backup")
+	assert.Equal(t, "use me to encrypt", cfg.CipherKey)
+	assert.Equal(t, "aws access", cfg.S3AccessKey)
+	assert.Equal(t, "aws secret", cfg.S3SecretKey)
+	assert.Equal(t, "aws token", cfg.S3Token)
+	assert.Equal(t, "us-east-1", cfg.S3Region)
+	assert.Equal(t, "https://spaces.test", cfg.S3Endpoint)
+}
+
+func TestLookupWithAppRole_HTTPS(t *testing.T) {
+	ts := httptest.NewTLSServer(testHandler())
+	defer ts.Close()
+
+	encoded := pem.EncodeToMemory(&pem.Block{
+		Type:  "CERTIFICATE",
+		Bytes: ts.Certificate().Raw,
+	})
+	certFile, err := crypto.CreateTempFile("vault", encoded)
+	require.NoError(t, err)
+
+	cfg, err := LookupWithAppRole(ts.URL, certFile, "test-role", "test-secret", "secret/myteam/backup")
+	require.NoError(t, err)
+
+	assert.Equal(t, "use me to encrypt", cfg.CipherKey)
+	assert.Equal(t, "aws access", cfg.S3AccessKey)
+	assert.Equal(t, "aws secret", cfg.S3SecretKey)
+	assert.Equal(t, "aws token", cfg.S3Token)
+	assert.Equal(t, "us-east-1", cfg.S3Region)
+	assert.Equal(t, "https://spaces.test", cfg.S3Endpoint)
+}
+
+func TestLookupWithToken(t *testing.T) {
+	ts := httptest.NewServer(testHandler())
+	defer ts.Close()
+
+	cfg, err := LookupWithToken(ts.URL, "", "5b1a0318-679c-9c45-e5c6-d1b9a9035d49", "secret/myteam/backup")
 	require.NoError(t, err)
 
 	assert.Equal(t, "use me to encrypt", cfg.CipherKey)

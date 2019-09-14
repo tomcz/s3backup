@@ -137,19 +137,17 @@ func initWithVault() error {
 	log.Println("Fetching configuration from vault")
 
 	if vaultPath == "" {
-		return errors.New("no vault secret path provided")
+		return errors.New("vault secret path not provided")
 	}
 
-	vault, err := config.NewVault(vaultAddr, vaultCaCert)
-	if err != nil {
-		return err
-	}
-
+	var err error
 	var cfg *config.Config
-	if vaultRoleID != "" && vaultSecretID != "" {
-		cfg, err = vault.LookupWithAppRole(vaultRoleID, vaultSecretID, vaultPath)
+	if vaultToken != "" {
+		cfg, err = config.LookupWithToken(vaultAddr, vaultCaCert, vaultToken, vaultPath)
+	} else if vaultRoleID != "" && vaultSecretID != "" {
+		cfg, err = config.LookupWithAppRole(vaultAddr, vaultCaCert, vaultRoleID, vaultSecretID, vaultPath)
 	} else {
-		cfg, err = vault.LookupWithToken(vaultToken, vaultPath)
+		err = errors.New("vault credentials not provided")
 	}
 	if err != nil {
 		return err
