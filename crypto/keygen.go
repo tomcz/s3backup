@@ -23,7 +23,7 @@ func GenerateAESKeyString() (string, error) {
 }
 
 func GenerateRSAKeyPair(privKeyFile, pubKeyFile string) error {
-	privKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	privKey, err := rsa.GenerateKey(rand.Reader, 4096)
 	if err != nil {
 		return err
 	}
