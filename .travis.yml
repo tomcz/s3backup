@@ -2,7 +2,7 @@ language: go
 go:
   - 1.12.x
 script:
-  - env GO111MODULE=on make travis
+  - make travis
 deploy:
   provider: releases
   api_key:
