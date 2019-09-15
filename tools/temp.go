@@ -1,17 +1,6 @@
-package crypto
+package tools
 
-import (
-	"crypto/rand"
-	"io/ioutil"
-)
-
-func Random(length int) ([]byte, error) {
-	buf := make([]byte, length)
-	if _, err := rand.Read(buf); err != nil {
-		return nil, err
-	}
-	return buf, nil
-}
+import "io/ioutil"
 
 func CreateTempFile(prefix string, body []byte) (string, error) {
 	file, err := ioutil.TempFile("", prefix)
@@ -24,6 +13,5 @@ func CreateTempFile(prefix string, body []byte) (string, error) {
 	if err != nil {
 		return "", err
 	}
-
 	return file.Name(), nil
 }

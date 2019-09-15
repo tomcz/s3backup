@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"io"
 	"os"
+
+	"github.com/tomcz/s3backup/tools"
 )
 
 type aesCipher struct {
@@ -31,7 +33,7 @@ func (c *aesCipher) Encrypt(plainTextFile, cipherTextFile string) error {
 		return err
 	}
 
-	iv, err := Random(block.BlockSize())
+	iv, err := tools.Random(block.BlockSize())
 	if err != nil {
 		return err
 	}

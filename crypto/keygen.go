@@ -8,10 +8,12 @@ import (
 	"encoding/pem"
 	"log"
 	"os"
+
+	"github.com/tomcz/s3backup/tools"
 )
 
 func GenerateAESKey() ([]byte, error) {
-	return Random(32) // 256 bits
+	return tools.Random(32) // 256 bits
 }
 
 func GenerateAESKeyString() (string, error) {

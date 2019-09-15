@@ -10,7 +10,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/tomcz/s3backup/crypto"
+	"github.com/tomcz/s3backup/tools"
 
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
@@ -106,7 +106,7 @@ func TestLookupWithToken(t *testing.T) {
 
 	cert := ts.Certificate()
 	encoded := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: cert.Raw})
-	certFile, err := crypto.CreateTempFile("vault", encoded)
+	certFile, err := tools.CreateTempFile("vault", encoded)
 	require.NoError(t, err)
 
 	cfg, err := LookupWithToken(ts.URL, certFile, "5b1a0318-679c-9c45-e5c6-d1b9a9035d49", "secret/myteam/backup")

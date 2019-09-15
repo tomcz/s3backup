@@ -5,23 +5,25 @@ import (
 	"os"
 	"testing"
 
+	"github.com/tomcz/s3backup/tools"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestRoundTripRSAEncryptDecrypt(t *testing.T) {
-	expected, err := Random(1024)
+	expected, err := tools.Random(1024)
 	require.NoError(t, err, "Cannot create file contents")
 
-	file, err := CreateTempFile("rsa", expected)
+	file, err := tools.CreateTempFile("rsa", expected)
 	require.NoError(t, err, "Cannot create file to encrypt")
 	defer os.Remove(file)
 
-	privFile, err := CreateTempFile("privkey", []byte{})
+	privFile, err := tools.CreateTempFile("privkey", []byte{})
 	require.NoError(t, err, "Cannot create private key file")
 	defer os.Remove(privFile)
 
-	pubFile, err := CreateTempFile("pubkey", []byte{})
+	pubFile, err := tools.CreateTempFile("pubkey", []byte{})
 	require.NoError(t, err, "Cannot create public key file")
 	defer os.Remove(pubFile)
 

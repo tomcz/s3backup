@@ -8,7 +8,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/tomcz/s3backup/crypto"
+	"github.com/tomcz/s3backup/tools"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
@@ -41,10 +41,10 @@ func TestRoundTripUploadDownload(t *testing.T) {
 	ts := httptest.NewServer(faker.Server())
 	defer ts.Close()
 
-	expected, err := crypto.Random(4096)
+	expected, err := tools.Random(4096)
 	require.NoError(t, err, "Cannot create file contents")
 
-	uploadFile, err := crypto.CreateTempFile("upload", expected)
+	uploadFile, err := tools.CreateTempFile("upload", expected)
 	require.NoError(t, err, "Cannot create file to upload")
 	defer os.Remove(uploadFile)
 

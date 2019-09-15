@@ -15,6 +15,8 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+
+	"github.com/tomcz/s3backup/tools"
 )
 
 type rsaCipher struct {
@@ -54,7 +56,7 @@ func (c *rsaCipher) Encrypt(plainTextFile, cipherTextFile string) error {
 		return err
 	}
 
-	iv, err := Random(block.BlockSize())
+	iv, err := tools.Random(block.BlockSize())
 	if err != nil {
 		return err
 	}
