@@ -53,9 +53,9 @@ Use "s3backup [command] --help" for more information about a command.
 
 ### AWS S3 Credentials
 
-[Click here](https://docs.aws.amazon.com/sdk-for-go/v1/developer-guide/configuring-sdk.html) for details
-about using default AWS credentials. Please note that if you choose to use AWS environment variables you
-**must** specify the `AWS_REGION`.
+AWS S3 integration in `s3backup` can be configured from the command line, and using AWS' environment
+variables and config files. [Click here](https://docs.aws.amazon.com/sdk-for-go/v1/developer-guide/configuring-sdk.html)
+for details on using default AWS credentials.
 
 ### HashiCorp Vault
 
@@ -64,7 +64,7 @@ held by a [vault](https://www.vaultproject.io/) instance so that you can store e
 credentials in a secure manner. The secrets that you need to hold in vault for `s3backup` are described
 [here](https://github.com/tomcz/s3backup/blob/master/config/config.go).
 
-Vault integration in `s3backup` can be configured from the command line and using vault's own
+Vault integration in `s3backup` can be configured from the command line, and using vault's own
 [environment variables](https://www.vaultproject.io/docs/commands/environment.html).
 
 ## Backup key generation

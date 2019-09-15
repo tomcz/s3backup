@@ -2,7 +2,6 @@ package store
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"regexp"
 
@@ -22,35 +21,32 @@ type s3store struct {
 }
 
 func NewS3(awsAccessKey, awsSecretKey, awsToken, awsRegion, awsEndpoint string) (Store, error) {
-	var sess *session.Session
-	var err error
-
-	if awsAccessKey == "" {
-		log.Println("Using AWS credentials from default credential chain")
-		sess, err = session.NewSession()
-	} else {
-		log.Println("Using AWS credentials from command line arguments")
-		var endpoint *string
-		var forcePathStyle *bool
-		if awsEndpoint != "" {
-			endpoint = aws.String(awsEndpoint)
-			forcePathStyle = aws.Bool(true)
-		}
-		sess, err = session.NewSession(&aws.Config{
+	var cfg []*aws.Config
+	if awsAccessKey != "" && awsSecretKey != "" {
+		cfg = append(cfg, &aws.Config{
 			Credentials: credentials.NewStaticCredentials(
 				awsAccessKey,
 				awsSecretKey,
 				awsToken,
 			),
-			Region:           aws.String(awsRegion),
-			S3ForcePathStyle: forcePathStyle,
-			Endpoint:         endpoint,
 		})
 	}
+	if awsRegion != "" {
+		cfg = append(cfg, &aws.Config{
+			Region: aws.String(awsRegion),
+		})
+	}
+	if awsEndpoint != "" {
+		cfg = append(cfg, &aws.Config{
+			Endpoint:         aws.String(awsEndpoint),
+			S3ForcePathStyle: aws.Bool(true), // gofakes3 and DigitalOcean's Spaces need this
+		})
+	}
+	awsSession, err := session.NewSession(cfg...)
 	if err != nil {
 		return nil, err
 	}
-	return &s3store{s3.New(sess)}, nil
+	return &s3store{s3.New(awsSession)}, nil
 }
 
 func (s *s3store) UploadFile(remotePath, localPath, checksum string) error {

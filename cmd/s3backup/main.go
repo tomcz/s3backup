@@ -76,13 +76,14 @@ func main() {
 
 func basicFlags(cmd *cobra.Command) *cobra.Command {
 	flags := cmd.Flags()
-	flags.StringVar(&symKey, "symKey", "", "Base64-encoded 256-bit symmetric key (optional)")
+	flags.StringVar(&symKey, "symKey", "", "Base64-encoded 256-bit symmetric AES key (optional)")
 	flags.StringVar(&pemKeyFile, "pemKey", "", "Path to PEM-encoded public or private key file (optional)")
 	flags.StringVar(&awsAccessKey, "accessKey", "", "AWS Access Key ID (if not using default AWS credentials)")
 	flags.StringVar(&awsSecretKey, "secretKey", "", "AWS Secret Key (required when accessKey is provided)")
 	flags.StringVar(&awsToken, "token", "", "AWS Token (effective only when accessKey is provided, depends on your AWS setup)")
-	flags.StringVar(&awsRegion, "region", "us-east-1", "AWS Region (effective only when accessKey is provided)")
-	flags.StringVar(&awsEndpoint, "endpoint", "", "Custom AWS Endpoint (effective only when accessKey is provided)")
+	// have seen too many failures when AWS region was not set, so we set it to a somewhat sensible default
+	flags.StringVar(&awsRegion, "region", "us-east-1", "AWS Region, override when necessary")
+	flags.StringVar(&awsEndpoint, "endpoint", "", "Custom AWS Endpoint (optional)")
 	flags.BoolVar(&skipHash, "nocheck", false, "Do not create or verify backup checksums")
 	return cmd
 }
