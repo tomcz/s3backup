@@ -90,5 +90,5 @@ Use "s3keygen [command] --help" for more information about a command.
 
 ## Build
 
-1. Install Go 1.12 from https://golang.org/
+1. Install Go 1.13 from https://golang.org/
 2. Build the binaries: `make build`
