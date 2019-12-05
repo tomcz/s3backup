@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/tomcz/s3backup/crypto"
-	"github.com/tomcz/s3backup/version"
-
 	"github.com/spf13/cobra"
+
+	"github.com/tomcz/s3backup/client/crypto"
+	"github.com/tomcz/s3backup/config"
 )
 
 func main() {
@@ -15,7 +15,7 @@ func main() {
 		Use:   "version",
 		Short: "Print version",
 		Run: func(_ *cobra.Command, _ []string) {
-			fmt.Println(version.Commit())
+			fmt.Println(config.Commit())
 		},
 	}
 

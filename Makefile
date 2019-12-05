@@ -1,5 +1,5 @@
 GITCOMMIT := $(shell git rev-parse --short HEAD 2>/dev/null)
-LDFLAGS := -X github.com/tomcz/s3backup/version.commit=${GITCOMMIT}
+LDFLAGS := -X github.com/tomcz/s3backup/config.commit=${GITCOMMIT}
 
 precommit: clean format test build
 

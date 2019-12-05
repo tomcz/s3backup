@@ -6,16 +6,13 @@ import (
 	"fmt"
 	"io"
 	"os"
-)
 
-type Hash interface {
-	Calculate(filePath string) (string, error)
-	Verify(filePath, expectedChecksum string) error
-}
+	"github.com/tomcz/s3backup/client"
+)
 
 type shaHash struct{}
 
-func NewHash() Hash {
+func NewHash() client.Hash {
 	return &shaHash{}
 }
 

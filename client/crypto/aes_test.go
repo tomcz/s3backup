@@ -5,17 +5,17 @@ import (
 	"os"
 	"testing"
 
-	"github.com/tomcz/s3backup/tools"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/tomcz/s3backup/utils"
 )
 
 func TestRoundTripAESEncryptDecrypt(t *testing.T) {
-	expected, err := tools.Random(1024)
+	expected, err := utils.Random(1024)
 	require.NoError(t, err, "Cannot create file contents")
 
-	file, err := tools.CreateTempFile("aes", expected)
+	file, err := utils.CreateTempFile("aes", expected)
 	require.NoError(t, err, "Cannot create file to encrypt")
 	defer os.Remove(file)
 

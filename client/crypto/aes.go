@@ -9,14 +9,17 @@ import (
 	"io"
 	"os"
 
-	"github.com/tomcz/s3backup/tools"
+	"github.com/tomcz/s3backup/client"
+	"github.com/tomcz/s3backup/utils"
 )
+
+const symKeyVersion = "BSKv1"
 
 type aesCipher struct {
 	key []byte
 }
 
-func NewAESCipher(secretKey string) (Cipher, error) {
+func NewAESCipher(secretKey string) (client.Cipher, error) {
 	key, err := base64.StdEncoding.DecodeString(secretKey)
 	if err != nil {
 		return nil, err
@@ -33,7 +36,7 @@ func (c *aesCipher) Encrypt(plainTextFile, cipherTextFile string) error {
 		return err
 	}
 
-	iv, err := tools.Random(block.BlockSize())
+	iv, err := utils.Random(block.BlockSize())
 	if err != nil {
 		return err
 	}

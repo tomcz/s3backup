@@ -4,17 +4,17 @@ import (
 	"os"
 	"testing"
 
-	"github.com/tomcz/s3backup/tools"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/tomcz/s3backup/utils"
 )
 
 func TestVerifyHashOnSameFile(t *testing.T) {
-	buf, err := tools.Random(1024)
+	buf, err := utils.Random(1024)
 	require.NoError(t, err, "Cannot create file contents")
 
-	file, err := tools.CreateTempFile("hash", buf)
+	file, err := utils.CreateTempFile("hash", buf)
 	require.NoError(t, err, "Cannot create file to hash")
 	defer os.Remove(file)
 
@@ -27,17 +27,17 @@ func TestVerifyHashOnSameFile(t *testing.T) {
 }
 
 func TestVerifyHashOnDifferentFiles(t *testing.T) {
-	buf1, err := tools.Random(1024)
+	buf1, err := utils.Random(1024)
 	require.NoError(t, err, "Cannot create file contents")
 
-	file1, err := tools.CreateTempFile("hash", buf1)
+	file1, err := utils.CreateTempFile("hash", buf1)
 	require.NoError(t, err, "Cannot create file to hash")
 	defer os.Remove(file1)
 
-	buf2, err := tools.Random(1024)
+	buf2, err := utils.Random(1024)
 	require.NoError(t, err, "Cannot create file contents")
 
-	file2, err := tools.CreateTempFile("hash", buf2)
+	file2, err := utils.CreateTempFile("hash", buf2)
 	require.NoError(t, err, "Cannot create file to hash")
 	defer os.Remove(file2)
 

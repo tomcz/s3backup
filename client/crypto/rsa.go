@@ -16,14 +16,17 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com/tomcz/s3backup/tools"
+	"github.com/tomcz/s3backup/client"
+	"github.com/tomcz/s3backup/utils"
 )
+
+const asymKeyVersion = "BAKv1"
 
 type rsaCipher struct {
 	block *pem.Block
 }
 
-func NewRSACipher(pemKeyFile string) (Cipher, error) {
+func NewRSACipher(pemKeyFile string) (client.Cipher, error) {
 	buf, err := ioutil.ReadFile(pemKeyFile)
 	if err != nil {
 		return nil, err
@@ -56,7 +59,7 @@ func (c *rsaCipher) Encrypt(plainTextFile, cipherTextFile string) error {
 		return err
 	}
 
-	iv, err := tools.Random(block.BlockSize())
+	iv, err := utils.Random(block.BlockSize())
 	if err != nil {
 		return err
 	}

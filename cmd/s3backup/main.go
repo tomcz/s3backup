@@ -5,13 +5,12 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/tomcz/s3backup/client"
-	"github.com/tomcz/s3backup/config"
-	"github.com/tomcz/s3backup/crypto"
-	"github.com/tomcz/s3backup/store"
-	"github.com/tomcz/s3backup/version"
-
 	"github.com/spf13/cobra"
+
+	"github.com/tomcz/s3backup/client"
+	"github.com/tomcz/s3backup/client/crypto"
+	"github.com/tomcz/s3backup/client/store"
+	"github.com/tomcz/s3backup/config"
 )
 
 var (
@@ -101,7 +100,7 @@ func vaultFlags(cmd *cobra.Command) *cobra.Command {
 }
 
 func printVersion(_ *cobra.Command, _ []string) {
-	fmt.Println(version.Commit())
+	fmt.Println(config.Commit())
 }
 
 func basicPut(_ *cobra.Command, args []string) error {
@@ -175,7 +174,7 @@ func newClient() (*client.Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	var cipher crypto.Cipher
+	var cipher client.Cipher
 	if symKey != "" {
 		cipher, err = crypto.NewAESCipher(symKey)
 	}
@@ -185,7 +184,7 @@ func newClient() (*client.Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	var hash crypto.Hash
+	var hash client.Hash
 	if !skipHash {
 		hash = crypto.NewHash()
 	}

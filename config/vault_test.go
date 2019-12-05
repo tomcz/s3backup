@@ -10,11 +10,11 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/tomcz/s3backup/tools"
-
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/tomcz/s3backup/utils"
 )
 
 const loginJSON = `{
@@ -106,7 +106,7 @@ func TestLookupWithToken(t *testing.T) {
 
 	cert := ts.Certificate()
 	encoded := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: cert.Raw})
-	certFile, err := tools.CreateTempFile("vault", encoded)
+	certFile, err := utils.CreateTempFile("vault", encoded)
 	require.NoError(t, err)
 
 	cfg, err := LookupWithToken(ts.URL, certFile, "5b1a0318-679c-9c45-e5c6-d1b9a9035d49", "secret/myteam/backup")

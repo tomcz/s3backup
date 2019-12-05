@@ -3,7 +3,7 @@ package client
 import (
 	"testing"
 
-	"github.com/tomcz/s3backup/mocks"
+	"github.com/tomcz/s3backup/client/mocks"
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"

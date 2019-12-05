@@ -1,7 +1,4 @@
-package crypto
-
-const asymKeyVersion = "BAKv1"
-const symKeyVersion = "BSKv1"
+package client
 
 type Cipher interface {
 	Encrypt(plainTextFile, cipherTextFile string) error

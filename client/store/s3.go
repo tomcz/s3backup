@@ -10,6 +10,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+
+	"github.com/tomcz/s3backup/client"
 )
 
 const checksumKey = "S3-Backup-Checksum"
@@ -17,10 +19,10 @@ const checksumKey = "S3-Backup-Checksum"
 var s3PathPattern = regexp.MustCompile(`^s3://([^/]+)/(.+)$`)
 
 type s3store struct {
-	client *s3.S3
+	api *s3.S3
 }
 
-func NewS3(awsAccessKey, awsSecretKey, awsToken, awsRegion, awsEndpoint string) (Store, error) {
+func NewS3(awsAccessKey, awsSecretKey, awsToken, awsRegion, awsEndpoint string) (client.Store, error) {
 	var cfg []*aws.Config
 	if awsAccessKey != "" && awsSecretKey != "" {
 		cfg = append(cfg, &aws.Config{
@@ -61,7 +63,7 @@ func (s *s3store) UploadFile(remotePath, localPath, checksum string) error {
 	}
 	defer file.Close()
 
-	uploader := s3manager.NewUploaderWithClient(s.client)
+	uploader := s3manager.NewUploaderWithClient(s.api)
 	input := &s3manager.UploadInput{
 		Bucket: aws.String(bucket),
 		Key:    aws.String(objectKey),
@@ -82,7 +84,7 @@ func (s *s3store) DownloadFile(remotePath, localPath string) (checksum string, e
 		return
 	}
 
-	res, err := s.client.HeadObject(&s3.HeadObjectInput{
+	res, err := s.api.HeadObject(&s3.HeadObjectInput{
 		Bucket: aws.String(bucket),
 		Key:    aws.String(objectKey),
 	})
@@ -100,7 +102,7 @@ func (s *s3store) DownloadFile(remotePath, localPath string) (checksum string, e
 	}
 	defer file.Close()
 
-	downloader := s3manager.NewDownloaderWithClient(s.client)
+	downloader := s3manager.NewDownloaderWithClient(s.api)
 	_, err = downloader.Download(file, &s3.GetObjectInput{
 		Bucket: aws.String(bucket),
 		Key:    aws.String(objectKey),

@@ -9,11 +9,11 @@ import (
 	"log"
 	"os"
 
-	"github.com/tomcz/s3backup/tools"
+	"github.com/tomcz/s3backup/utils"
 )
 
 func GenerateAESKey() ([]byte, error) {
-	return tools.Random(32) // 256 bits
+	return utils.Random(32) // 256 bits
 }
 
 func GenerateAESKeyString() (string, error) {

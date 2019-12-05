@@ -3,17 +3,14 @@ package client
 import (
 	"log"
 	"os"
-
-	"github.com/tomcz/s3backup/crypto"
-	"github.com/tomcz/s3backup/store"
 )
 
 const tempFileSuffix = ".tmp"
 
 type Client struct {
-	Hash   crypto.Hash
-	Cipher crypto.Cipher
-	Store  store.Store
+	Hash   Hash
+	Cipher Cipher
+	Store  Store
 }
 
 func (c *Client) GetRemoteFile(remotePath, localPath string) error {
