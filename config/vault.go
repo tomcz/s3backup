@@ -54,11 +54,11 @@ func lookup(client *api.Client, path string) (*Config, error) {
 	if err != nil {
 		return nil, err
 	}
-	var cfg Config
-	if err = mapstructure.Decode(secret.Data, &cfg); err != nil {
+	cfg := newConfig()
+	if err = mapstructure.Decode(secret.Data, cfg); err != nil {
 		return nil, err
 	}
-	return &cfg, nil
+	return cfg, nil
 }
 
 func logout(client *api.Client, shouldLogout bool) {

@@ -43,7 +43,7 @@ const secretJSON = `{
     "s3_access_key": "aws access",
     "s3_secret_key": "aws secret",
     "s3_token": "aws token",
-    "s3_region": "us-east-1",
+    "s3_region": "us-west-2",
     "s3_endpoint": "https://spaces.test"
   },
   "lease_duration": 2764800,
@@ -96,7 +96,7 @@ func TestLookupWithAppRole(t *testing.T) {
 	assert.Equal(t, "aws access", cfg.S3AccessKey)
 	assert.Equal(t, "aws secret", cfg.S3SecretKey)
 	assert.Equal(t, "aws token", cfg.S3Token)
-	assert.Equal(t, "us-east-1", cfg.S3Region)
+	assert.Equal(t, "us-west-2", cfg.S3Region)
 	assert.Equal(t, "https://spaces.test", cfg.S3Endpoint)
 }
 
@@ -116,6 +116,6 @@ func TestLookupWithToken(t *testing.T) {
 	assert.Equal(t, "aws access", cfg.S3AccessKey)
 	assert.Equal(t, "aws secret", cfg.S3SecretKey)
 	assert.Equal(t, "aws token", cfg.S3Token)
-	assert.Equal(t, "us-east-1", cfg.S3Region)
+	assert.Equal(t, "us-west-2", cfg.S3Region)
 	assert.Equal(t, "https://spaces.test", cfg.S3Endpoint)
 }
