@@ -2,7 +2,7 @@
 // Source: store/store.go
 
 // Package mocks is a generated GoMock package.
-package mocks
+package client
 
 import (
 	gomock "github.com/golang/mock/gomock"

@@ -3,8 +3,6 @@ package client
 import (
 	"testing"
 
-	"github.com/tomcz/s3backup/client/mocks"
-
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 )
@@ -13,8 +11,8 @@ func TestGetRemoteFileWithoutDecryption(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	hash := mocks.NewMockHash(ctrl)
-	store := mocks.NewMockStore(ctrl)
+	hash := NewMockHash(ctrl)
+	store := NewMockStore(ctrl)
 
 	c := &Client{
 		Hash:  hash,
@@ -31,9 +29,9 @@ func TestGetRemoteFileWithDecryption(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	hash := mocks.NewMockHash(ctrl)
-	store := mocks.NewMockStore(ctrl)
-	cipher := mocks.NewMockCipher(ctrl)
+	hash := NewMockHash(ctrl)
+	store := NewMockStore(ctrl)
+	cipher := NewMockCipher(ctrl)
 
 	c := &Client{
 		Hash:   hash,
@@ -52,8 +50,8 @@ func TestPutLocalFileWithoutEncryption(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	hash := mocks.NewMockHash(ctrl)
-	store := mocks.NewMockStore(ctrl)
+	hash := NewMockHash(ctrl)
+	store := NewMockStore(ctrl)
 
 	c := &Client{
 		Hash:  hash,
@@ -70,9 +68,9 @@ func TestPutLocalFileWithEncryption(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	hash := mocks.NewMockHash(ctrl)
-	store := mocks.NewMockStore(ctrl)
-	cipher := mocks.NewMockCipher(ctrl)
+	hash := NewMockHash(ctrl)
+	store := NewMockStore(ctrl)
+	cipher := NewMockCipher(ctrl)
 
 	c := &Client{
 		Hash:   hash,
