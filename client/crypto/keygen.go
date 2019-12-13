@@ -30,14 +30,14 @@ func GenerateRSAKeyPair(privKeyFile, pubKeyFile string) error {
 		return err
 	}
 	privKeyBytes := x509.MarshalPKCS1PrivateKey(privKey)
-	if err := writeToPemFile("PRIVATE KEY", privKeyBytes, privKeyFile); err != nil {
+	if err := writeToPemFile(rsaPrivateKey, privKeyBytes, privKeyFile); err != nil {
 		return err
 	}
 	pubKeyBytes, err := x509.MarshalPKIXPublicKey(privKey.Public())
 	if err != nil {
 		return err
 	}
-	return writeToPemFile("PUBLIC KEY", pubKeyBytes, pubKeyFile)
+	return writeToPemFile(rsaPublicKey, pubKeyBytes, pubKeyFile)
 }
 
 func writeToPemFile(keyType string, keyBytes []byte, filePath string) error {

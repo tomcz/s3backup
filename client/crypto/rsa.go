@@ -20,7 +20,11 @@ import (
 	"github.com/tomcz/s3backup/utils"
 )
 
-const asymKeyVersion = "BAKv1"
+const (
+	asymKeyVersion = "BAKv1"
+	rsaPublicKey   = "PUBLIC KEY"
+	rsaPrivateKey  = "PRIVATE KEY"
+)
 
 type rsaCipher struct {
 	block *pem.Block
@@ -150,8 +154,8 @@ func (c *rsaCipher) Decrypt(cipherTextFile, plainTextFile string) error {
 }
 
 func (c *rsaCipher) decodePublicKey() (*rsa.PublicKey, error) {
-	if c.block.Type != "PUBLIC KEY" {
-		return nil, fmt.Errorf("bad PEM block: expected PUBLIC KEY, actual %v", c.block.Type)
+	if c.block.Type != rsaPublicKey {
+		return nil, fmt.Errorf("bad PEM block: expected %v, actual %v", rsaPublicKey, c.block.Type)
 	}
 	pub, err := x509.ParsePKIXPublicKey(c.block.Bytes)
 	if err != nil {
@@ -159,14 +163,14 @@ func (c *rsaCipher) decodePublicKey() (*rsa.PublicKey, error) {
 	}
 	pubKey, ok := pub.(*rsa.PublicKey)
 	if !ok {
-		return nil, fmt.Errorf("PEM block does not contain a RSA Public Key")
+		return nil, fmt.Errorf("bad PEM block: expected *rsa.PublicKey, actual %T", pub)
 	}
 	return pubKey, nil
 }
 
 func (c *rsaCipher) decodePrivateKey() (*rsa.PrivateKey, error) {
-	if c.block.Type != "PRIVATE KEY" {
-		return nil, fmt.Errorf("bad PEM block: expected PRIVATE KEY, actual %v", c.block.Type)
+	if c.block.Type != rsaPrivateKey {
+		return nil, fmt.Errorf("bad PEM block: expected %v, actual %v", rsaPrivateKey, c.block.Type)
 	}
 	return x509.ParsePKCS1PrivateKey(c.block.Bytes)
 }
