@@ -13,7 +13,8 @@ target:
 	mkdir target
 
 format:
-	go fmt ./...
+	@echo "Running goimports ..."
+	@goimports -w -local github.com/tomcz/s3backup $(shell find . -type f -name '*.go' | grep -v '/vendor/')
 
 test:
 	go test -race -cover -tags=integration -ldflags "${LDFLAGS}" ./...
