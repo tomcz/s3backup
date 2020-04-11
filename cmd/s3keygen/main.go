@@ -15,7 +15,7 @@ func main() {
 		Use:   "version",
 		Short: "Print version",
 		Run: func(_ *cobra.Command, _ []string) {
-			fmt.Println(config.Commit())
+			fmt.Println(config.Version())
 		},
 	}
 

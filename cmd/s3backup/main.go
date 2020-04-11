@@ -4,8 +4,9 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"os"
 
-	"github.com/spf13/cobra"
+	"github.com/urfave/cli/v2"
 
 	"github.com/tomcz/s3backup/client"
 	"github.com/tomcz/s3backup/client/crypto"
@@ -31,106 +32,186 @@ var (
 )
 
 func main() {
-	var cmdVersion = &cobra.Command{
-		Use:   "version",
-		Short: "Print version and exit",
-		Run:   printVersion,
+	var cmdVersion = &cli.Command{
+		Name:   "version",
+		Usage:  "Print version and exit",
+		Action: printVersion,
 	}
-	var cmdBasicPut = &cobra.Command{
-		Use:   "put s3://bucket/objectkey local_file_path",
-		Short: "Put local file to S3 bucket using local credentials",
-		Args:  cobra.ExactArgs(2),
-		RunE:  basicPut,
+	var cmdBasicPut = &cli.Command{
+		Name:      "put",
+		Usage:     "Put local file to S3 bucket using local credentials",
+		ArgsUsage: "s3://bucket/objectkey local_file_path",
+		Action:    basicPut,
+		Flags:     basicFlags(),
 	}
-	var cmdBasicGet = &cobra.Command{
-		Use:   "get s3://bucket/objectkey local_file_path",
-		Short: "Get local file from S3 bucket using local credentials",
-		Args:  cobra.ExactArgs(2),
-		RunE:  basicGet,
+	var cmdBasicGet = &cli.Command{
+		Name:      "get",
+		Usage:     "Get local file from S3 bucket using local credentials",
+		ArgsUsage: "s3://bucket/objectkey local_file_path",
+		Action:    basicGet,
+		Flags:     basicFlags(),
 	}
-	var cmdVaultPut = &cobra.Command{
-		Use:   "vault-put s3://bucket/objectkey local_file_path",
-		Short: "Put local file to S3 bucket using credentials from vault",
-		Args:  cobra.ExactArgs(2),
-		RunE:  vaultPut,
+	var cmdVaultPut = &cli.Command{
+		Name:      "vault-put",
+		Usage:     "Put local file to S3 bucket using credentials from vault",
+		ArgsUsage: "s3://bucket/objectkey local_file_path",
+		Action:    vaultPut,
+		Flags:     vaultFlags(),
 	}
-	var cmdVaultGet = &cobra.Command{
-		Use:   "vault-get s3://bucket/objectkey local_file_path",
-		Short: "Get local file from S3 bucket using credentials from vault",
-		Args:  cobra.ExactArgs(2),
-		RunE:  vaultGet,
+	var cmdVaultGet = &cli.Command{
+		Name:      "vault-get",
+		Usage:     "Get local file from S3 bucket using credentials from vault",
+		ArgsUsage: "s3://bucket/objectkey local_file_path",
+		Action:    vaultGet,
+		Flags:     vaultFlags(),
 	}
-	var rootCmd = &cobra.Command{Use: "s3backup"}
-	rootCmd.AddCommand(
-		cmdVersion,
-		basicFlags(cmdBasicPut),
-		basicFlags(cmdBasicGet),
-		vaultFlags(cmdVaultPut),
-		vaultFlags(cmdVaultGet),
-	)
-	if err := rootCmd.Execute(); err != nil {
+	app := &cli.App{
+		Name:    "s3backup",
+		Usage:   "S3 backup script in a single binary",
+		Version: config.Version(),
+		Commands: []*cli.Command{
+			cmdVersion,
+			cmdBasicPut,
+			cmdBasicGet,
+			cmdVaultPut,
+			cmdVaultGet,
+		},
+	}
+	if err := app.Run(os.Args); err != nil {
 		log.Fatalln(err)
 	}
 }
 
-func basicFlags(cmd *cobra.Command) *cobra.Command {
-	flags := cmd.Flags()
-	flags.StringVar(&symKey, "symKey", "", "Base64-encoded 256-bit symmetric AES key (optional)")
-	flags.StringVar(&pemKeyFile, "pemKey", "", "Path to PEM-encoded public or private key file (optional)")
-	flags.StringVar(&awsAccessKey, "accessKey", "", "AWS Access Key ID (if not using default AWS credentials)")
-	flags.StringVar(&awsSecretKey, "secretKey", "", "AWS Secret Key (required when accessKey is provided)")
-	flags.StringVar(&awsToken, "token", "", "AWS Token (effective only when accessKey is provided, depends on your AWS setup)")
-	// have seen too many failures when AWS region was not set, so we set it to a somewhat sensible default
-	flags.StringVar(&awsRegion, "region", "us-east-1", "AWS Region, override when necessary")
-	flags.StringVar(&awsEndpoint, "endpoint", "", "Custom AWS Endpoint (optional)")
-	flags.BoolVar(&skipHash, "nocheck", false, "Do not create or verify backup checksums")
-	return cmd
+func basicFlags() []cli.Flag {
+	return []cli.Flag{
+		&cli.StringFlag{
+			Name:        "symKey",
+			Usage:       "Base64-encoded 256-bit symmetric AES key (optional)",
+			Destination: &symKey,
+		},
+		&cli.StringFlag{
+			Name:        "pemKey",
+			Usage:       "Path to PEM-encoded public or private key `FILE` (optional)",
+			Destination: &pemKeyFile,
+		},
+		&cli.StringFlag{
+			Name:        "accessKey",
+			Usage:       "AWS Access Key ID (if not using default AWS credentials)",
+			Destination: &awsAccessKey,
+		},
+		&cli.StringFlag{
+			Name:        "secretKey",
+			Usage:       "AWS Secret Key (required when accessKey is provided)",
+			Destination: &awsSecretKey,
+		},
+		&cli.StringFlag{
+			Name:        "token",
+			Usage:       "AWS Token (effective only when accessKey is provided, depends on your AWS setup)",
+			Destination: &awsToken,
+		},
+		// have seen too many failures when AWS region was not set, so we set it to a somewhat sensible default
+		&cli.StringFlag{
+			Name:        "region",
+			Usage:       "AWS Region, override when necessary",
+			Value:       "us-east-1",
+			Destination: &awsRegion,
+		},
+		&cli.StringFlag{
+			Name:        "endpoint",
+			Usage:       "Custom AWS Endpoint `URL` (optional)",
+			Destination: &awsEndpoint,
+		},
+		&cli.BoolFlag{
+			Name:        "nocheck",
+			Usage:       "Do not create or verify backup checksums",
+			Destination: &skipHash,
+		},
+	}
 }
 
-func vaultFlags(cmd *cobra.Command) *cobra.Command {
-	flags := cmd.Flags()
-	flags.StringVar(&vaultRoleID, "role", "", "Vault role_id to retrieve backup credentials (either role & secret, or token)")
-	flags.StringVar(&vaultSecretID, "secret", "", "Vault secret_id to retrieve backup credentials (either role & secret, or token)")
-	flags.StringVar(&vaultToken, "token", "", "Vault token to retrieve backup credentials (either role & secret, or token)")
-	flags.StringVar(&vaultPath, "path", "", "Vault secret path containing backup credentials (required)")
-	flags.StringVar(&vaultCaCert, "caCert", "", "Vault root certificate file (optional)")
-	flags.StringVar(&vaultAddr, "vault", "", "Vault service address (required)")
-	flags.BoolVar(&skipHash, "nocheck", false, "Do not create or verify backup checksums")
-	return cmd
+func vaultFlags() []cli.Flag {
+	return []cli.Flag{
+		&cli.StringFlag{
+			Name:        "role",
+			Usage:       "Vault role_id to retrieve backup credentials (either role & secret, or token)",
+			Destination: &vaultRoleID,
+		},
+		&cli.StringFlag{
+			Name:        "secret",
+			Usage:       "Vault secret_id to retrieve backup credentials (either role & secret, or token)",
+			Destination: &vaultSecretID,
+		},
+		&cli.StringFlag{
+			Name:        "token",
+			Usage:       "Vault token to retrieve backup credentials (either role & secret, or token)",
+			Destination: &vaultToken,
+		},
+		&cli.StringFlag{
+			Name:        "path",
+			Usage:       "Vault secret path containing backup credentials (required)",
+			Required:    true,
+			Destination: &vaultPath,
+		},
+		&cli.StringFlag{
+			Name:        "caCert",
+			Usage:       "Vault root certificate `FILE` (optional)",
+			Destination: &vaultCaCert,
+		},
+		&cli.StringFlag{
+			Name:        "vault",
+			Usage:       "Vault service `URL` (required)",
+			Required:    true,
+			Destination: &vaultAddr,
+		},
+		&cli.BoolFlag{
+			Name:        "nocheck",
+			Usage:       "Do not create or verify backup checksums",
+			Destination: &skipHash,
+		},
+	}
 }
 
-func printVersion(_ *cobra.Command, _ []string) {
-	fmt.Println(config.Commit())
+func printVersion(*cli.Context) error {
+	fmt.Println(config.Version())
+	return nil
 }
 
-func basicPut(_ *cobra.Command, args []string) error {
+func basicPut(ctx *cli.Context) error {
 	c, err := newClient()
 	if err != nil {
 		return err
 	}
-	return c.PutLocalFile(args[0], args[1])
+	if ctx.NArg() != 2 {
+		return errors.New("remote path & local path are required")
+	}
+	args := ctx.Args()
+	return c.PutLocalFile(args.Get(0), args.Get(1))
 }
 
-func basicGet(_ *cobra.Command, args []string) error {
+func basicGet(ctx *cli.Context) error {
 	c, err := newClient()
 	if err != nil {
 		return err
 	}
-	return c.GetRemoteFile(args[0], args[1])
+	if ctx.NArg() != 2 {
+		return errors.New("remote path & local path are required")
+	}
+	args := ctx.Args()
+	return c.GetRemoteFile(args.Get(0), args.Get(1))
 }
 
-func vaultPut(cmd *cobra.Command, args []string) error {
+func vaultPut(ctx *cli.Context) error {
 	if err := initWithVault(); err != nil {
 		return err
 	}
-	return basicPut(cmd, args)
+	return basicPut(ctx)
 }
 
-func vaultGet(cmd *cobra.Command, args []string) error {
+func vaultGet(ctx *cli.Context) error {
 	if err := initWithVault(); err != nil {
 		return err
 	}
-	return basicGet(cmd, args)
+	return basicGet(ctx)
 }
 
 func initWithVault() error {
