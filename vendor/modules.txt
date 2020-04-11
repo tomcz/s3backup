@@ -78,8 +78,6 @@ github.com/hashicorp/vault/sdk/helper/hclutil
 github.com/hashicorp/vault/sdk/helper/jsonutil
 github.com/hashicorp/vault/sdk/helper/parseutil
 github.com/hashicorp/vault/sdk/helper/strutil
-# github.com/inconshreveable/mousetrap v1.0.0
-github.com/inconshreveable/mousetrap
 # github.com/jmespath/go-jmespath v0.0.0-20180206201540-c2b33e8439af
 github.com/jmespath/go-jmespath
 # github.com/johannesboyne/gofakes3 v0.0.0-20190901124954-96fabbd7f68a
@@ -106,10 +104,6 @@ github.com/ryszard/goskiplist/skiplist
 github.com/shabbyrobe/gocovmerge
 # github.com/shurcooL/sanitized_anchor_name v1.0.0
 github.com/shurcooL/sanitized_anchor_name
-# github.com/spf13/cobra v0.0.5
-github.com/spf13/cobra
-# github.com/spf13/pflag v1.0.3
-github.com/spf13/pflag
 # github.com/stretchr/testify v1.4.0
 github.com/stretchr/testify/assert
 github.com/stretchr/testify/require

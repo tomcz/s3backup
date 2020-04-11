@@ -26,6 +26,4 @@ compile = GOOS=$2 GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o target/$1-$2 ./
 
 build: target
 	$(call compile,s3backup,linux)
-	$(call compile,s3keygen,linux)
 	$(call compile,s3backup,darwin)
-	$(call compile,s3keygen,darwin)

@@ -29,41 +29,59 @@ var (
 	vaultAddr     string
 	vaultCaCert   string
 	skipHash      bool
+	rsaPrivKey    string
+	rsaPubKey     string
 )
 
 func main() {
-	var cmdVersion = &cli.Command{
+	cmdVersion := &cli.Command{
 		Name:   "version",
 		Usage:  "Print version and exit",
 		Action: printVersion,
 	}
-	var cmdBasicPut = &cli.Command{
+	cmdBasicPut := &cli.Command{
 		Name:      "put",
-		Usage:     "Put local file to S3 bucket using local credentials",
+		Usage:     "Upload file to S3 bucket using local credentials",
 		ArgsUsage: "s3://bucket/objectkey local_file_path",
 		Action:    basicPut,
 		Flags:     basicFlags(),
 	}
-	var cmdBasicGet = &cli.Command{
+	cmdBasicGet := &cli.Command{
 		Name:      "get",
-		Usage:     "Get local file from S3 bucket using local credentials",
+		Usage:     "Download file from S3 bucket using local credentials",
 		ArgsUsage: "s3://bucket/objectkey local_file_path",
 		Action:    basicGet,
 		Flags:     basicFlags(),
 	}
-	var cmdVaultPut = &cli.Command{
+	cmdVaultPut := &cli.Command{
 		Name:      "vault-put",
-		Usage:     "Put local file to S3 bucket using credentials from vault",
+		Usage:     "Upload file to S3 bucket using credentials from vault",
 		ArgsUsage: "s3://bucket/objectkey local_file_path",
 		Action:    vaultPut,
 		Flags:     vaultFlags(),
 	}
-	var cmdVaultGet = &cli.Command{
+	cmdVaultGet := &cli.Command{
 		Name:      "vault-get",
-		Usage:     "Get local file from S3 bucket using credentials from vault",
+		Usage:     "Download file from S3 bucket using credentials from vault",
 		ArgsUsage: "s3://bucket/objectkey local_file_path",
 		Action:    vaultGet,
 		Flags:     vaultFlags(),
+	}
+	cmdGenAES := &cli.Command{
+		Name:   "aes",
+		Usage:  "Generate and print AES key",
+		Action: genSecretKey,
+	}
+	cmdGenRSA := &cli.Command{
+		Name:   "rsa",
+		Usage:  "Generate RSA key pair files",
+		Action: genKeyPair,
+		Flags:  genKeyFlags(),
+	}
+	cmdKeygen := &cli.Command{
+		Name:        "keygen",
+		Usage:       "Generate RSA and AES backup keys",
+		Subcommands: []*cli.Command{cmdGenAES, cmdGenRSA},
 	}
 	app := &cli.App{
 		Name:    "s3backup",
@@ -75,6 +93,7 @@ func main() {
 			cmdBasicGet,
 			cmdVaultPut,
 			cmdVaultGet,
+			cmdKeygen,
 		},
 	}
 	if err := app.Run(os.Args); err != nil {
@@ -167,6 +186,23 @@ func vaultFlags() []cli.Flag {
 			Name:        "nocheck",
 			Usage:       "Do not create or verify backup checksums",
 			Destination: &skipHash,
+		},
+	}
+}
+
+func genKeyFlags() []cli.Flag {
+	return []cli.Flag{
+		&cli.StringFlag{
+			Name:        "priv",
+			Usage:       "Private key `FILE` for RSA key pair",
+			Value:       "private.pem",
+			Destination: &rsaPrivKey,
+		},
+		&cli.StringFlag{
+			Name:        "pub",
+			Usage:       "Public key `FILE` for RSA key pair",
+			Value:       "public.pem",
+			Destination: &rsaPubKey,
 		},
 	}
 }
@@ -274,4 +310,17 @@ func newClient() (*client.Client, error) {
 		Cipher: cipher,
 		Store:  s3,
 	}, nil
+}
+
+func genSecretKey(*cli.Context) error {
+	key, err := crypto.GenerateAESKeyString()
+	if err != nil {
+		return err
+	}
+	fmt.Println(key)
+	return nil
+}
+
+func genKeyPair(*cli.Context) error {
+	return crypto.GenerateRSAKeyPair(rsaPrivKey, rsaPubKey)
 }
