@@ -34,7 +34,7 @@ func LookupWithToken(vaultAddr, caCertFile, token, path string) (*Config, error)
 
 func newClient(vaultAddr, caCertFile string) (*api.Client, error) {
 	cfg := api.DefaultConfig()
-	if err := cfg.ReadEnvironment(); err != nil {
+	if err := cfg.Error; err != nil {
 		return nil, err
 	}
 	if vaultAddr != "" {
