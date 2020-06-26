@@ -83,6 +83,20 @@ func main() {
 		Usage:       "Generate RSA and AES backup keys",
 		Subcommands: []*cli.Command{cmdGenAES, cmdGenRSA},
 	}
+	cmdEncrypt := &cli.Command{
+		Name:      "encrypt",
+		Usage:     "Just encrypt a local file",
+		ArgsUsage: "inFile outFile",
+		Action:    encryptLocalFile,
+		Flags:     cipherFlags(),
+	}
+	cmdDecrypt := &cli.Command{
+		Name:      "decrypt",
+		Usage:     "Just decrypt a local file",
+		ArgsUsage: "inFile outFile",
+		Action:    decryptLocalFile,
+		Flags:     cipherFlags(),
+	}
 	app := &cli.App{
 		Name:    "s3backup",
 		Usage:   "S3 backup script in a single binary",
@@ -94,6 +108,8 @@ func main() {
 			cmdVaultPut,
 			cmdVaultGet,
 			cmdKeygen,
+			cmdEncrypt,
+			cmdDecrypt,
 		},
 	}
 	if err := app.Run(os.Args); err != nil {
@@ -144,6 +160,21 @@ func basicFlags() []cli.Flag {
 			Name:        "nocheck",
 			Usage:       "Do not create or verify backup checksums",
 			Destination: &skipHash,
+		},
+	}
+}
+
+func cipherFlags() []cli.Flag {
+	return []cli.Flag{
+		&cli.StringFlag{
+			Name:        "symKey",
+			Usage:       "Base64-encoded 256-bit symmetric AES key",
+			Destination: &symKey,
+		},
+		&cli.StringFlag{
+			Name:        "pemKey",
+			Usage:       "Path to PEM-encoded public or private key `FILE`",
+			Destination: &pemKeyFile,
 		},
 	}
 }
@@ -323,4 +354,43 @@ func genSecretKey(*cli.Context) error {
 
 func genKeyPair(*cli.Context) error {
 	return crypto.GenerateRSAKeyPair(rsaPrivKey, rsaPubKey)
+}
+
+func encryptLocalFile(ctx *cli.Context) error {
+	cipher, err := createCipher(ctx)
+	if err != nil {
+		return err
+	}
+	args := ctx.Args()
+	return cipher.Encrypt(args.Get(0), args.Get(1))
+}
+
+func decryptLocalFile(ctx *cli.Context) error {
+	cipher, err := createCipher(ctx)
+	if err != nil {
+		return err
+	}
+	args := ctx.Args()
+	return cipher.Decrypt(args.Get(0), args.Get(1))
+}
+
+func createCipher(ctx *cli.Context) (client.Cipher, error) {
+	if ctx.NArg() != 2 {
+		return nil, errors.New("in and out files are required")
+	}
+	var err error
+	var cipher client.Cipher
+	if symKey != "" {
+		cipher, err = crypto.NewAESCipher(symKey)
+	}
+	if pemKeyFile != "" {
+		cipher, err = crypto.NewRSACipher(pemKeyFile)
+	}
+	if err != nil {
+		return nil, err
+	}
+	if cipher == nil {
+		return nil, errors.New("either one of symKey or pemKey is required")
+	}
+	return cipher, nil
 }

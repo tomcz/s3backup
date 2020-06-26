@@ -47,6 +47,8 @@ COMMANDS:
    vault-put  Upload file to S3 bucket using credentials from vault
    vault-get  Download file from S3 bucket using credentials from vault
    keygen     Generate RSA and AES backup keys
+   encrypt    Just encrypt a local file
+   decrypt    Just decrypt a local file
    help, h    Shows a list of commands or help for one command
 
 GLOBAL OPTIONS:
