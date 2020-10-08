@@ -28,7 +28,7 @@ func NewAESCipher(secretKey string) (client.Cipher, error) {
 		key = sum[:]
 	}
 	if len(key) != 32 {
-		// key is too long so we hash it instead
+		// key is not quite right so we hash it
 		sum := sha256.Sum256(key)
 		key = sum[:]
 	}
