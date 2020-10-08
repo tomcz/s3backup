@@ -9,13 +9,13 @@ You can download the latest release from [here](https://github.com/tomcz/s3backu
 
 ## Upload process
 
-1. Encrypt file to be backed up (optional but highly recommended). `s3backup` uses AES encryption,
-and can use either a 256-bit Base64-encoded symmetric key, or a PEM-encoded RSA public key. If a
-public key is provided, `s3backup` will generate a random 256-bit symmetric key which will be
-encrypted using the public key and stored with the encrypted file. To make key creation easier,
-you can use its `keygen` commands, as outlined [below](#backup-key-generation).
+1. Encrypt the file to be backed up (optional but highly recommended). `s3backup` uses AES-256
+encryption via a password or a Base64-encoded secret key, or a PEM-encoded RSA public key. If
+a public key is provided, `s3backup` will generate a random 256-bit symmetric key which will
+be encrypted using the public key and stored with the encrypted file. To make key creation
+easier, you can use the `keygen` commands as outlined [below](#backup-key-generation).
 
-2. Calculate a SHA-256 checksum for the file to be uploaded. For encrypted uploads the checksum
+2. Calculate SHA-256 checksum for the file to be uploaded. For encrypted uploads the checksum
 is calculated on the encrypted file.
 
 3. Upload to AWS S3 using concurrent uploads to handle large files and store the checksum with
@@ -72,7 +72,7 @@ USAGE:
    s3backup put [command options] s3://bucket/objectkey local_file_path
 
 OPTIONS:
-   --symKey value     Base64-encoded 256-bit symmetric AES key (optional)
+   --symKey value     Password to use for symmetric AES encryption (optional)
    --pemKey FILE      Path to PEM-encoded public or private key FILE (optional)
    --accessKey value  AWS Access Key ID (if not using default AWS credentials)
    --secretKey value  AWS Secret Key (required when accessKey is provided)
@@ -93,7 +93,7 @@ USAGE:
    s3backup get [command options] s3://bucket/objectkey local_file_path
 
 OPTIONS:
-   --symKey value     Base64-encoded 256-bit symmetric AES key (optional)
+   --symKey value     Password to use for symmetric AES encryption (optional)
    --pemKey FILE      Path to PEM-encoded public or private key FILE (optional)
    --accessKey value  AWS Access Key ID (if not using default AWS credentials)
    --secretKey value  AWS Secret Key (required when accessKey is provided)

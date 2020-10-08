@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
+	"crypto/sha256"
 	"encoding/base64"
 	"fmt"
 	"io"
@@ -22,10 +23,14 @@ type aesCipher struct {
 func NewAESCipher(secretKey string) (client.Cipher, error) {
 	key, err := base64.StdEncoding.DecodeString(secretKey)
 	if err != nil {
-		return nil, err
+		// assume the key should be hashed instead
+		sum := sha256.Sum256([]byte(secretKey))
+		key = sum[:]
 	}
 	if len(key) != 32 {
-		return nil, fmt.Errorf("not a 256 bit key: expected 32 bytes, got %v", len(key))
+		// key is too long so we hash it instead
+		sum := sha256.Sum256(key)
+		key = sum[:]
 	}
 	return &aesCipher{key}, nil
 }

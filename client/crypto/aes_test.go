@@ -11,16 +11,23 @@ import (
 	"github.com/tomcz/s3backup/utils"
 )
 
-func TestRoundTripAESEncryptDecrypt(t *testing.T) {
+func TestRoundTripAESEncryptDecrypt_GeneratedKey(t *testing.T) {
+	key, err := GenerateAESKeyString()
+	require.NoError(t, err, "Cannot generate AES key")
+	testRoundTrip(t, key)
+}
+
+func TestRoundTripAESEncryptDecrypt_ArbitraryKey(t *testing.T) {
+	testRoundTrip(t, "password0")
+}
+
+func testRoundTrip(t *testing.T, key string) {
 	expected, err := utils.Random(1024)
 	require.NoError(t, err, "Cannot create file contents")
 
 	file, err := utils.CreateTempFile("aes", expected)
 	require.NoError(t, err, "Cannot create file to encrypt")
 	defer os.Remove(file)
-
-	key, err := GenerateAESKeyString()
-	require.NoError(t, err, "Cannot generate AES key")
 
 	cipher, err := NewAESCipher(key)
 	require.NoError(t, err, "Cannot create AES cipher")

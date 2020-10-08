@@ -121,7 +121,7 @@ func basicFlags() []cli.Flag {
 	return []cli.Flag{
 		&cli.StringFlag{
 			Name:        "symKey",
-			Usage:       "Base64-encoded 256-bit symmetric AES key (optional)",
+			Usage:       "Password to use for symmetric AES encryption (optional)",
 			Destination: &symKey,
 		},
 		&cli.StringFlag{
@@ -168,7 +168,7 @@ func cipherFlags() []cli.Flag {
 	return []cli.Flag{
 		&cli.StringFlag{
 			Name:        "symKey",
-			Usage:       "Base64-encoded 256-bit symmetric AES key",
+			Usage:       "Password to use for symmetric AES encryption",
 			Destination: &symKey,
 		},
 		&cli.StringFlag{
