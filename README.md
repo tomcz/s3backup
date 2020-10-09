@@ -20,7 +20,7 @@ You can download the latest release from [here](https://github.com/tomcz/s3backu
 
 2. Verify that the stored checksum matches the downloaded file.
 
-3. Optionally decrypt the downloaded file using either the same symmetric key that was used to encrypt it, or the RSA private key matching the RSA public key that was used for encryption.
+3. Optionally decrypt the downloaded file using either the same password or symmetric key that was used to encrypt it, or the RSA private key matching the RSA public key that was used for encryption.
 
 ## Usage
 
