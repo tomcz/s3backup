@@ -44,28 +44,28 @@ func main() {
 		Usage:     "Upload file to S3 bucket using local credentials",
 		ArgsUsage: "s3://bucket/objectkey local_file_path",
 		Action:    basicPut,
-		Flags:     basicFlags(),
+		Flags:     basicFlags(true),
 	}
 	cmdBasicGet := &cli.Command{
 		Name:      "get",
 		Usage:     "Download file from S3 bucket using local credentials",
 		ArgsUsage: "s3://bucket/objectkey local_file_path",
 		Action:    basicGet,
-		Flags:     basicFlags(),
+		Flags:     basicFlags(false),
 	}
 	cmdVaultPut := &cli.Command{
 		Name:      "vault-put",
 		Usage:     "Upload file to S3 bucket using credentials from vault",
 		ArgsUsage: "s3://bucket/objectkey local_file_path",
 		Action:    vaultPut,
-		Flags:     vaultFlags(),
+		Flags:     vaultFlags(true),
 	}
 	cmdVaultGet := &cli.Command{
 		Name:      "vault-get",
 		Usage:     "Download file from S3 bucket using credentials from vault",
 		ArgsUsage: "s3://bucket/objectkey local_file_path",
 		Action:    vaultGet,
-		Flags:     vaultFlags(),
+		Flags:     vaultFlags(false),
 	}
 	cmdGenAES := &cli.Command{
 		Name:   "aes",
@@ -88,14 +88,14 @@ func main() {
 		Usage:     "Just encrypt a local file",
 		ArgsUsage: "inFile outFile",
 		Action:    encryptLocalFile,
-		Flags:     cipherFlags(),
+		Flags:     cipherFlags(true),
 	}
 	cmdDecrypt := &cli.Command{
 		Name:      "decrypt",
 		Usage:     "Just decrypt a local file",
 		ArgsUsage: "inFile outFile",
 		Action:    decryptLocalFile,
-		Flags:     cipherFlags(),
+		Flags:     cipherFlags(false),
 	}
 	app := &cli.App{
 		Name:    "s3backup",
@@ -117,16 +117,24 @@ func main() {
 	}
 }
 
-func basicFlags() []cli.Flag {
+func basicFlags(encrypt bool) []cli.Flag {
+	sym := "decryption"
+	asym := "private"
+	check := "verify"
+	if encrypt {
+		sym = "encryption"
+		asym = "public"
+		check = "create"
+	}
 	return []cli.Flag{
 		&cli.StringFlag{
 			Name:        "symKey",
-			Usage:       "Password to use for symmetric AES encryption (optional)",
+			Usage:       fmt.Sprintf("Password to use for symmetric AES %s (optional)", sym),
 			Destination: &symKey,
 		},
 		&cli.StringFlag{
 			Name:        "pemKey",
-			Usage:       "Path to PEM-encoded public or private key `FILE` (optional)",
+			Usage:       fmt.Sprintf("Path to PEM-encoded %s key `FILE` (optional)", asym),
 			Destination: &pemKeyFile,
 		},
 		&cli.StringFlag{
@@ -158,28 +166,38 @@ func basicFlags() []cli.Flag {
 		},
 		&cli.BoolFlag{
 			Name:        "nocheck",
-			Usage:       "Do not create or verify backup checksums",
+			Usage:       fmt.Sprintf("Do not %s backup checksums", check),
 			Destination: &skipHash,
 		},
 	}
 }
 
-func cipherFlags() []cli.Flag {
+func cipherFlags(encrypt bool) []cli.Flag {
+	sym := "decryption"
+	asym := "private"
+	if encrypt {
+		sym = "encryption"
+		asym = "public"
+	}
 	return []cli.Flag{
 		&cli.StringFlag{
 			Name:        "symKey",
-			Usage:       "Password to use for symmetric AES encryption",
+			Usage:       fmt.Sprintf("Password to use for symmetric AES %s", sym),
 			Destination: &symKey,
 		},
 		&cli.StringFlag{
 			Name:        "pemKey",
-			Usage:       "Path to PEM-encoded public or private key `FILE`",
+			Usage:       fmt.Sprintf("Path to PEM-encoded %s key `FILE`", asym),
 			Destination: &pemKeyFile,
 		},
 	}
 }
 
-func vaultFlags() []cli.Flag {
+func vaultFlags(encrypt bool) []cli.Flag {
+	check := "verify"
+	if encrypt {
+		check = "create"
+	}
 	return []cli.Flag{
 		&cli.StringFlag{
 			Name:        "role",
@@ -215,7 +233,7 @@ func vaultFlags() []cli.Flag {
 		},
 		&cli.BoolFlag{
 			Name:        "nocheck",
-			Usage:       "Do not create or verify backup checksums",
+			Usage:       fmt.Sprintf("Do not %s backup checksums", check),
 			Destination: &skipHash,
 		},
 	}
