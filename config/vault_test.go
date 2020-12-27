@@ -10,7 +10,6 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -52,6 +51,10 @@ const secretJSON = `{
 }`
 
 func checkLogin(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "PUT" {
+		http.Error(w, "bad method", http.StatusMethodNotAllowed)
+		return
+	}
 	m := make(map[string]interface{})
 	if err := json.NewDecoder(r.Body).Decode(&m); err != nil {
 		http.Error(w, fmt.Sprintf("%v", err), http.StatusInternalServerError)
@@ -67,21 +70,23 @@ func checkLogin(w http.ResponseWriter, r *http.Request) {
 }
 
 func respondWith(body string) func(http.ResponseWriter, *http.Request) {
-	return func(w http.ResponseWriter, _ *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != "GET" {
+			http.Error(w, "bad method", http.StatusMethodNotAllowed)
+			return
+		}
+		if r.Header.Get("X-Vault-Token") != "5b1a0318-679c-9c45-e5c6-d1b9a9035d49" {
+			http.Error(w, "bad token", http.StatusForbidden)
+			return
+		}
 		fmt.Fprintln(w, body)
 	}
 }
 
 func testHandler() http.Handler {
-	r := mux.NewRouter()
-
-	r.HandleFunc("/v1/auth/approle/login", checkLogin).
-		Methods("PUT")
-
-	r.HandleFunc("/v1/secret/myteam/backup", respondWith(secretJSON)).
-		Headers("X-Vault-Token", "5b1a0318-679c-9c45-e5c6-d1b9a9035d49").
-		Methods("GET")
-
+	r := http.NewServeMux()
+	r.HandleFunc("/v1/auth/approle/login", checkLogin)
+	r.HandleFunc("/v1/secret/myteam/backup", respondWith(secretJSON))
 	return r
 }
 

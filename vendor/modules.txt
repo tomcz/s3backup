@@ -45,8 +45,6 @@ github.com/davecgh/go-spew/spew
 github.com/golang/mock/gomock
 # github.com/golang/snappy v0.0.1
 github.com/golang/snappy
-# github.com/gorilla/mux v1.7.3
-github.com/gorilla/mux
 # github.com/hashicorp/errwrap v1.0.0
 github.com/hashicorp/errwrap
 # github.com/hashicorp/go-cleanhttp v0.5.1
