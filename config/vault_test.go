@@ -55,7 +55,7 @@ func checkLogin(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "bad method", http.StatusMethodNotAllowed)
 		return
 	}
-	m := make(map[string]interface{})
+	var m map[string]interface{}
 	if err := json.NewDecoder(r.Body).Decode(&m); err != nil {
 		http.Error(w, fmt.Sprintf("%v", err), http.StatusInternalServerError)
 		return
