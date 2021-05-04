@@ -5,21 +5,23 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/tomcz/s3backup/client/mocks"
 )
 
 func TestGetRemoteFileWithoutDecryption(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	hash := NewMockHash(ctrl)
-	store := NewMockStore(ctrl)
+	hash := mocks.NewMockHash(ctrl)
+	store := mocks.NewMockStore(ctrl)
 
 	c := &Client{
 		Hash:  hash,
 		Store: store,
 	}
 
-	store.EXPECT().DownloadFile("s3://foo/bar.txt", "bar.txt").Return("muahahaha", nil)
+	store.EXPECT().DownloadFile("s3://foo/bar.txt", "bar.txt", true).Return("muahahaha", nil)
 	hash.EXPECT().Verify("bar.txt", "muahahaha").Return(nil)
 
 	assert.NoError(t, c.GetRemoteFile("s3://foo/bar.txt", "bar.txt"))
@@ -29,9 +31,9 @@ func TestGetRemoteFileWithDecryption(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	hash := NewMockHash(ctrl)
-	store := NewMockStore(ctrl)
-	cipher := NewMockCipher(ctrl)
+	hash := mocks.NewMockHash(ctrl)
+	store := mocks.NewMockStore(ctrl)
+	cipher := mocks.NewMockCipher(ctrl)
 
 	c := &Client{
 		Hash:   hash,
@@ -39,7 +41,7 @@ func TestGetRemoteFileWithDecryption(t *testing.T) {
 		Cipher: cipher,
 	}
 
-	store.EXPECT().DownloadFile("s3://foo/bar.txt", "bar.txt.tmp").Return("muahahaha", nil)
+	store.EXPECT().DownloadFile("s3://foo/bar.txt", "bar.txt.tmp", true).Return("muahahaha", nil)
 	hash.EXPECT().Verify("bar.txt.tmp", "muahahaha").Return(nil)
 	cipher.EXPECT().Decrypt("bar.txt.tmp", "bar.txt").Return(nil)
 
@@ -50,8 +52,8 @@ func TestPutLocalFileWithoutEncryption(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	hash := NewMockHash(ctrl)
-	store := NewMockStore(ctrl)
+	hash := mocks.NewMockHash(ctrl)
+	store := mocks.NewMockStore(ctrl)
 
 	c := &Client{
 		Hash:  hash,
@@ -68,9 +70,9 @@ func TestPutLocalFileWithEncryption(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	hash := NewMockHash(ctrl)
-	store := NewMockStore(ctrl)
-	cipher := NewMockCipher(ctrl)
+	hash := mocks.NewMockHash(ctrl)
+	store := mocks.NewMockStore(ctrl)
+	cipher := mocks.NewMockCipher(ctrl)
 
 	c := &Client{
 		Hash:   hash,

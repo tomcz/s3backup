@@ -1,5 +1,3 @@
-// +build integration
-
 package store
 
 import (
@@ -61,7 +59,7 @@ func TestRoundTripUploadDownload_withChecksum(t *testing.T) {
 	require.NoError(t, err, "failed to upload file")
 
 	downloadFile := uploadFile + ".download"
-	checksum, err := target.DownloadFile("s3://test-bucket/test-file", downloadFile)
+	checksum, err := target.DownloadFile("s3://test-bucket/test-file", downloadFile, true)
 	require.NoError(t, err, "failed to download file")
 	defer os.Remove(downloadFile)
 
@@ -98,7 +96,7 @@ func TestRoundTripUploadDownload_withoutChecksum(t *testing.T) {
 	require.NoError(t, err, "failed to upload file")
 
 	downloadFile := uploadFile + ".download"
-	checksum, err := target.DownloadFile("s3://test-bucket/test-file", downloadFile)
+	checksum, err := target.DownloadFile("s3://test-bucket/test-file", downloadFile, true)
 	require.NoError(t, err, "failed to download file")
 	defer os.Remove(downloadFile)
 

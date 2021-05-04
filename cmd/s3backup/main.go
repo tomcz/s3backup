@@ -152,11 +152,9 @@ func basicFlags(encrypt bool) []cli.Flag {
 			Usage:       "AWS Token (effective only when accessKey is provided, depends on your AWS setup)",
 			Destination: &awsToken,
 		},
-		// have seen too many failures when AWS region was not set, so we set it to a somewhat sensible default
 		&cli.StringFlag{
 			Name:        "region",
-			Usage:       "AWS Region, override when necessary",
-			Value:       "us-east-1",
+			Usage:       "AWS Region (we use AWS defaults if not provided)",
 			Destination: &awsRegion,
 		},
 		&cli.StringFlag{

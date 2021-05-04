@@ -66,7 +66,7 @@ OPTIONS:
    --accessKey value  AWS Access Key ID (if not using default AWS credentials)
    --secretKey value  AWS Secret Key (required when accessKey is provided)
    --token value      AWS Token (effective only when accessKey is provided, depends on your AWS setup)
-   --region value     AWS Region, override when necessary (default: "us-east-1")
+   --region value     AWS Region (we use AWS defaults if not provided)
    --endpoint URL     Custom AWS Endpoint URL (optional)
    --nocheck          Do not create backup checksums (default: false)
 ```
@@ -86,7 +86,7 @@ OPTIONS:
    --accessKey value  AWS Access Key ID (if not using default AWS credentials)
    --secretKey value  AWS Secret Key (required when accessKey is provided)
    --token value      AWS Token (effective only when accessKey is provided, depends on your AWS setup)
-   --region value     AWS Region, override when necessary (default: "us-east-1")
+   --region value     AWS Region (we use AWS defaults if not provided)
    --endpoint URL     Custom AWS Endpoint URL (optional)
    --nocheck          Do not verify backup checksums (default: false)
 ```

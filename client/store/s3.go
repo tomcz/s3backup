@@ -59,7 +59,7 @@ func (s *s3store) UploadFile(remotePath, localPath, checksum string) error {
 
 	file, err := os.Open(localPath)
 	if err != nil {
-		return err
+		return fmt.Errorf("cannot open %s: %w", localPath, err)
 	}
 	defer file.Close()
 
@@ -75,30 +75,36 @@ func (s *s3store) UploadFile(remotePath, localPath, checksum string) error {
 		}
 	}
 	_, err = uploader.Upload(input)
-	return err
+	if err != nil {
+		return fmt.Errorf("failed to upload file: %w", err)
+	}
+	return nil
 }
 
-func (s *s3store) DownloadFile(remotePath, localPath string) (checksum string, err error) {
+func (s *s3store) DownloadFile(remotePath, localPath string, readChecksum bool) (string, error) {
 	bucket, objectKey, err := splitRemotePath(remotePath)
 	if err != nil {
-		return
+		return "", err
 	}
 
-	res, err := s.api.HeadObject(&s3.HeadObjectInput{
-		Bucket: aws.String(bucket),
-		Key:    aws.String(objectKey),
-	})
-	if err != nil {
-		return
-	}
-	hash, ok := res.Metadata[checksumKey]
-	if ok {
-		checksum = *hash
+	var checksum string
+	if readChecksum {
+		res, err := s.api.HeadObject(&s3.HeadObjectInput{
+			Bucket: aws.String(bucket),
+			Key:    aws.String(objectKey),
+		})
+		if err != nil {
+			return "", fmt.Errorf("failed to read checksum: %w", err)
+		}
+		hash, ok := res.Metadata[checksumKey]
+		if ok {
+			checksum = *hash
+		}
 	}
 
 	file, err := os.Create(localPath)
 	if err != nil {
-		return
+		return "", fmt.Errorf("cannot create %s: %w", localPath, err)
 	}
 	defer file.Close()
 
@@ -107,7 +113,10 @@ func (s *s3store) DownloadFile(remotePath, localPath string) (checksum string, e
 		Bucket: aws.String(bucket),
 		Key:    aws.String(objectKey),
 	})
-	return // checksum, err
+	if err != nil {
+		return "", fmt.Errorf("download failed: %w", err)
+	}
+	return checksum, nil
 }
 
 func splitRemotePath(remotePath string) (bucket string, objectKey string, err error) {
