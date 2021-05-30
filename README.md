@@ -1,5 +1,3 @@
-[![Build Status](https://travis-ci.org/tomcz/s3backup.svg?branch=master)](https://travis-ci.org/tomcz/s3backup)
-
 # S3 backup script in a single binary
 
 Provides a standard way of backing up an archive to a S3 bucket, and restoring the backed up archive from its S3 bucket. No more custom backup scripts please ...
