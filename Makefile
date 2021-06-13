@@ -5,7 +5,7 @@ LDFLAGS := -X github.com/tomcz/s3backup/config.commit=${GITCOMMIT}
 LDFLAGS := ${LDFLAGS} -X github.com/tomcz/s3backup/config.tag=${GIT_TAG}
 
 .PHONY: precommit
-precommit: clean format test build
+precommit: clean format lint test build
 
 .PHONY: commit
 commit: clean
@@ -25,6 +25,14 @@ ifeq (, $(shell which goimports))
 endif
 	@echo "Running goimports ..."
 	@goimports -w -local github.com/tomcz/s3backup $(shell find . -type f -name '*.go' | grep -v '/vendor/')
+
+.PHONY: lint
+lint:
+ifeq (, $(shell which staticcheck))
+	go install honnef.co/go/tools/cmd/staticcheck@2021.1
+endif
+	@echo "Running staticcheck ..."
+	@staticcheck $(shell go list ./... | grep -v /vendor/)
 
 .PHONY: test
 test:
