@@ -10,10 +10,7 @@ func LookupWithAppRole(vaultAddr, caCertFile, roleID, secretID, path string) (*C
 	if err != nil {
 		return nil, err
 	}
-	body := map[string]interface{}{
-		"role_id":   roleID,
-		"secret_id": secretID,
-	}
+	body := map[string]any{"role_id": roleID, "secret_id": secretID}
 	secret, err := client.Logical().Write("auth/approle/login", body)
 	if err != nil {
 		return nil, err

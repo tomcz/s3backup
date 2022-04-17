@@ -5,11 +5,10 @@ LDFLAGS := -X github.com/tomcz/s3backup/config.commit=${GITCOMMIT}
 LDFLAGS := ${LDFLAGS} -X github.com/tomcz/s3backup/config.tag=${GIT_TAG}
 
 .PHONY: precommit
-precommit: clean format lint test build
+precommit: clean generate format lint test build
 
 .PHONY: commit
-commit: clean
-	GO111MODULE=on GOFLAGS='-mod=vendor' $(MAKE) test build
+commit: clean test build
 
 .PHONY: clean
 clean:
@@ -21,7 +20,7 @@ target:
 .PHONY: format
 format:
 ifeq (, $(shell which goimports))
-	go get golang.org/x/tools/cmd/goimports
+	go install golang.org/x/tools/cmd/goimports@latest
 endif
 	@echo "Running goimports ..."
 	@goimports -w -local github.com/tomcz/s3backup $(shell find . -type f -name '*.go' | grep -v '/vendor/')
@@ -29,7 +28,7 @@ endif
 .PHONY: lint
 lint:
 ifeq (, $(shell which staticcheck))
-	go install honnef.co/go/tools/cmd/staticcheck@2021.1
+	go install honnef.co/go/tools/cmd/staticcheck@latest
 endif
 	@echo "Running staticcheck ..."
 	@staticcheck $(shell go list ./... | grep -v /vendor/)
@@ -41,10 +40,9 @@ test:
 .PHONY: generate
 generate:
 ifeq (, $(shell which mockgen))
-	go install github.com/golang/mock/mockgen@v1.5.0
+	go install github.com/golang/mock/mockgen@latest
 endif
 	go generate ./client/...
-	${MAKE} format
 
 compile = GOOS=$2 GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o target/$1-$2 ./cmd/$1
 

@@ -83,6 +83,9 @@ const (
 
 	ErrNoSuchVersion ErrorCode = "NoSuchVersion"
 
+	// No need to retransmit the object
+	ErrNotModified ErrorCode = "NotModified"
+
 	ErrRequestTimeTooSkewed ErrorCode = "RequestTimeTooSkewed"
 	ErrTooManyBuckets       ErrorCode = "TooManyBuckets"
 	ErrNotImplemented       ErrorCode = "NotImplemented"
@@ -214,6 +217,8 @@ func (e InternalErrorCode) Error() string        { return string(ErrInternal) }
 // know!
 func (e ErrorCode) Message() string {
 	switch e {
+	case ErrInvalidBucketName:
+		return `Bucket name must match the regex "^[a-zA-Z0-9.\-_]{1,255}$"`
 	case ErrNoSuchBucket:
 		return "The specified bucket does not exist"
 	case ErrRequestTimeTooSkewed:
@@ -265,6 +270,9 @@ func (e ErrorCode) Status() int {
 
 	case ErrNotImplemented:
 		return http.StatusNotImplemented
+
+	case ErrNotModified:
+		return http.StatusNotModified
 
 	case ErrMissingContentLength:
 		return http.StatusLengthRequired

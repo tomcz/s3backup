@@ -185,7 +185,7 @@ type ListBucketResultBase struct {
 	// Specifies whether (true) or not (false) all of the results were
 	// returned. If the number of results exceeds that specified by MaxKeys,
 	// all of the results might not be returned.
-	IsTruncated bool `xml:"IsTruncated,omitempty"`
+	IsTruncated bool `xml:"IsTruncated"`
 
 	// Causes keys that contain the same string between the prefix and the
 	// first occurrence of the delimiter to be rolled up into a single result
@@ -203,6 +203,12 @@ type ListBucketResultBase struct {
 
 	CommonPrefixes []CommonPrefix `xml:"CommonPrefixes,omitempty"`
 	Contents       []*Content     `xml:"Contents"`
+}
+
+type GetBucketLocation struct {
+	XMLName            xml.Name `xml:"LocationConstraint"`
+	Xmlns              string   `xml:"xmlns,attr"`
+	LocationConstraint string   `xml:",chardata"`
 }
 
 type ListBucketResult struct {
@@ -422,6 +428,13 @@ type ListMultipartUploadPartItem struct {
 	LastModified ContentTime `xml:"LastModified,omitempty"`
 	ETag         string      `xml:"ETag,omitempty"`
 	Size         int64       `xml:"Size"`
+}
+
+// CopyObjectResult contains the response from a CopyObject operation.
+type CopyObjectResult struct {
+	XMLName      xml.Name    `xml:"CopyObjectResult"`
+	ETag         string      `xml:"ETag,omitempty"`
+	LastModified ContentTime `xml:"LastModified,omitempty"`
 }
 
 // MFADeleteStatus is used by VersioningConfiguration.
