@@ -5,10 +5,12 @@ LDFLAGS := -s -w -X github.com/tomcz/s3backup/config.commit=${GITCOMMIT}
 LDFLAGS := ${LDFLAGS} -X github.com/tomcz/s3backup/config.tag=${GIT_TAG}
 
 .PHONY: precommit
-precommit: clean generate format lint test build
+precommit: clean generate format lint test compile
 
 .PHONY: commit
-commit: clean test build
+commit: clean test cross-compile
+	rm target/s3backup
+	ls -lha target/
 
 .PHONY: clean
 clean:
@@ -35,7 +37,7 @@ endif
 
 .PHONY: test
 test:
-	go test -race -cover -ldflags "${LDFLAGS}" ./...
+	go test -race -cover ./...
 
 .PHONY: generate
 generate:
@@ -44,9 +46,24 @@ ifeq (, $(shell which mockgen))
 endif
 	go generate ./client/...
 
-compile = GOOS=$2 GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o target/$1-$2 ./cmd/$1
+.PHONY: compile
+compile: target
+	rm -f target/s3backup
+	go build -ldflags "${LDFLAGS}" -o target ./cmd/...
 
-.PHONY: build
-build: target
-	$(call compile,s3backup,linux)
-	$(call compile,s3backup,darwin)
+pack = gzip -c < target/s3backup > target/s3backup-${1}.gz
+
+.PHONY: cross-compile
+cross-compile:
+	GOOS=linux GOARCH=amd64 $(MAKE) compile
+	$(call pack,linux-amd64)
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 $(MAKE) compile
+	$(call pack,linux-amd64-nocgo)
+	GOOS=darwin GOARCH=amd64 $(MAKE) compile
+	$(call pack,osx-amd64)
+	GOOS=darwin GOARCH=arm64 $(MAKE) compile
+	$(call pack,osx-arm64)
+	GOOS=windows GOARCH=amd64 $(MAKE) compile
+	$(call pack,win-amd64.exe)
+	GOOS=windows GOARCH=386 $(MAKE) compile
+	$(call pack,win-386.exe)
