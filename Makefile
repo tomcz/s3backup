@@ -9,7 +9,6 @@ precommit: clean generate format lint test compile
 
 .PHONY: commit
 commit: clean test cross-compile
-	rm target/s3backup
 	ls -lha target/
 
 .PHONY: clean
@@ -48,7 +47,6 @@ endif
 
 .PHONY: compile
 compile: target
-	rm -f target/s3backup
 	go build -ldflags "${LDFLAGS}" -o target ./cmd/...
 
 pack = gzip -c < target/s3backup > target/s3backup-${1}.gz
@@ -56,14 +54,14 @@ pack = gzip -c < target/s3backup > target/s3backup-${1}.gz
 .PHONY: cross-compile
 cross-compile:
 	GOOS=linux GOARCH=amd64 $(MAKE) compile
-	$(call pack,linux-amd64)
+	#$(call pack,linux-amd64)
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 $(MAKE) compile
-	$(call pack,linux-amd64-nocgo)
+	#$(call pack,linux-amd64-nocgo)
 	GOOS=darwin GOARCH=amd64 $(MAKE) compile
-	$(call pack,osx-amd64)
+	#$(call pack,osx-amd64)
 	GOOS=darwin GOARCH=arm64 $(MAKE) compile
-	$(call pack,osx-arm64)
+	#$(call pack,osx-arm64)
 	GOOS=windows GOARCH=amd64 $(MAKE) compile
-	$(call pack,win-amd64.exe)
+	#$(call pack,win-amd64.exe)
 	GOOS=windows GOARCH=386 $(MAKE) compile
-	$(call pack,win-386.exe)
+	#$(call pack,win-386.exe)
