@@ -3,6 +3,7 @@ GIT_TAG := $(shell git describe --tags 2>/dev/null)
 
 LDFLAGS := -s -w -X github.com/tomcz/s3backup/config.commit=${GITCOMMIT}
 LDFLAGS := ${LDFLAGS} -X github.com/tomcz/s3backup/config.tag=${GIT_TAG}
+OUTFILE ?= s3backup
 
 .PHONY: precommit
 precommit: clean generate format lint test compile
@@ -47,21 +48,14 @@ endif
 
 .PHONY: compile
 compile: target
-	go build -ldflags "${LDFLAGS}" -o target ./cmd/...
-
-pack = gzip -c < target/s3backup > target/s3backup-${1}.gz
+	go build -ldflags "${LDFLAGS}" -o target/${OUTFILE} ./cmd/s3backup/...
+	gzip -c < target/${OUTFILE} > target/${OUTFILE}.gz
 
 .PHONY: cross-compile
 cross-compile:
-	GOOS=linux GOARCH=amd64 $(MAKE) compile
-	#$(call pack,linux-amd64)
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 $(MAKE) compile
-	#$(call pack,linux-amd64-nocgo)
-	GOOS=darwin GOARCH=amd64 $(MAKE) compile
-	#$(call pack,osx-amd64)
-	GOOS=darwin GOARCH=arm64 $(MAKE) compile
-	#$(call pack,osx-arm64)
-	GOOS=windows GOARCH=amd64 $(MAKE) compile
-	#$(call pack,win-amd64.exe)
-	GOOS=windows GOARCH=386 $(MAKE) compile
-	#$(call pack,win-386.exe)
+	OUTFILE=s3backup-linux-amd64 GOOS=linux GOARCH=amd64 $(MAKE) compile
+	OUTFILE=s3backup-linux-nocgo CGO_ENABLED=0 GOOS=linux GOARCH=amd64 $(MAKE) compile
+	OUTFILE=s3backup-osx-amd64 GOOS=darwin GOARCH=amd64 $(MAKE) compile
+	OUTFILE=s3backup-osx-arm64 GOOS=darwin GOARCH=arm64 $(MAKE) compile
+	OUTFILE=s3backup-win-amd64.exe GOOS=windows GOARCH=amd64 $(MAKE) compile
+	OUTFILE=s3backup-win-386.exe GOOS=windows GOARCH=386 $(MAKE) compile
