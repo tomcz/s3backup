@@ -59,3 +59,4 @@ cross-compile:
 	OUTFILE=s3backup-osx-arm64 GOOS=darwin GOARCH=arm64 $(MAKE) compile
 	OUTFILE=s3backup-win-amd64.exe GOOS=windows GOARCH=amd64 $(MAKE) compile
 	OUTFILE=s3backup-win-386.exe GOOS=windows GOARCH=386 $(MAKE) compile
+	(cd target && find . -name '*.gz' -exec sha256sum {} \;) > target/verify.sha256
