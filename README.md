@@ -56,7 +56,7 @@ NAME:
    s3backup put - Upload file to S3 bucket using local credentials
 
 USAGE:
-   s3backup put [command options] s3://bucket/objectkey local_file_path
+   s3backup put [command options] local_file_path s3://bucket/objectkey
 
 OPTIONS:
    --symKey value     Password to use for symmetric AES encryption (optional)
@@ -102,7 +102,7 @@ NAME:
    s3backup vault-put - Upload file to S3 bucket using credentials from vault
 
 USAGE:
-   s3backup vault-put [command options] s3://bucket/objectkey local_file_path
+   s3backup vault-put [command options] local_file_path s3://bucket/objectkey
 
 OPTIONS:
    --role value    Vault role_id to retrieve backup credentials (either role & secret, or token)

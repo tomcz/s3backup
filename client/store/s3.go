@@ -51,6 +51,10 @@ func NewS3(awsAccessKey, awsSecretKey, awsToken, awsRegion, awsEndpoint string) 
 	return &s3store{s3.New(awsSession)}, nil
 }
 
+func (s *s3store) IsRemote(path string) bool {
+	return s3PathPattern.MatchString(path)
+}
+
 func (s *s3store) UploadFile(remotePath, localPath, checksum string) error {
 	bucket, objectKey, err := splitRemotePath(remotePath)
 	if err != nil {

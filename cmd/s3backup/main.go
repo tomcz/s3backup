@@ -42,7 +42,7 @@ func main() {
 	cmdBasicPut := &cli.Command{
 		Name:      "put",
 		Usage:     "Upload file to S3 bucket using local credentials",
-		ArgsUsage: "s3://bucket/objectkey local_file_path",
+		ArgsUsage: "local_file_path s3://bucket/objectkey",
 		Action:    basicPut,
 		Flags:     basicFlags(true),
 	}
@@ -56,7 +56,7 @@ func main() {
 	cmdVaultPut := &cli.Command{
 		Name:      "vault-put",
 		Usage:     "Upload file to S3 bucket using credentials from vault",
-		ArgsUsage: "s3://bucket/objectkey local_file_path",
+		ArgsUsage: "local_file_path s3://bucket/objectkey",
 		Action:    vaultPut,
 		Flags:     vaultFlags(true),
 	}

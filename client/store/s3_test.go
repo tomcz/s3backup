@@ -1,7 +1,6 @@
 package store
 
 import (
-	"io/ioutil"
 	"net/http/httptest"
 	"os"
 	"testing"
@@ -31,6 +30,12 @@ func TestSplitRemotePath(t *testing.T) {
 
 	_, _, err = splitRemotePath("http://example.com/wibble.bar")
 	assert.Error(t, err)
+}
+
+func TestIsRemote(t *testing.T) {
+	store := &s3store{}
+	assert.True(t, store.IsRemote("s3://bucket/object.key"))
+	assert.False(t, store.IsRemote("wibble.txt"))
 }
 
 func TestRoundTripUploadDownload_withChecksum(t *testing.T) {
@@ -63,7 +68,7 @@ func TestRoundTripUploadDownload_withChecksum(t *testing.T) {
 	require.NoError(t, err, "failed to download file")
 	defer os.Remove(downloadFile)
 
-	actual, err := ioutil.ReadFile(downloadFile)
+	actual, err := os.ReadFile(downloadFile)
 	require.NoError(t, err, "Cannot read downloaded file")
 
 	assert.Equal(t, "wibble", checksum)
@@ -100,7 +105,7 @@ func TestRoundTripUploadDownload_withoutChecksum(t *testing.T) {
 	require.NoError(t, err, "failed to download file")
 	defer os.Remove(downloadFile)
 
-	actual, err := ioutil.ReadFile(downloadFile)
+	actual, err := os.ReadFile(downloadFile)
 	require.NoError(t, err, "Cannot read downloaded file")
 
 	assert.Equal(t, "", checksum)

@@ -48,6 +48,20 @@ func (mr *MockStoreMockRecorder) DownloadFile(remotePath, localPath, readChecksu
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DownloadFile", reflect.TypeOf((*MockStore)(nil).DownloadFile), remotePath, localPath, readChecksum)
 }
 
+// IsRemote mocks base method.
+func (m *MockStore) IsRemote(path string) bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "IsRemote", path)
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// IsRemote indicates an expected call of IsRemote.
+func (mr *MockStoreMockRecorder) IsRemote(path interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsRemote", reflect.TypeOf((*MockStore)(nil).IsRemote), path)
+}
+
 // UploadFile mocks base method.
 func (m *MockStore) UploadFile(remotePath, localPath, checksum string) error {
 	m.ctrl.T.Helper()

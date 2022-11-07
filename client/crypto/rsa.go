@@ -13,7 +13,6 @@ import (
 	"encoding/pem"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 
 	"github.com/tomcz/s3backup/client"
@@ -31,7 +30,7 @@ type rsaCipher struct {
 }
 
 func NewRSACipher(pemKeyFile string) (client.Cipher, error) {
-	buf, err := ioutil.ReadFile(pemKeyFile)
+	buf, err := os.ReadFile(pemKeyFile)
 	if err != nil {
 		return nil, err
 	}

@@ -1,7 +1,6 @@
 package crypto
 
 import (
-	"io/ioutil"
 	"os"
 	"testing"
 
@@ -44,7 +43,7 @@ func TestRoundTripRSAEncryptDecrypt(t *testing.T) {
 	require.NoError(t, pubCipher.Encrypt(file, encryptedFile), "Cannot encrypt file")
 	require.NoError(t, privCipher.Decrypt(encryptedFile, decryptedFile), "Cannot decrypt file")
 
-	actual, err := ioutil.ReadFile(decryptedFile)
+	actual, err := os.ReadFile(decryptedFile)
 	require.NoError(t, err, "Cannot read decrypted file")
 
 	assert.Equal(t, expected, actual, "File contents are different")
