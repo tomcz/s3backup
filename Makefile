@@ -1,3 +1,4 @@
+BASE_DIR := $(shell git rev-parse --show-toplevel 2>/dev/null)
 GITCOMMIT := $(shell git rev-parse --short HEAD 2>/dev/null)
 GIT_TAG := $(shell git describe --tags 2>/dev/null)
 
@@ -21,19 +22,11 @@ target:
 
 .PHONY: format
 format:
-ifeq (, $(shell which goimports))
-	go install golang.org/x/tools/cmd/goimports@latest
-endif
-	@echo "Running goimports ..."
-	@goimports -w -local github.com/tomcz/s3backup $(shell find . -type f -name '*.go' | grep -v '/vendor/')
+	${BASE_DIR}/scripts/format.sh
 
 .PHONY: lint
 lint:
-ifeq (, $(shell which staticcheck))
-	go install honnef.co/go/tools/cmd/staticcheck@latest
-endif
-	@echo "Running staticcheck ..."
-	@staticcheck $(shell go list ./... | grep -v /vendor/)
+	${BASE_DIR}/scripts/lint.sh
 
 .PHONY: test
 test:
@@ -41,9 +34,7 @@ test:
 
 .PHONY: generate
 generate:
-ifeq (, $(shell which mockgen))
-	go install github.com/golang/mock/mockgen@latest
-endif
+	${BASE_DIR}/scripts/mockgen.sh
 	go generate ./client/...
 
 .PHONY: compile
