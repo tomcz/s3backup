@@ -22,11 +22,12 @@ target:
 
 .PHONY: format
 format:
-	${BASE_DIR}/scripts/format.sh
+	@echo 'goimports ./...'
+	@goimports -w -local github.com/tomcz/s3backup $(shell find . -type f -name '*.go' -not -path './vendor/*')
 
 .PHONY: lint
 lint:
-	${BASE_DIR}/scripts/lint.sh
+	golangci-lint run
 
 .PHONY: test
 test:
@@ -34,7 +35,6 @@ test:
 
 .PHONY: generate
 generate:
-	${BASE_DIR}/scripts/mockgen.sh
 	go generate ./client/...
 
 .PHONY: compile

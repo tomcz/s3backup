@@ -60,6 +60,6 @@ func lookup(client *api.Client, path string) (*Config, error) {
 
 func logout(client *api.Client, shouldLogout bool) {
 	if shouldLogout {
-		client.Auth().Token().RevokeSelf("")
+		client.Auth().Token().RevokeSelf("") //nolint:all
 	}
 }
