@@ -63,7 +63,7 @@ func (s *s3store) UploadFile(remotePath, localPath, checksum string) error {
 
 	file, err := os.Open(localPath)
 	if err != nil {
-		return fmt.Errorf("cannot open %s: %w", localPath, err)
+		return fmt.Errorf("cannot open %q: %w", localPath, err)
 	}
 	defer file.Close()
 
@@ -108,7 +108,7 @@ func (s *s3store) DownloadFile(remotePath, localPath string, readChecksum bool) 
 
 	file, err := os.Create(localPath)
 	if err != nil {
-		return "", fmt.Errorf("cannot create %s: %w", localPath, err)
+		return "", fmt.Errorf("cannot create %q: %w", localPath, err)
 	}
 	defer file.Close()
 
@@ -128,7 +128,7 @@ func splitRemotePath(remotePath string) (bucket string, objectKey string, err er
 		bucket = md[1]
 		objectKey = md[2]
 	} else {
-		err = fmt.Errorf("%v is not a valid S3 path", remotePath)
+		err = fmt.Errorf("%q is not a valid S3 path", remotePath)
 	}
 	return // bucket, objectKey, err
 }
