@@ -93,12 +93,12 @@ func (s *s3store) DownloadFile(remotePath, localPath string, readChecksum bool) 
 
 	var checksum string
 	if readChecksum {
-		res, err := s.api.HeadObject(&s3.HeadObjectInput{
+		res, cerr := s.api.HeadObject(&s3.HeadObjectInput{
 			Bucket: aws.String(bucket),
 			Key:    aws.String(objectKey),
 		})
-		if err != nil {
-			return "", fmt.Errorf("failed to read checksum: %w", err)
+		if cerr != nil {
+			return "", fmt.Errorf("failed to read checksum: %w", cerr)
 		}
 		hash, ok := res.Metadata[checksumKey]
 		if ok {
