@@ -85,14 +85,14 @@ func main() {
 	}
 	cmdEncrypt := &cli.Command{
 		Name:      "encrypt",
-		Usage:     "Just encrypt a local file",
+		Usage:     "Encrypt a local file",
 		ArgsUsage: "inFile outFile",
 		Action:    encryptLocalFile,
 		Flags:     cipherFlags(true),
 	}
 	cmdDecrypt := &cli.Command{
 		Name:      "decrypt",
-		Usage:     "Just decrypt a local file",
+		Usage:     "Decrypt a local file",
 		ArgsUsage: "inFile outFile",
 		Action:    decryptLocalFile,
 		Flags:     cipherFlags(false),
