@@ -36,8 +36,8 @@ COMMANDS:
    vault-put  Upload file to S3 bucket using credentials from vault
    vault-get  Download file from S3 bucket using credentials from vault
    keygen     Generate RSA and AES backup keys
-   encrypt    Just encrypt a local file
-   decrypt    Just decrypt a local file
+   encrypt    Encrypt a local file
+   decrypt    Decrypt a local file
    help, h    Shows a list of commands or help for one command
 
 GLOBAL OPTIONS:
@@ -135,7 +135,7 @@ OPTIONS:
 
 ## Backup key generation
 
-To make things easier, `s3backup` also provides `keygen` commands to create 256-bit symmetric keys and 2048-bit RSA private/public key pairs suitable for use by `s3backup`.
+To make things easier, `s3backup` also provides `keygen` commands to create 256-bit symmetric keys and 4096-bit RSA private/public key pairs suitable for use by `s3backup`.
 
 ```
 NAME:
@@ -156,5 +156,5 @@ OPTIONS:
 
 ## Build
 
-1. Install Go 1.18 from https://golang.org/
+1. Install Go 1.19 from https://golang.org/
 2. Build the binaries: `make build`
