@@ -8,7 +8,6 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/sha256"
-	"crypto/x509"
 	"encoding/binary"
 	"encoding/pem"
 	"fmt"
@@ -19,30 +18,20 @@ import (
 	"github.com/tomcz/s3backup/utils"
 )
 
-const (
-	asymKeyVersion = "BAKv1"
-	rsaPublicKey   = "PUBLIC KEY"
-	rsaPrivateKey  = "PRIVATE KEY"
-)
-
 type rsaCipher struct {
 	block *pem.Block
 }
 
 func NewRSACipher(pemKeyFile string) (client.Cipher, error) {
-	buf, err := os.ReadFile(pemKeyFile)
+	block, err := readFromPemFile(pemKeyFile)
 	if err != nil {
 		return nil, err
-	}
-	block, _ := pem.Decode(buf)
-	if block == nil {
-		return nil, fmt.Errorf("%v does not contain a PEM block", pemKeyFile)
 	}
 	return &rsaCipher{block}, nil
 }
 
 func (c *rsaCipher) Encrypt(plainTextFile, cipherTextFile string) error {
-	pubKey, err := c.decodePublicKey()
+	pubKey, err := decodePublicKey(c.block)
 	if err != nil {
 		return err
 	}
@@ -73,16 +62,16 @@ func (c *rsaCipher) Encrypt(plainTextFile, cipherTextFile string) error {
 	}
 	defer outFile.Close()
 
-	if _, err := outFile.Write([]byte(asymKeyVersion)); err != nil {
+	if _, err = outFile.Write([]byte(asymKeyVersion)); err != nil {
 		return err
 	}
-	if err := binary.Write(outFile, binary.LittleEndian, uint64(len(encAesKey))); err != nil {
+	if err = binary.Write(outFile, binary.LittleEndian, uint64(len(encAesKey))); err != nil {
 		return err
 	}
-	if _, err := outFile.Write(encAesKey); err != nil {
+	if _, err = outFile.Write(encAesKey); err != nil {
 		return err
 	}
-	if _, err := outFile.Write(iv); err != nil {
+	if _, err = outFile.Write(iv); err != nil {
 		return err
 	}
 
@@ -99,7 +88,7 @@ func (c *rsaCipher) Encrypt(plainTextFile, cipherTextFile string) error {
 }
 
 func (c *rsaCipher) Decrypt(cipherTextFile, plainTextFile string) error {
-	privKey, err := c.decodePrivateKey()
+	privKey, err := decodePrivateKey(c.block)
 	if err != nil {
 		return err
 	}
@@ -111,7 +100,7 @@ func (c *rsaCipher) Decrypt(cipherTextFile, plainTextFile string) error {
 	defer inFile.Close()
 
 	preamble := make([]byte, len(asymKeyVersion))
-	if _, err := inFile.Read(preamble); err != nil {
+	if _, err = inFile.Read(preamble); err != nil {
 		return err
 	}
 	if !bytes.Equal(preamble, []byte(asymKeyVersion)) {
@@ -119,11 +108,11 @@ func (c *rsaCipher) Decrypt(cipherTextFile, plainTextFile string) error {
 	}
 
 	var encAesKeyLen uint64
-	if err := binary.Read(inFile, binary.LittleEndian, &encAesKeyLen); err != nil {
+	if err = binary.Read(inFile, binary.LittleEndian, &encAesKeyLen); err != nil {
 		return err
 	}
 	encAesKey := make([]byte, encAesKeyLen)
-	if _, err := inFile.Read(encAesKey); err != nil {
+	if _, err = inFile.Read(encAesKey); err != nil {
 		return err
 	}
 	aesKey, err := privKey.Decrypt(rand.Reader, encAesKey, &rsa.OAEPOptions{Hash: crypto.SHA256})
@@ -136,7 +125,7 @@ func (c *rsaCipher) Decrypt(cipherTextFile, plainTextFile string) error {
 	}
 
 	iv := make([]byte, block.BlockSize())
-	if _, err := inFile.Read(iv); err != nil {
+	if _, err = inFile.Read(iv); err != nil {
 		return err
 	}
 
@@ -150,26 +139,4 @@ func (c *rsaCipher) Decrypt(cipherTextFile, plainTextFile string) error {
 	reader := &cipher.StreamReader{S: stream, R: inFile}
 	_, err = io.Copy(outFile, reader)
 	return err
-}
-
-func (c *rsaCipher) decodePublicKey() (*rsa.PublicKey, error) {
-	if c.block.Type != rsaPublicKey {
-		return nil, fmt.Errorf("bad PEM block: expected %v, actual %v", rsaPublicKey, c.block.Type)
-	}
-	pub, err := x509.ParsePKIXPublicKey(c.block.Bytes)
-	if err != nil {
-		return nil, err
-	}
-	pubKey, ok := pub.(*rsa.PublicKey)
-	if !ok {
-		return nil, fmt.Errorf("bad PEM block: expected *rsa.PublicKey, actual %T", pub)
-	}
-	return pubKey, nil
-}
-
-func (c *rsaCipher) decodePrivateKey() (*rsa.PrivateKey, error) {
-	if c.block.Type != rsaPrivateKey {
-		return nil, fmt.Errorf("bad PEM block: expected %v, actual %v", rsaPrivateKey, c.block.Type)
-	}
-	return x509.ParsePKCS1PrivateKey(c.block.Bytes)
 }

@@ -4,8 +4,6 @@ import (
 	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
-	"crypto/sha256"
-	"encoding/base64"
 	"fmt"
 	"io"
 	"os"
@@ -14,23 +12,14 @@ import (
 	"github.com/tomcz/s3backup/utils"
 )
 
-const symKeyVersion = "BSKv1"
-
 type aesCipher struct {
 	key []byte
 }
 
 func NewAESCipher(secretKey string) (client.Cipher, error) {
-	key, err := base64.StdEncoding.DecodeString(secretKey)
+	key, err := parseAESKey(secretKey)
 	if err != nil {
-		// assume the key should be hashed instead
-		sum := sha256.Sum256([]byte(secretKey))
-		key = sum[:]
-	}
-	if len(key) != 32 {
-		// key is not quite right so we hash it
-		sum := sha256.Sum256(key)
-		key = sum[:]
+		return nil, err
 	}
 	return &aesCipher{key}, nil
 }
@@ -52,10 +41,10 @@ func (c *aesCipher) Encrypt(plainTextFile, cipherTextFile string) error {
 	}
 	defer outFile.Close()
 
-	if _, err := outFile.Write([]byte(symKeyVersion)); err != nil {
+	if _, err = outFile.Write([]byte(symKeyVersion)); err != nil {
 		return err
 	}
-	if _, err := outFile.Write(iv); err != nil {
+	if _, err = outFile.Write(iv); err != nil {
 		return err
 	}
 
@@ -84,7 +73,7 @@ func (c *aesCipher) Decrypt(cipherTextFile, plainTextFile string) error {
 	defer inFile.Close()
 
 	preamble := make([]byte, len(symKeyVersion))
-	if _, err := inFile.Read(preamble); err != nil {
+	if _, err = inFile.Read(preamble); err != nil {
 		return err
 	}
 	if !bytes.Equal(preamble, []byte(symKeyVersion)) {
@@ -92,7 +81,7 @@ func (c *aesCipher) Decrypt(cipherTextFile, plainTextFile string) error {
 	}
 
 	iv := make([]byte, block.BlockSize())
-	if _, err := inFile.Read(iv); err != nil {
+	if _, err = inFile.Read(iv); err != nil {
 		return err
 	}
 
