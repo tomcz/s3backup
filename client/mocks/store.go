@@ -34,18 +34,18 @@ func (m *MockStore) EXPECT() *MockStoreMockRecorder {
 }
 
 // DownloadFile mocks base method.
-func (m *MockStore) DownloadFile(remotePath, localPath string, readChecksum bool) (string, error) {
+func (m *MockStore) DownloadFile(remotePath, localPath string) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DownloadFile", remotePath, localPath, readChecksum)
+	ret := m.ctrl.Call(m, "DownloadFile", remotePath, localPath)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // DownloadFile indicates an expected call of DownloadFile.
-func (mr *MockStoreMockRecorder) DownloadFile(remotePath, localPath, readChecksum interface{}) *gomock.Call {
+func (mr *MockStoreMockRecorder) DownloadFile(remotePath, localPath interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DownloadFile", reflect.TypeOf((*MockStore)(nil).DownloadFile), remotePath, localPath, readChecksum)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DownloadFile", reflect.TypeOf((*MockStore)(nil).DownloadFile), remotePath, localPath)
 }
 
 // IsRemote mocks base method.

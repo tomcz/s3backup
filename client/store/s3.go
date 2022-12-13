@@ -7,6 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
@@ -85,25 +86,10 @@ func (s *s3store) UploadFile(remotePath, localPath, checksum string) error {
 	return nil
 }
 
-func (s *s3store) DownloadFile(remotePath, localPath string, readChecksum bool) (string, error) {
+func (s *s3store) DownloadFile(remotePath, localPath string) (string, error) {
 	bucket, objectKey, err := splitRemotePath(remotePath)
 	if err != nil {
 		return "", err
-	}
-
-	var checksum string
-	if readChecksum {
-		res, cerr := s.api.HeadObject(&s3.HeadObjectInput{
-			Bucket: aws.String(bucket),
-			Key:    aws.String(objectKey),
-		})
-		if cerr != nil {
-			return "", fmt.Errorf("failed to read checksum: %w", cerr)
-		}
-		hash, ok := res.Metadata[checksumKey]
-		if ok {
-			checksum = *hash
-		}
 	}
 
 	file, err := os.Create(localPath)
@@ -112,11 +98,11 @@ func (s *s3store) DownloadFile(remotePath, localPath string, readChecksum bool) 
 	}
 	defer file.Close()
 
+	var checksum string
 	downloader := s3manager.NewDownloaderWithClient(s.api)
-	_, err = downloader.Download(file, &s3.GetObjectInput{
-		Bucket: aws.String(bucket),
-		Key:    aws.String(objectKey),
-	})
+	req := &s3.GetObjectInput{Bucket: aws.String(bucket), Key: aws.String(objectKey)}
+	opt := request.WithGetResponseHeader(fmt.Sprintf("x-amz-meta-%s", checksumKey), &checksum)
+	_, err = downloader.Download(file, req, s3manager.WithDownloaderRequestOptions(opt))
 	if err != nil {
 		return "", fmt.Errorf("download failed: %w", err)
 	}

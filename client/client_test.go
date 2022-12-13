@@ -23,7 +23,7 @@ func TestGetRemoteFileWithoutDecryption(t *testing.T) {
 
 	store.EXPECT().IsRemote("bar.txt").Return(false).AnyTimes()
 	store.EXPECT().IsRemote("s3://foo/bar.txt").Return(true).AnyTimes()
-	store.EXPECT().DownloadFile("s3://foo/bar.txt", "bar.txt", true).Return("muahahaha", nil)
+	store.EXPECT().DownloadFile("s3://foo/bar.txt", "bar.txt").Return("muahahaha", nil)
 	hash.EXPECT().Verify("bar.txt", "muahahaha").Return(nil)
 
 	assert.NoError(t, c.GetRemoteFile("bar.txt", "s3://foo/bar.txt"))
@@ -45,7 +45,7 @@ func TestGetRemoteFileWithDecryption(t *testing.T) {
 
 	store.EXPECT().IsRemote("bar.txt").Return(false).AnyTimes()
 	store.EXPECT().IsRemote("s3://foo/bar.txt").Return(true).AnyTimes()
-	store.EXPECT().DownloadFile("s3://foo/bar.txt", "bar.txt.tmp", true).Return("muahahaha", nil)
+	store.EXPECT().DownloadFile("s3://foo/bar.txt", "bar.txt.tmp").Return("muahahaha", nil)
 	hash.EXPECT().Verify("bar.txt.tmp", "muahahaha").Return(nil)
 	cipher.EXPECT().Decrypt("bar.txt.tmp", "bar.txt").Return(nil)
 

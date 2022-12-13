@@ -5,5 +5,5 @@ package client
 type Store interface {
 	IsRemote(path string) bool
 	UploadFile(remotePath, localPath, checksum string) error
-	DownloadFile(remotePath, localPath string, readChecksum bool) (checksum string, err error)
+	DownloadFile(remotePath, localPath string) (checksum string, err error)
 }

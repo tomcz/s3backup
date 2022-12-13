@@ -29,7 +29,7 @@ func (c *Client) GetRemoteFile(remotePath, localPath string) error {
 	}
 
 	log.Println("Downloading", remotePath, "to", tempFile)
-	checksum, cerr := c.Store.DownloadFile(remotePath, tempFile, c.Hash != nil)
+	checksum, cerr := c.Store.DownloadFile(remotePath, tempFile)
 	if cerr != nil {
 		return cerr
 	}
