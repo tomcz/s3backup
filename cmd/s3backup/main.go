@@ -302,7 +302,9 @@ func vaultGet(ctx *cli.Context) error {
 
 func maybeRemoveKeyFile() {
 	if pemKeyFile != "" {
-		os.Remove(pemKeyFile)
+		if err := os.Remove(pemKeyFile); err != nil {
+			log.Printf("WARNING: unable to remove key file %s: %v\n", pemKeyFile, err)
+		}
 	}
 }
 
