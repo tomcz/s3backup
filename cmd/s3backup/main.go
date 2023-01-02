@@ -285,7 +285,7 @@ func basicGet(ctx *cli.Context) error {
 }
 
 func vaultPut(ctx *cli.Context) error {
-	if err := initWithVault(); err != nil {
+	if err := initWithVault(true); err != nil {
 		return err
 	}
 	defer maybeRemoveKeyFile()
@@ -293,7 +293,7 @@ func vaultPut(ctx *cli.Context) error {
 }
 
 func vaultGet(ctx *cli.Context) error {
-	if err := initWithVault(); err != nil {
+	if err := initWithVault(false); err != nil {
 		return err
 	}
 	defer maybeRemoveKeyFile()
@@ -308,7 +308,7 @@ func maybeRemoveKeyFile() {
 	}
 }
 
-func initWithVault() error {
+func initWithVault(encrypt bool) error {
 	log.Println("Fetching configuration from vault")
 
 	if vaultPath == "" {
@@ -328,13 +328,13 @@ func initWithVault() error {
 		return err
 	}
 
-	if cfg.PublicKey != "" {
+	if encrypt && cfg.PublicKey != "" {
 		pemKeyFile, err = utils.CreateTempFile("pub", []byte(cfg.PublicKey))
 		if err != nil {
 			return err
 		}
 	}
-	if cfg.PrivateKey != "" {
+	if !encrypt && cfg.PrivateKey != "" {
 		pemKeyFile, err = utils.CreateTempFile("prv", []byte(cfg.PrivateKey))
 		if err != nil {
 			return err
