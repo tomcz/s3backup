@@ -12,6 +12,7 @@ import (
 	"github.com/tomcz/s3backup/client/crypto"
 	"github.com/tomcz/s3backup/client/store"
 	"github.com/tomcz/s3backup/config"
+	"github.com/tomcz/s3backup/utils"
 )
 
 var (
@@ -287,6 +288,7 @@ func vaultPut(ctx *cli.Context) error {
 	if err := initWithVault(); err != nil {
 		return err
 	}
+	defer maybeRemoveKeyFile()
 	return basicPut(ctx)
 }
 
@@ -294,7 +296,14 @@ func vaultGet(ctx *cli.Context) error {
 	if err := initWithVault(); err != nil {
 		return err
 	}
+	defer maybeRemoveKeyFile()
 	return basicGet(ctx)
+}
+
+func maybeRemoveKeyFile() {
+	if pemKeyFile != "" {
+		os.Remove(pemKeyFile)
+	}
 }
 
 func initWithVault() error {
@@ -317,6 +326,18 @@ func initWithVault() error {
 		return err
 	}
 
+	if cfg.PublicKey != "" {
+		pemKeyFile, err = utils.CreateTempFile("pub", []byte(cfg.PublicKey))
+		if err != nil {
+			return err
+		}
+	}
+	if cfg.PrivateKey != "" {
+		pemKeyFile, err = utils.CreateTempFile("prv", []byte(cfg.PrivateKey))
+		if err != nil {
+			return err
+		}
+	}
 	symKey = cfg.CipherKey
 	awsAccessKey = cfg.S3AccessKey
 	awsSecretKey = cfg.S3SecretKey
