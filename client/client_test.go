@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
-	"github.com/stretchr/testify/assert"
+	"gotest.tools/v3/assert"
 
 	"github.com/tomcz/s3backup/client/mocks"
 )
@@ -26,7 +26,7 @@ func TestGetRemoteFileWithoutDecryption(t *testing.T) {
 	store.EXPECT().DownloadFile("s3://foo/bar.txt", "bar.txt").Return("muahahaha", nil)
 	hash.EXPECT().Verify("bar.txt", "muahahaha").Return(nil)
 
-	assert.NoError(t, c.GetRemoteFile("bar.txt", "s3://foo/bar.txt"))
+	assert.NilError(t, c.GetRemoteFile("bar.txt", "s3://foo/bar.txt"))
 }
 
 func TestGetRemoteFileWithDecryption(t *testing.T) {
@@ -49,7 +49,7 @@ func TestGetRemoteFileWithDecryption(t *testing.T) {
 	hash.EXPECT().Verify("bar.txt.tmp", "muahahaha").Return(nil)
 	cipher.EXPECT().Decrypt("bar.txt.tmp", "bar.txt").Return(nil)
 
-	assert.NoError(t, c.GetRemoteFile("s3://foo/bar.txt", "bar.txt"))
+	assert.NilError(t, c.GetRemoteFile("s3://foo/bar.txt", "bar.txt"))
 }
 
 func TestPutLocalFileWithoutEncryption(t *testing.T) {
@@ -69,7 +69,7 @@ func TestPutLocalFileWithoutEncryption(t *testing.T) {
 	hash.EXPECT().Calculate("bar.txt").Return("woahahaha", nil)
 	store.EXPECT().UploadFile("s3://foo/bar.txt", "bar.txt", "woahahaha").Return(nil)
 
-	assert.NoError(t, c.PutLocalFile("bar.txt", "s3://foo/bar.txt"))
+	assert.NilError(t, c.PutLocalFile("bar.txt", "s3://foo/bar.txt"))
 }
 
 func TestPutLocalFileWithEncryption(t *testing.T) {
@@ -92,5 +92,5 @@ func TestPutLocalFileWithEncryption(t *testing.T) {
 	hash.EXPECT().Calculate("bar.txt.tmp").Return("woahahaha", nil)
 	store.EXPECT().UploadFile("s3://foo/bar.txt", "bar.txt.tmp", "woahahaha").Return(nil)
 
-	assert.NoError(t, c.PutLocalFile("s3://foo/bar.txt", "bar.txt"))
+	assert.NilError(t, c.PutLocalFile("s3://foo/bar.txt", "bar.txt"))
 }
