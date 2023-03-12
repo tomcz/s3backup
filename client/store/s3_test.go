@@ -26,7 +26,7 @@ func TestSplitRemotePath(t *testing.T) {
 	assert.Equal(t, "some/path/to/object.foo", objectKey)
 
 	_, _, err = splitRemotePath("http://example.com/wibble.bar")
-	assert.Assert(t, err != nil)
+	assert.ErrorContains(t, err, "not a valid S3 path")
 }
 
 func TestIsRemote(t *testing.T) {
