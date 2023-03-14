@@ -54,5 +54,5 @@ cross-compile:
 
 .PHONY: vendor
 vendor:
-	go mod tidy -compat=1.19
+	go mod tidy -compat=1.20
 	go mod vendor
