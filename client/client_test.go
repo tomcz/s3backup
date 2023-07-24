@@ -3,7 +3,7 @@ package client
 import (
 	"testing"
 
-	"github.com/golang/mock/gomock"
+	"go.uber.org/mock/gomock"
 	"gotest.tools/v3/assert"
 
 	"github.com/tomcz/s3backup/client/mocks"

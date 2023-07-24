@@ -2,6 +2,8 @@ package gofakes3
 
 import (
 	"io"
+
+	"github.com/aws/aws-sdk-go/aws/awserr"
 )
 
 const (
@@ -128,7 +130,6 @@ type PutObjectResult struct {
 //
 // The Backend API is not yet stable; if you create your own Backend, breakage
 // is likely until this notice is removed.
-//
 type Backend interface {
 	// ListBuckets returns a list of all buckets owned by the authenticated
 	// sender of the request.
@@ -237,7 +238,6 @@ type Backend interface {
 // If you don't implement VersionedBackend, requests to GoFakeS3 that attempt to
 // make use of versions will return ErrNotImplemented if GoFakesS3 is unable to
 // find another way to satisfy the request.
-//
 type VersionedBackend interface {
 	// VersioningConfiguration must return a gofakes3.ErrNoSuchBucket error if the bucket
 	// does not exist. See gofakes3.BucketNotFound() for a convenient way to create one.
@@ -292,6 +292,9 @@ type VersionedBackend interface {
 	// ObjectDeleteResult and a nil error.
 	DeleteObjectVersion(bucketName, objectName string, versionID VersionID) (ObjectDeleteResult, error)
 
+	// DeleteMultiVersions permanently deletes all of the specified Object Versions
+	DeleteMultiVersions(bucketName string, objects ...ObjectID) (MultiDeleteResult, error)
+
 	// Backend implementers can assume the ListBucketVersionsPage is valid:
 	// KeyMarker and VersionIDMarker will either both be set, or both be unset. No
 	// other combination will be present (S300004).
@@ -304,4 +307,25 @@ type VersionedBackend interface {
 	// The Backend MUST treat a nil prefix identically to a zero prefix, and a
 	// nil page identically to a zero page.
 	ListBucketVersions(bucketName string, prefix *Prefix, page *ListBucketVersionsPage) (*ListBucketVersionsResult, error)
+}
+
+func MergeMetadata(db Backend, bucketName string, objectName string, meta map[string]string) error {
+	// get potential existing object to potentially carry metadata over
+	existingObj, err := db.GetObject(bucketName, objectName, nil)
+	if err != nil {
+		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() != string(ErrNoSuchKey) {
+			return err
+		}
+	}
+	// carry over metadata if it exists
+	if existingObj != nil {
+		for k, v := range existingObj.Metadata {
+			// new metadata overwrites old but keep the rest
+			// TODO: check how metadata can be deleted?!
+			if _, ok := meta[k]; !ok {
+				meta[k] = v
+			}
+		}
+	}
+	return nil
 }

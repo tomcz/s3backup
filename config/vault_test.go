@@ -1,6 +1,7 @@
 package config
 
 import (
+	"context"
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
@@ -48,19 +49,19 @@ const secretJSON = `{
 }`
 
 func checkLogin(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "PUT" {
-		http.Error(w, "bad method", http.StatusMethodNotAllowed)
+	if r.Method != "POST" {
+		http.Error(w, fmt.Sprintf("checkLogin: bad method: %s", r.Method), http.StatusMethodNotAllowed)
 		return
 	}
 	var m map[string]any
 	if err := json.NewDecoder(r.Body).Decode(&m); err != nil {
-		http.Error(w, fmt.Sprintf("%v", err), http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("checkLogin: %v", err), http.StatusInternalServerError)
 		return
 	}
 	role := m["role_id"].(string)
 	secret := m["secret_id"].(string)
 	if role != "test-role" || secret != "test-secret" {
-		http.Error(w, "Unknown role/secret IDs", http.StatusForbidden)
+		http.Error(w, "checkLogin: unknown role/secret IDs", http.StatusForbidden)
 		return
 	}
 	fmt.Fprintln(w, loginJSON)
@@ -69,11 +70,11 @@ func checkLogin(w http.ResponseWriter, r *http.Request) {
 func respondWith(body string) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != "GET" {
-			http.Error(w, "bad method", http.StatusMethodNotAllowed)
+			http.Error(w, fmt.Sprintf("respondWith: bad method: %s", r.Method), http.StatusMethodNotAllowed)
 			return
 		}
 		if r.Header.Get("X-Vault-Token") != "5b1a0318-679c-9c45-e5c6-d1b9a9035d49" {
-			http.Error(w, "bad token", http.StatusForbidden)
+			http.Error(w, "respondWith: bad token", http.StatusForbidden)
 			return
 		}
 		fmt.Fprintln(w, body)
@@ -91,7 +92,8 @@ func TestLookupWithAppRole(t *testing.T) {
 	ts := httptest.NewServer(testHandler())
 	defer ts.Close()
 
-	cfg, err := LookupWithAppRole(ts.URL, "", "test-role", "test-secret", "secret/myteam/backup")
+	ctx := context.Background()
+	cfg, err := LookupWithAppRole(ctx, ts.URL, "", "test-role", "test-secret", "secret/myteam/backup")
 	assert.NilError(t, err)
 
 	assert.Equal(t, "use me to encrypt", cfg.CipherKey)
@@ -111,7 +113,8 @@ func TestLookupWithToken(t *testing.T) {
 	certFile, err := utils.CreateTempFile("vault", encoded)
 	assert.NilError(t, err)
 
-	cfg, err := LookupWithToken(ts.URL, certFile, "5b1a0318-679c-9c45-e5c6-d1b9a9035d49", "secret/myteam/backup")
+	ctx := context.Background()
+	cfg, err := LookupWithToken(ctx, ts.URL, certFile, "5b1a0318-679c-9c45-e5c6-d1b9a9035d49", "secret/myteam/backup")
 	assert.NilError(t, err)
 
 	assert.Equal(t, "use me to encrypt", cfg.CipherKey)

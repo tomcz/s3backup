@@ -34,6 +34,7 @@ type GoFakeS3 struct {
 	integrityCheck          bool
 	failOnUnimplementedPage bool
 	hostBucket              bool
+	autoBucket              bool
 	uploader                *uploader
 	log                     Logger
 }
@@ -168,9 +169,12 @@ func (g *GoFakeS3) listBuckets(w http.ResponseWriter, r *http.Request) error {
 //
 // - https://docs.aws.amazon.com/AmazonS3/latest/API/RESTBucketGET.html
 // - https://docs.aws.amazon.com/AmazonS3/latest/API/v2-RESTBucketGET.html
-//
 func (g *GoFakeS3) listBucket(bucketName string, w http.ResponseWriter, r *http.Request) error {
 	g.log.Print(LogInfo, "LIST BUCKET")
+
+	if err := g.ensureBucketExists(bucketName); err != nil {
+		return err
+	}
 
 	q := r.URL.Query()
 	prefix := prefixFromQuery(q)
@@ -181,12 +185,9 @@ func (g *GoFakeS3) listBucket(bucketName string, w http.ResponseWriter, r *http.
 
 	isVersion2 := q.Get("list-type") == "2"
 
-	g.log.Print(LogInfo, "bucketname:", bucketName)
-	g.log.Print(LogInfo, "prefix    :", prefix)
-	g.log.Print(LogInfo, "page      :", fmt.Sprintf("%+v", page))
+	g.log.Print(LogInfo, "bucketname:", bucketName, "prefix:", prefix, "page:", fmt.Sprintf("%+v", page))
 
 	objects, err := g.storage.ListBucket(bucketName, &prefix, page)
-
 	if err != nil {
 		if err == ErrInternalPageNotImplemented && !g.failOnUnimplementedPage {
 			// We have observed (though not yet confirmed) that simple clients
@@ -269,6 +270,10 @@ func (g *GoFakeS3) listBucket(bucketName string, w http.ResponseWriter, r *http.
 func (g *GoFakeS3) getBucketLocation(bucketName string, w http.ResponseWriter, r *http.Request) error {
 	g.log.Print(LogInfo, "GET BUCKET LOCATION")
 
+	if err := g.ensureBucketExists(bucketName); err != nil { // S300006
+		return err
+	}
+
 	result := GetBucketLocation{
 		Xmlns:              "http://s3.amazonaws.com/doc/2006-03-01/",
 		LocationConstraint: "",
@@ -280,6 +285,10 @@ func (g *GoFakeS3) getBucketLocation(bucketName string, w http.ResponseWriter, r
 func (g *GoFakeS3) listBucketVersions(bucketName string, w http.ResponseWriter, r *http.Request) error {
 	if g.versioned == nil {
 		return ErrNotImplemented
+	}
+
+	if err := g.ensureBucketExists(bucketName); err != nil {
+		return err
 	}
 
 	q := r.URL.Query()
@@ -342,9 +351,14 @@ func (g *GoFakeS3) createBucket(bucket string, w http.ResponseWriter, r *http.Re
 // contains no items.
 func (g *GoFakeS3) deleteBucket(bucket string, w http.ResponseWriter, r *http.Request) error {
 	g.log.Print(LogInfo, "DELETE BUCKET:", bucket)
+
+	if err := g.ensureBucketExists(bucket); err != nil {
+		return err
+	}
 	if err := g.storage.DeleteBucket(bucket); err != nil {
 		return err
 	}
+
 	w.WriteHeader(http.StatusNoContent)
 	return nil
 }
@@ -370,9 +384,11 @@ func (g *GoFakeS3) getObject(
 	r *http.Request,
 ) error {
 
-	g.log.Print(LogInfo, "GET OBJECT")
-	g.log.Print(LogInfo, "Bucket:", bucket)
-	g.log.Print(LogInfo, "└── Object:", object)
+	g.log.Print(LogInfo, "GET OBJECT", "Bucket:", bucket, "Object:", object)
+
+	if err := g.ensureBucketExists(bucket); err != nil {
+		return err
+	}
 
 	rnge, err := parseRangeHeader(r.Header.Get("Range"))
 	if err != nil {
@@ -445,6 +461,12 @@ func (g *GoFakeS3) writeGetOrHeadObjectResponse(obj *Object, w http.ResponseWrit
 		return ErrNotModified
 	}
 
+	lastModified, _ := time.Parse(http.TimeFormat, obj.Metadata["Last-Modified"])
+	ifModifiedSince, _ := time.Parse(http.TimeFormat, r.Header.Get("If-Modified-Since"))
+	if !lastModified.IsZero() && !ifModifiedSince.Before(lastModified) {
+		return ErrNotModified
+	}
+
 	w.Header().Set("Accept-Ranges", "bytes")
 
 	return nil
@@ -458,9 +480,11 @@ func (g *GoFakeS3) headObject(
 	r *http.Request,
 ) error {
 
-	g.log.Print(LogInfo, "HEAD OBJECT")
-	g.log.Print(LogInfo, "Bucket:", bucket)
-	g.log.Print(LogInfo, "└── Object:", object)
+	g.log.Print(LogInfo, "HEAD OBJECT", bucket, object)
+
+	if err := g.ensureBucketExists(bucket); err != nil {
+		return err
+	}
 
 	obj, err := g.storage.HeadObject(bucket, object)
 	if err != nil {
@@ -485,6 +509,10 @@ func (g *GoFakeS3) headObject(
 // by a browser form.
 func (g *GoFakeS3) createObjectBrowserUpload(bucket string, w http.ResponseWriter, r *http.Request) error {
 	g.log.Print(LogInfo, "CREATE OBJECT THROUGH BROWSER UPLOAD")
+
+	if err := g.ensureBucketExists(bucket); err != nil {
+		return err
+	}
 
 	const _24MB = (1 << 20) * 24 // maximum amount of memory before temp files are used
 	if err := r.ParseMultipartForm(_24MB); nil != err {
@@ -542,6 +570,10 @@ func (g *GoFakeS3) createObjectBrowserUpload(bucket string, w http.ResponseWrite
 // CreateObject creates a new S3 object.
 func (g *GoFakeS3) createObject(bucket, object string, w http.ResponseWriter, r *http.Request) (err error) {
 	g.log.Print(LogInfo, "CREATE OBJECT:", bucket, object)
+
+	if err := g.ensureBucketExists(bucket); err != nil {
+		return err
+	}
 
 	meta, err := metadataHeaders(r.Header, g.timeSource.Now(), g.metadataSizeLimit)
 	if err != nil {
@@ -613,8 +645,12 @@ func (g *GoFakeS3) createObject(bucket, object string, w http.ResponseWriter, r 
 
 // CopyObject copies an existing S3 object
 func (g *GoFakeS3) copyObject(bucket, object string, meta map[string]string, w http.ResponseWriter, r *http.Request) (err error) {
+	if err := g.ensureBucketExists(bucket); err != nil {
+		return err
+	}
+
 	source := meta["X-Amz-Copy-Source"]
-	g.log.Print(LogInfo, "└── COPY:", source)
+	g.log.Print(LogInfo, "COPY:", source, "TO", bucket, object)
 
 	if len(object) > KeySizeLimit {
 		return ResourceError(ErrKeyTooLong, object)
@@ -672,6 +708,10 @@ func (g *GoFakeS3) copyObject(bucket, object string, meta map[string]string, w h
 
 func (g *GoFakeS3) deleteObject(bucket, object string, w http.ResponseWriter, r *http.Request) error {
 	g.log.Print(LogInfo, "DELETE:", bucket, object)
+	if err := g.ensureBucketExists(bucket); err != nil {
+		return err
+	}
+
 	result, err := g.storage.DeleteObject(bucket, object)
 	if err != nil {
 		return err
@@ -697,6 +737,10 @@ func (g *GoFakeS3) deleteObjectVersion(bucket, object string, version VersionID,
 	}
 
 	g.log.Print(LogInfo, "DELETE VERSION:", bucket, object, version)
+	if err := g.ensureBucketExists(bucket); err != nil {
+		return err
+	}
+
 	result, err := g.versioned.DeleteObjectVersion(bucket, object, version)
 	if err != nil {
 		return err
@@ -722,6 +766,10 @@ func (g *GoFakeS3) deleteObjectVersion(bucket, object string, version VersionID,
 func (g *GoFakeS3) deleteMulti(bucket string, w http.ResponseWriter, r *http.Request) error {
 	g.log.Print(LogInfo, "delete multi", bucket)
 
+	if err := g.ensureBucketExists(bucket); err != nil {
+		return err
+	}
+
 	var in DeleteRequest
 
 	defer r.Body.Close()
@@ -730,12 +778,19 @@ func (g *GoFakeS3) deleteMulti(bucket string, w http.ResponseWriter, r *http.Req
 		return ErrorMessage(ErrMalformedXML, err.Error())
 	}
 
-	keys := make([]string, len(in.Objects))
-	for i, o := range in.Objects {
-		keys[i] = o.Key
+	var err error
+	var out MultiDeleteResult
+	if g.versioned == nil {
+		keys := make([]string, len(in.Objects))
+		for i, o := range in.Objects {
+			keys[i] = o.Key
+		}
+
+		out, err = g.storage.DeleteMulti(bucket, keys...)
+	} else {
+		out, err = g.versioned.DeleteMultiVersions(bucket, in.Objects...)
 	}
 
-	out, err := g.storage.DeleteMulti(bucket, keys...)
 	if err != nil {
 		return err
 	}
@@ -768,12 +823,12 @@ func (g *GoFakeS3) initiateMultipartUpload(bucket, object string, w http.Respons
 }
 
 // From the docs:
-//	A part number uniquely identifies a part and also defines its position
-// 	within the object being created. If you upload a new part using the same
-// 	part number that was used with a previous part, the previously uploaded part
-// 	is overwritten. Each part must be at least 5 MB in size, except the last
-// 	part. There is no size limit on the last part of your multipart upload.
 //
+//	A part number uniquely identifies a part and also defines its position
+//	within the object being created. If you upload a new part using the same
+//	part number that was used with a previous part, the previously uploaded part
+//	is overwritten. Each part must be at least 5 MB in size, except the last
+//	part. There is no size limit on the last part of your multipart upload.
 func (g *GoFakeS3) putMultipartUploadPart(bucket, object string, uploadID UploadID, w http.ResponseWriter, r *http.Request) error {
 	g.log.Print(LogInfo, "put multipart upload", bucket, object, uploadID)
 
@@ -875,6 +930,10 @@ func (g *GoFakeS3) completeMultipartUpload(bucket, object string, uploadID Uploa
 }
 
 func (g *GoFakeS3) listMultipartUploads(bucket string, w http.ResponseWriter, r *http.Request) error {
+	if err := g.ensureBucketExists(bucket); err != nil {
+		return err
+	}
+
 	query := r.URL.Query()
 	prefix := prefixFromQuery(query)
 	marker := uploadListMarkerFromQuery(query)
@@ -896,6 +955,10 @@ func (g *GoFakeS3) listMultipartUploads(bucket string, w http.ResponseWriter, r 
 }
 
 func (g *GoFakeS3) listMultipartUploadParts(bucket, object string, uploadID UploadID, w http.ResponseWriter, r *http.Request) error {
+	if err := g.ensureBucketExists(bucket); err != nil {
+		return err
+	}
+
 	query := r.URL.Query()
 
 	marker, err := parseClampedInt(query.Get("part-number-marker"), 0, 0, math.MaxInt64)
@@ -917,6 +980,10 @@ func (g *GoFakeS3) listMultipartUploadParts(bucket, object string, uploadID Uplo
 }
 
 func (g *GoFakeS3) getBucketVersioning(bucket string, w http.ResponseWriter, r *http.Request) error {
+	if err := g.ensureBucketExists(bucket); err != nil { // S300007
+		return err
+	}
+
 	var config VersioningConfiguration
 
 	if g.versioned != nil {
@@ -931,6 +998,10 @@ func (g *GoFakeS3) getBucketVersioning(bucket string, w http.ResponseWriter, r *
 }
 
 func (g *GoFakeS3) putBucketVersioning(bucket string, w http.ResponseWriter, r *http.Request) error {
+	if err := g.ensureBucketExists(bucket); err != nil { // S300007
+		return err
+	}
+
 	var in VersioningConfiguration
 	if err := g.xmlDecodeBody(r.Body, &in); err != nil {
 		return err
@@ -957,7 +1028,12 @@ func (g *GoFakeS3) ensureBucketExists(bucket string) error {
 	if err != nil {
 		return err
 	}
-	if !exists {
+	if !exists && g.autoBucket {
+		if err := g.storage.CreateBucket(bucket); err != nil {
+			g.log.Print(LogErr, "autobucket create failed:", err)
+			return ResourceError(ErrNoSuchBucket, bucket)
+		}
+	} else if !exists {
 		return ResourceError(ErrNoSuchBucket, bucket)
 	}
 	return nil
@@ -1006,7 +1082,10 @@ func metadataSize(meta map[string]string) int {
 func metadataHeaders(headers map[string][]string, at time.Time, sizeLimit int) (map[string]string, error) {
 	meta := make(map[string]string)
 	for hk, hv := range headers {
-		if strings.HasPrefix(hk, "X-Amz-") || hk == "Content-Type" || hk == "Content-Disposition" {
+		if strings.HasPrefix(hk, "X-Amz-") ||
+			hk == "Content-Type" ||
+			hk == "Content-Disposition" ||
+			hk == "Content-Encoding" {
 			meta[hk] = hv[0]
 		}
 	}

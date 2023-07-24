@@ -1,55 +1,63 @@
 package config
 
 import (
-	"github.com/hashicorp/vault/api"
+	"context"
+	"fmt"
+
+	"github.com/hashicorp/vault-client-go"
+	"github.com/hashicorp/vault-client-go/schema"
 	"github.com/mitchellh/mapstructure"
 )
 
-func LookupWithAppRole(vaultAddr, caCertFile, roleID, secretID, path string) (*Config, error) {
+func LookupWithAppRole(ctx context.Context, vaultAddr, caCertFile, roleID, secretID, path string) (*Config, error) {
 	client, err := newClient(vaultAddr, caCertFile)
 	if err != nil {
 		return nil, err
 	}
-	body := map[string]any{"role_id": roleID, "secret_id": secretID}
-	secret, err := client.Logical().Write("auth/approle/login", body)
+	resp, err := client.Auth.AppRoleLogin(ctx, schema.AppRoleLoginRequest{RoleId: roleID, SecretId: secretID})
 	if err != nil {
 		return nil, err
 	}
-	client.SetToken(secret.Auth.ClientToken)
-	defer logout(client, secret.Auth.Renewable)
-	return lookup(client, path)
+	if err = client.SetToken(resp.Auth.ClientToken); err != nil {
+		return nil, err
+	}
+	defer logout(ctx, client, resp.Auth.Renewable)
+	return lookup(ctx, client, path)
 }
 
-func LookupWithToken(vaultAddr, caCertFile, token, path string) (*Config, error) {
+func LookupWithToken(ctx context.Context, vaultAddr, caCertFile, token, path string) (*Config, error) {
 	client, err := newClient(vaultAddr, caCertFile)
 	if err != nil {
 		return nil, err
 	}
-	client.SetToken(token)
-	return lookup(client, path)
-}
-
-func newClient(vaultAddr, caCertFile string) (*api.Client, error) {
-	cfg := api.DefaultConfig()
-	if err := cfg.Error; err != nil {
+	if err = client.SetToken(token); err != nil {
 		return nil, err
 	}
+	return lookup(ctx, client, path)
+}
+
+func newClient(vaultAddr, caCertFile string) (*vault.Client, error) {
+	var opts []vault.ClientOption
 	if vaultAddr != "" {
-		cfg.Address = vaultAddr
+		opts = append(opts, vault.WithAddress(vaultAddr))
 	}
 	if caCertFile != "" {
-		t := &api.TLSConfig{CACert: caCertFile}
-		if err := cfg.ConfigureTLS(t); err != nil {
-			return nil, err
-		}
+		opts = append(opts, vault.WithTLS(vault.TLSConfiguration{
+			ServerCertificate: vault.ServerCertificateEntry{
+				FromFile: caCertFile,
+			},
+		}))
 	}
-	return api.NewClient(cfg)
+	return vault.New(opts...)
 }
 
-func lookup(client *api.Client, path string) (*Config, error) {
-	secret, err := client.Logical().Read(path)
+func lookup(ctx context.Context, client *vault.Client, path string) (*Config, error) {
+	secret, err := client.Read(ctx, path)
 	if err != nil {
 		return nil, err
+	}
+	if secret == nil {
+		return nil, fmt.Errorf("secret not found at path %q", path)
 	}
 	var cfg Config
 	if err = mapstructure.Decode(secret.Data, &cfg); err != nil {
@@ -58,8 +66,8 @@ func lookup(client *api.Client, path string) (*Config, error) {
 	return &cfg, nil
 }
 
-func logout(client *api.Client, shouldLogout bool) {
+func logout(ctx context.Context, client *vault.Client, shouldLogout bool) {
 	if shouldLogout {
-		client.Auth().Token().RevokeSelf("") //nolint:all
+		client.Auth.TokenRevokeSelf(ctx) //nolint:all
 	}
 }

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log"
@@ -317,10 +318,11 @@ func initWithVault(encrypt bool) error {
 
 	var err error
 	var cfg *config.Config
+	ctx := context.Background()
 	if vaultToken != "" {
-		cfg, err = config.LookupWithToken(vaultAddr, vaultCaCert, vaultToken, vaultPath)
+		cfg, err = config.LookupWithToken(ctx, vaultAddr, vaultCaCert, vaultToken, vaultPath)
 	} else if vaultRoleID != "" && vaultSecretID != "" {
-		cfg, err = config.LookupWithAppRole(vaultAddr, vaultCaCert, vaultRoleID, vaultSecretID, vaultPath)
+		cfg, err = config.LookupWithAppRole(ctx, vaultAddr, vaultCaCert, vaultRoleID, vaultSecretID, vaultPath)
 	} else {
 		err = errors.New("vault credentials not provided")
 	}
