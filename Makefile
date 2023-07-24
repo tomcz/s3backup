@@ -9,6 +9,9 @@ OUTFILE ?= s3backup
 .PHONY: precommit
 precommit: clean generate format lint test compile
 
+.PHONY: build
+build: clean compile
+
 .PHONY: commit
 commit: clean test cross-compile
 	ls -lha target/
