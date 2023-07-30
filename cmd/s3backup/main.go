@@ -398,7 +398,7 @@ func genKeyPair(*cli.Context) error {
 }
 
 func encryptLocalFile(ctx *cli.Context) error {
-	cipher, err := createCipher(ctx)
+	cipher, err := initLocalFileOps(ctx)
 	if err != nil {
 		return err
 	}
@@ -407,7 +407,7 @@ func encryptLocalFile(ctx *cli.Context) error {
 }
 
 func decryptLocalFile(ctx *cli.Context) error {
-	cipher, err := createCipher(ctx)
+	cipher, err := initLocalFileOps(ctx)
 	if err != nil {
 		return err
 	}
@@ -415,7 +415,7 @@ func decryptLocalFile(ctx *cli.Context) error {
 	return cipher.Decrypt(args.Get(0), args.Get(1))
 }
 
-func createCipher(ctx *cli.Context) (client.Cipher, error) {
+func initLocalFileOps(ctx *cli.Context) (client.Cipher, error) {
 	if ctx.NArg() != 2 {
 		return nil, errors.New("in and out files are required")
 	}
