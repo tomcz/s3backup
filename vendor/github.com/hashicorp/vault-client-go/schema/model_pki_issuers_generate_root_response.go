@@ -10,8 +10,8 @@ type PkiIssuersGenerateRootResponse struct {
 	// The generated self-signed CA certificate.
 	Certificate string `json:"certificate,omitempty"`
 
-	// The expiration of the given.
-	Expiration string `json:"expiration,omitempty"`
+	// The expiration of the given issuer.
+	Expiration int64 `json:"expiration,omitempty"`
 
 	// The ID of the issuer
 	IssuerId string `json:"issuer_id,omitempty"`
@@ -33,13 +33,4 @@ type PkiIssuersGenerateRootResponse struct {
 
 	// The requested Subject's named serial number.
 	SerialNumber string `json:"serial_number,omitempty"`
-}
-
-// NewPkiIssuersGenerateRootResponseWithDefaults instantiates a new PkiIssuersGenerateRootResponse object
-// This constructor will only assign default values to properties that have it defined,
-// but it doesn't guarantee that properties required by API are set
-func NewPkiIssuersGenerateRootResponseWithDefaults() *PkiIssuersGenerateRootResponse {
-	var this PkiIssuersGenerateRootResponse
-
-	return &this
 }

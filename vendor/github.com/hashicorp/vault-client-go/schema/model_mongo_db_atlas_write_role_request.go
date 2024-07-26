@@ -14,7 +14,7 @@ type MongoDbAtlasWriteRoleRequest struct {
 	IpAddresses []string `json:"ip_addresses,omitempty"`
 
 	// The maximum allowed lifetime of credentials issued using this role.
-	MaxTtl int32 `json:"max_ttl,omitempty"`
+	MaxTtl string `json:"max_ttl,omitempty"`
 
 	// Organization ID required for an organization API key
 	OrganizationId string `json:"organization_id,omitempty"`
@@ -29,14 +29,5 @@ type MongoDbAtlasWriteRoleRequest struct {
 	Roles []string `json:"roles"`
 
 	// Duration in seconds after which the issued credential should expire. Defaults to 0, in which case the value will fallback to the system/mount defaults.
-	Ttl int32 `json:"ttl,omitempty"`
-}
-
-// NewMongoDbAtlasWriteRoleRequestWithDefaults instantiates a new MongoDbAtlasWriteRoleRequest object
-// This constructor will only assign default values to properties that have it defined,
-// but it doesn't guarantee that properties required by API are set
-func NewMongoDbAtlasWriteRoleRequestWithDefaults() *MongoDbAtlasWriteRoleRequest {
-	var this MongoDbAtlasWriteRoleRequest
-
-	return &this
+	Ttl string `json:"ttl,omitempty"`
 }

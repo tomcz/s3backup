@@ -17,21 +17,8 @@ type AwsWriteRoleTagRequest struct {
 	InstanceId string `json:"instance_id,omitempty"`
 
 	// If set, specifies the maximum allowed token lifetime.
-	MaxTtl int32 `json:"max_ttl,omitempty"`
+	MaxTtl string `json:"max_ttl,omitempty"`
 
 	// Policies to be associated with the tag. If set, must be a subset of the role's policies. If set, but set to an empty value, only the 'default' policy will be given to issued tokens.
 	Policies []string `json:"policies,omitempty"`
-}
-
-// NewAwsWriteRoleTagRequestWithDefaults instantiates a new AwsWriteRoleTagRequest object
-// This constructor will only assign default values to properties that have it defined,
-// but it doesn't guarantee that properties required by API are set
-func NewAwsWriteRoleTagRequestWithDefaults() *AwsWriteRoleTagRequest {
-	var this AwsWriteRoleTagRequest
-
-	this.AllowInstanceMigration = false
-	this.DisallowReauthentication = false
-	this.MaxTtl = 0
-
-	return &this
 }

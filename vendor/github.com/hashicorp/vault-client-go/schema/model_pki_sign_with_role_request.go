@@ -44,27 +44,11 @@ type PkiSignWithRoleRequest struct {
 	SerialNumber string `json:"serial_number,omitempty"`
 
 	// The requested Time To Live for the certificate; sets the expiration date. If not specified the role default, backend default, or system default TTL is used, in that order. Cannot be larger than the role max TTL.
-	Ttl int32 `json:"ttl,omitempty"`
+	Ttl string `json:"ttl,omitempty"`
 
 	// The requested URI SANs, if any, in a comma-delimited list.
 	UriSans []string `json:"uri_sans,omitempty"`
 
 	// The requested user_ids value to place in the subject, if any, in a comma-delimited list. Restricted by allowed_user_ids. Any values are added with OID 0.9.2342.19200300.100.1.1.
 	UserIds []string `json:"user_ids,omitempty"`
-}
-
-// NewPkiSignWithRoleRequestWithDefaults instantiates a new PkiSignWithRoleRequest object
-// This constructor will only assign default values to properties that have it defined,
-// but it doesn't guarantee that properties required by API are set
-func NewPkiSignWithRoleRequestWithDefaults() *PkiSignWithRoleRequest {
-	var this PkiSignWithRoleRequest
-
-	this.Csr = ""
-	this.ExcludeCnFromSans = false
-	this.Format = "pem"
-	this.IssuerRef = "default"
-	this.PrivateKeyFormat = "der"
-	this.RemoveRootsFromChain = false
-
-	return &this
 }

@@ -39,21 +39,8 @@ type CentrifyConfigureRequest struct {
 	TokenPolicies []string `json:"token_policies,omitempty"`
 
 	// The initial ttl of the token to generate
-	TokenTtl int32 `json:"token_ttl,omitempty"`
+	TokenTtl string `json:"token_ttl,omitempty"`
 
 	// The type of token to generate, service or batch
 	TokenType string `json:"token_type,omitempty"`
-}
-
-// NewCentrifyConfigureRequestWithDefaults instantiates a new CentrifyConfigureRequest object
-// This constructor will only assign default values to properties that have it defined,
-// but it doesn't guarantee that properties required by API are set
-func NewCentrifyConfigureRequestWithDefaults() *CentrifyConfigureRequest {
-	var this CentrifyConfigureRequest
-
-	this.AppId = "vault_io_integration"
-	this.Scope = "vault_io_integration"
-	this.TokenType = "default-service"
-
-	return &this
 }

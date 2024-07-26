@@ -7,6 +7,12 @@ package schema
 
 // PkiSetSignedIntermediateResponse struct for PkiSetSignedIntermediateResponse
 type PkiSetSignedIntermediateResponse struct {
+	// Existing issuers specified as part of the import bundle of this request
+	ExistingIssuers []string `json:"existing_issuers,omitempty"`
+
+	// Existing keys specified as part of the import bundle of this request
+	ExistingKeys []string `json:"existing_keys,omitempty"`
+
 	// Net-new issuers imported as a part of this request
 	ImportedIssuers []string `json:"imported_issuers,omitempty"`
 
@@ -15,13 +21,4 @@ type PkiSetSignedIntermediateResponse struct {
 
 	// A mapping of issuer_id to key_id for all issuers included in this request
 	Mapping map[string]interface{} `json:"mapping,omitempty"`
-}
-
-// NewPkiSetSignedIntermediateResponseWithDefaults instantiates a new PkiSetSignedIntermediateResponse object
-// This constructor will only assign default values to properties that have it defined,
-// but it doesn't guarantee that properties required by API are set
-func NewPkiSetSignedIntermediateResponseWithDefaults() *PkiSetSignedIntermediateResponse {
-	var this PkiSetSignedIntermediateResponse
-
-	return &this
 }

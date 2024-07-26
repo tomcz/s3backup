@@ -21,13 +21,7 @@ type PkiReadKeyResponse struct {
 
 	// Managed Key Name
 	ManagedKeyName string `json:"managed_key_name,omitempty"`
-}
 
-// NewPkiReadKeyResponseWithDefaults instantiates a new PkiReadKeyResponse object
-// This constructor will only assign default values to properties that have it defined,
-// but it doesn't guarantee that properties required by API are set
-func NewPkiReadKeyResponseWithDefaults() *PkiReadKeyResponse {
-	var this PkiReadKeyResponse
-
-	return &this
+	// RFC 5280 Subject Key Identifier of the public counterpart
+	SubjectKeyId string `json:"subject_key_id,omitempty"`
 }

@@ -20,10 +20,10 @@ type DatabaseWriteRoleRequest struct {
 	DbName string `json:"db_name,omitempty"`
 
 	// Default ttl for role.
-	DefaultTtl int32 `json:"default_ttl,omitempty"`
+	DefaultTtl string `json:"default_ttl,omitempty"`
 
 	// Maximum time a credential is valid for
-	MaxTtl int32 `json:"max_ttl,omitempty"`
+	MaxTtl string `json:"max_ttl,omitempty"`
 
 	// Specifies the database statements to be executed to renew a user. Not every plugin type will support this functionality. See the plugin's API page for more information on support and formatting for this parameter.
 	RenewStatements []string `json:"renew_statements,omitempty"`
@@ -33,15 +33,4 @@ type DatabaseWriteRoleRequest struct {
 
 	// Specifies the database statements to be executed rollback a create operation in the event of an error. Not every plugin type will support this functionality. See the plugin's API page for more information on support and formatting for this parameter.
 	RollbackStatements []string `json:"rollback_statements,omitempty"`
-}
-
-// NewDatabaseWriteRoleRequestWithDefaults instantiates a new DatabaseWriteRoleRequest object
-// This constructor will only assign default values to properties that have it defined,
-// but it doesn't guarantee that properties required by API are set
-func NewDatabaseWriteRoleRequestWithDefaults() *DatabaseWriteRoleRequest {
-	var this DatabaseWriteRoleRequest
-
-	this.CredentialType = "password"
-
-	return &this
 }

@@ -16,6 +16,9 @@ type PkiReadIssuerResponse struct {
 	// CRL Distribution Points
 	CrlDistributionPoints []string `json:"crl_distribution_points,omitempty"`
 
+	// Whether or not templating is enabled for AIA fields
+	EnableAiaUrlTemplating bool `json:"enable_aia_url_templating,omitempty"`
+
 	// Issuer Id
 	IssuerId string `json:"issuer_id,omitempty"`
 
@@ -34,7 +37,7 @@ type PkiReadIssuerResponse struct {
 	// Manual Chain
 	ManualChain []string `json:"manual_chain,omitempty"`
 
-	// OSCP Servers
+	// OCSP Servers
 	OcspServers []string `json:"ocsp_servers,omitempty"`
 
 	// Revocation Signature Alogrithm
@@ -48,14 +51,5 @@ type PkiReadIssuerResponse struct {
 	Revoked bool `json:"revoked,omitempty"`
 
 	// Usage
-	Usage []string `json:"usage,omitempty"`
-}
-
-// NewPkiReadIssuerResponseWithDefaults instantiates a new PkiReadIssuerResponse object
-// This constructor will only assign default values to properties that have it defined,
-// but it doesn't guarantee that properties required by API are set
-func NewPkiReadIssuerResponseWithDefaults() *PkiReadIssuerResponse {
-	var this PkiReadIssuerResponse
-
-	return &this
+	Usage string `json:"usage,omitempty"`
 }

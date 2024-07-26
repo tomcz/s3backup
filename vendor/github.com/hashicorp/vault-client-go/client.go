@@ -11,13 +11,14 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"slices"
 	"strings"
 	"sync"
 
 	"github.com/hashicorp/go-retryablehttp"
 )
 
-const ClientVersion = "0.3.3"
+const ClientVersion = "0.4.3"
 
 // Client manages communication with Vault, initialize it with vault.New(...)
 type Client struct {
@@ -93,25 +94,33 @@ func newClient(configuration ClientConfiguration) (*Client, error) {
 	}
 	c.parsedBaseAddress = address
 
-	// Internet draft https://datatracker.ietf.org/doc/html/draft-andrews-http-srv-02 specifies that the port must be empty.
-	if configuration.EnableSRVLookup && address.Port() != "" {
-		return nil, fmt.Errorf("cannot enable DNS service record (SRV) lookup since the base address port (%q) is not empty", address.Port())
-	}
-
-	transport, ok := c.client.Transport.(*http.Transport)
-	if !ok {
-		return nil, fmt.Errorf("the configured base client's transport (%T) is not of type *http.Transport", c.client.Transport)
-	}
-
-	// Adjust the dial context for unix domain socket addresses.
 	if strings.HasPrefix(configuration.Address, "unix://") {
-		transport.DialContext = func(context.Context, string, string) (net.Conn, error) {
-			return net.Dial("unix", strings.TrimPrefix(configuration.Address, "unix://"))
+		// Adjust the dial context for unix domain socket addresses in the
+		// internal HTTP transport, if exists.
+		if httpTransport, ok := c.client.Transport.(*http.Transport); ok {
+			httpTransport.DialContext = func(context.Context, string, string) (net.Conn, error) {
+				return net.Dial("unix", strings.TrimPrefix(configuration.Address, "unix://"))
+			}
+		} else {
+			return nil, fmt.Errorf(
+				"the configured base client's transport (%T) is not of type *http.Transport and cannot be used with the unix:// address",
+				c.client.Transport,
+			)
 		}
 	}
 
-	if err := configuration.TLS.applyTo(transport.TLSClientConfig); err != nil {
-		return nil, err
+	if !configuration.TLS.empty() {
+		// Apply TLS configuration to the internal HTTP transport, if exists.
+		if httpTransport, ok := c.client.Transport.(*http.Transport); ok {
+			if err := configuration.TLS.applyTo(httpTransport.TLSClientConfig); err != nil {
+				return nil, err
+			}
+		} else {
+			return nil, fmt.Errorf(
+				"the configured base client's transport (%T) is not of type *http.Transport and cannot be used with TLS configuration",
+				c.client.Transport,
+			)
+		}
 	}
 
 	c.Auth = Auth{
@@ -196,8 +205,8 @@ func (c *Client) cloneClientRequestModifiers() requestModifiers {
 
 	var clone requestModifiers
 
-	copy(clone.requestCallbacks, c.clientRequestModifiers.requestCallbacks)
-	copy(clone.responseCallbacks, c.clientRequestModifiers.responseCallbacks)
+	clone.requestCallbacks = slices.Clone(c.clientRequestModifiers.requestCallbacks)
+	clone.responseCallbacks = slices.Clone(c.clientRequestModifiers.responseCallbacks)
 
 	clone.headers = requestHeaders{
 		userAgent:                 c.clientRequestModifiers.headers.userAgent,
@@ -208,7 +217,7 @@ func (c *Client) cloneClientRequestModifiers() requestModifiers {
 		customHeaders:             c.clientRequestModifiers.headers.customHeaders.Clone(),
 	}
 
-	copy(clone.headers.mfaCredentials, c.clientRequestModifiers.headers.mfaCredentials)
+	clone.headers.mfaCredentials = slices.Clone(c.clientRequestModifiers.headers.mfaCredentials)
 
 	return clone
 }

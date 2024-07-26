@@ -23,19 +23,8 @@ type SshSignCertificateRequest struct {
 	PublicKey string `json:"public_key,omitempty"`
 
 	// The requested Time To Live for the SSH certificate; sets the expiration date. If not specified the role default, backend default, or system default TTL is used, in that order. Cannot be later than the role max TTL.
-	Ttl int32 `json:"ttl,omitempty"`
+	Ttl string `json:"ttl,omitempty"`
 
 	// Valid principals, either usernames or hostnames, that the certificate should be signed for.
 	ValidPrincipals string `json:"valid_principals,omitempty"`
-}
-
-// NewSshSignCertificateRequestWithDefaults instantiates a new SshSignCertificateRequest object
-// This constructor will only assign default values to properties that have it defined,
-// but it doesn't guarantee that properties required by API are set
-func NewSshSignCertificateRequestWithDefaults() *SshSignCertificateRequest {
-	var this SshSignCertificateRequest
-
-	this.CertType = "user"
-
-	return &this
 }

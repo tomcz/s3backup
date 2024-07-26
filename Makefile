@@ -25,8 +25,7 @@ target:
 
 .PHONY: format
 format:
-	@echo 'goimports ./...'
-	@goimports -w -local github.com/tomcz/s3backup $(shell find . -type f -name '*.go' -not -path './vendor/*')
+	goimports -w -local github.com/tomcz/s3backup cmd/ internal/ tools/
 
 .PHONY: lint
 lint:
@@ -38,7 +37,7 @@ test:
 
 .PHONY: generate
 generate:
-	go generate ./client/...
+	go generate ./internal/...
 
 .PHONY: compile
 compile: target
@@ -57,5 +56,5 @@ cross-compile:
 
 .PHONY: vendor
 vendor:
-	go mod tidy -compat=1.20
+	go mod tidy
 	go mod vendor

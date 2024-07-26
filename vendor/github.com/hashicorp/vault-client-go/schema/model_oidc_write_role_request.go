@@ -17,14 +17,5 @@ type OidcWriteRoleRequest struct {
 	Template string `json:"template,omitempty"`
 
 	// TTL of the tokens generated against the role.
-	Ttl int32 `json:"ttl,omitempty"`
-}
-
-// NewOidcWriteRoleRequestWithDefaults instantiates a new OidcWriteRoleRequest object
-// This constructor will only assign default values to properties that have it defined,
-// but it doesn't guarantee that properties required by API are set
-func NewOidcWriteRoleRequestWithDefaults() *OidcWriteRoleRequest {
-	var this OidcWriteRoleRequest
-
-	return &this
+	Ttl string `json:"ttl,omitempty"`
 }

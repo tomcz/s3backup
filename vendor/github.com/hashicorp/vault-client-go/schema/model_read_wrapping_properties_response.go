@@ -13,14 +13,5 @@ type ReadWrappingPropertiesResponse struct {
 
 	CreationTime time.Time `json:"creation_time,omitempty"`
 
-	CreationTtl int32 `json:"creation_ttl,omitempty"`
-}
-
-// NewReadWrappingPropertiesResponseWithDefaults instantiates a new ReadWrappingPropertiesResponse object
-// This constructor will only assign default values to properties that have it defined,
-// but it doesn't guarantee that properties required by API are set
-func NewReadWrappingPropertiesResponseWithDefaults() *ReadWrappingPropertiesResponse {
-	var this ReadWrappingPropertiesResponse
-
-	return &this
+	CreationTtl string `json:"creation_ttl,omitempty"`
 }

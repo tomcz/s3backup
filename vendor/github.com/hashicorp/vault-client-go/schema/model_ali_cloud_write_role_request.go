@@ -11,7 +11,7 @@ type AliCloudWriteRoleRequest struct {
 	InlinePolicies string `json:"inline_policies,omitempty"`
 
 	// The maximum allowed lifetime of tokens issued using this role.
-	MaxTtl int32 `json:"max_ttl,omitempty"`
+	MaxTtl string `json:"max_ttl,omitempty"`
 
 	// The name and type of each remote policy to be applied. Example: \"name:AliyunRDSReadOnlyAccess,type:System\".
 	RemotePolicies []string `json:"remote_policies,omitempty"`
@@ -20,14 +20,5 @@ type AliCloudWriteRoleRequest struct {
 	RoleArn string `json:"role_arn,omitempty"`
 
 	// Duration in seconds after which the issued token should expire. Defaults to 0, in which case the value will fallback to the system/mount defaults.
-	Ttl int32 `json:"ttl,omitempty"`
-}
-
-// NewAliCloudWriteRoleRequestWithDefaults instantiates a new AliCloudWriteRoleRequest object
-// This constructor will only assign default values to properties that have it defined,
-// but it doesn't guarantee that properties required by API are set
-func NewAliCloudWriteRoleRequestWithDefaults() *AliCloudWriteRoleRequest {
-	var this AliCloudWriteRoleRequest
-
-	return &this
+	Ttl string `json:"ttl,omitempty"`
 }

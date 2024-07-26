@@ -20,14 +20,5 @@ type AppRoleWriteSecretIdRequest struct {
 	TokenBoundCidrs []string `json:"token_bound_cidrs,omitempty"`
 
 	// Duration in seconds after which this SecretID expires. Overrides secret_id_ttl role option when supplied. May not be longer than role's secret_id_ttl.
-	Ttl int32 `json:"ttl,omitempty"`
-}
-
-// NewAppRoleWriteSecretIdRequestWithDefaults instantiates a new AppRoleWriteSecretIdRequest object
-// This constructor will only assign default values to properties that have it defined,
-// but it doesn't guarantee that properties required by API are set
-func NewAppRoleWriteSecretIdRequestWithDefaults() *AppRoleWriteSecretIdRequest {
-	var this AppRoleWriteSecretIdRequest
-
-	return &this
+	Ttl string `json:"ttl,omitempty"`
 }

@@ -17,14 +17,5 @@ type KubernetesGenerateCredentialsRequest struct {
 	KubernetesNamespace string `json:"kubernetes_namespace"`
 
 	// The TTL of the generated credentials
-	Ttl int32 `json:"ttl,omitempty"`
-}
-
-// NewKubernetesGenerateCredentialsRequestWithDefaults instantiates a new KubernetesGenerateCredentialsRequest object
-// This constructor will only assign default values to properties that have it defined,
-// but it doesn't guarantee that properties required by API are set
-func NewKubernetesGenerateCredentialsRequestWithDefaults() *KubernetesGenerateCredentialsRequest {
-	var this KubernetesGenerateCredentialsRequest
-
-	return &this
+	Ttl string `json:"ttl,omitempty"`
 }

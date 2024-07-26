@@ -7,6 +7,9 @@ package schema
 
 // PkiReadAutoTidyConfigurationResponse struct for PkiReadAutoTidyConfigurationResponse
 type PkiReadAutoTidyConfigurationResponse struct {
+	// Safety buffer after creation after which accounts lacking orders are revoked
+	AcmeAccountSafetyBuffer int32 `json:"acme_account_safety_buffer,omitempty"`
+
 	// Specifies whether automatic tidy is enabled or not
 	Enabled bool `json:"enabled,omitempty"`
 
@@ -28,6 +31,9 @@ type PkiReadAutoTidyConfigurationResponse struct {
 	// Safety buffer time duration
 	SafetyBuffer int32 `json:"safety_buffer,omitempty"`
 
+	// Tidy Unused Acme Accounts, and Orders
+	TidyAcme bool `json:"tidy_acme,omitempty"`
+
 	// Specifies whether to tidy up the certificate store
 	TidyCertStore bool `json:"tidy_cert_store,omitempty"`
 
@@ -45,13 +51,4 @@ type PkiReadAutoTidyConfigurationResponse struct {
 
 	// Specifies whether to remove all invalid and expired certificates from storage
 	TidyRevokedCerts bool `json:"tidy_revoked_certs,omitempty"`
-}
-
-// NewPkiReadAutoTidyConfigurationResponseWithDefaults instantiates a new PkiReadAutoTidyConfigurationResponse object
-// This constructor will only assign default values to properties that have it defined,
-// but it doesn't guarantee that properties required by API are set
-func NewPkiReadAutoTidyConfigurationResponseWithDefaults() *PkiReadAutoTidyConfigurationResponse {
-	var this PkiReadAutoTidyConfigurationResponse
-
-	return &this
 }

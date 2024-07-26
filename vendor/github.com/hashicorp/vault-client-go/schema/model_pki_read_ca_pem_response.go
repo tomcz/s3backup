@@ -8,7 +8,7 @@ package schema
 // PkiReadCaPemResponse struct for PkiReadCaPemResponse
 type PkiReadCaPemResponse struct {
 	// Issuing CA Chain
-	CaChain []string `json:"ca_chain,omitempty"`
+	CaChain string `json:"ca_chain,omitempty"`
 
 	// Certificate
 	Certificate string `json:"certificate,omitempty"`
@@ -17,17 +17,8 @@ type PkiReadCaPemResponse struct {
 	IssuerId string `json:"issuer_id,omitempty"`
 
 	// Revocation time
-	RevocationTime string `json:"revocation_time,omitempty"`
+	RevocationTime int64 `json:"revocation_time,omitempty"`
 
 	// Revocation time RFC 3339 formatted
 	RevocationTimeRfc3339 string `json:"revocation_time_rfc3339,omitempty"`
-}
-
-// NewPkiReadCaPemResponseWithDefaults instantiates a new PkiReadCaPemResponse object
-// This constructor will only assign default values to properties that have it defined,
-// but it doesn't guarantee that properties required by API are set
-func NewPkiReadCaPemResponseWithDefaults() *PkiReadCaPemResponse {
-	var this PkiReadCaPemResponse
-
-	return &this
 }

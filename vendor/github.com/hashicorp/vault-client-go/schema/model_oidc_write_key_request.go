@@ -14,19 +14,8 @@ type OidcWriteKeyRequest struct {
 	AllowedClientIds []string `json:"allowed_client_ids,omitempty"`
 
 	// How often to generate a new keypair.
-	RotationPeriod int32 `json:"rotation_period,omitempty"`
+	RotationPeriod string `json:"rotation_period,omitempty"`
 
 	// Controls how long the public portion of a key will be available for verification after being rotated.
-	VerificationTtl int32 `json:"verification_ttl,omitempty"`
-}
-
-// NewOidcWriteKeyRequestWithDefaults instantiates a new OidcWriteKeyRequest object
-// This constructor will only assign default values to properties that have it defined,
-// but it doesn't guarantee that properties required by API are set
-func NewOidcWriteKeyRequestWithDefaults() *OidcWriteKeyRequest {
-	var this OidcWriteKeyRequest
-
-	this.Algorithm = "RS256"
-
-	return &this
+	VerificationTtl string `json:"verification_ttl,omitempty"`
 }

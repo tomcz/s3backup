@@ -8,14 +8,5 @@ package schema
 // AppRoleWriteSecretIdTtlRequest struct for AppRoleWriteSecretIdTtlRequest
 type AppRoleWriteSecretIdTtlRequest struct {
 	// Duration in seconds after which the issued SecretID should expire. Defaults to 0, meaning no expiration.
-	SecretIdTtl int32 `json:"secret_id_ttl,omitempty"`
-}
-
-// NewAppRoleWriteSecretIdTtlRequestWithDefaults instantiates a new AppRoleWriteSecretIdTtlRequest object
-// This constructor will only assign default values to properties that have it defined,
-// but it doesn't guarantee that properties required by API are set
-func NewAppRoleWriteSecretIdTtlRequestWithDefaults() *AppRoleWriteSecretIdTtlRequest {
-	var this AppRoleWriteSecretIdTtlRequest
-
-	return &this
+	SecretIdTtl string `json:"secret_id_ttl,omitempty"`
 }

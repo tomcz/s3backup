@@ -16,6 +16,9 @@ type PkiPatchIssuerResponse struct {
 	// CRL Distribution Points
 	CrlDistributionPoints []string `json:"crl_distribution_points,omitempty"`
 
+	// Whether or not templating is enabled for AIA fields
+	EnableAiaUrlTemplating bool `json:"enable_aia_url_templating,omitempty"`
+
 	// Issuer Id
 	IssuerId string `json:"issuer_id,omitempty"`
 
@@ -34,7 +37,7 @@ type PkiPatchIssuerResponse struct {
 	// Manual Chain
 	ManualChain []string `json:"manual_chain,omitempty"`
 
-	// OSCP Servers
+	// OCSP Servers
 	OcspServers []string `json:"ocsp_servers,omitempty"`
 
 	// Revocation Signature Alogrithm
@@ -48,14 +51,5 @@ type PkiPatchIssuerResponse struct {
 	Revoked bool `json:"revoked,omitempty"`
 
 	// Usage
-	Usage []string `json:"usage,omitempty"`
-}
-
-// NewPkiPatchIssuerResponseWithDefaults instantiates a new PkiPatchIssuerResponse object
-// This constructor will only assign default values to properties that have it defined,
-// but it doesn't guarantee that properties required by API are set
-func NewPkiPatchIssuerResponseWithDefaults() *PkiPatchIssuerResponse {
-	var this PkiPatchIssuerResponse
-
-	return &this
+	Usage string `json:"usage,omitempty"`
 }

@@ -53,7 +53,7 @@ type PkiIssuerSignVerbatimWithRoleRequest struct {
 	SignatureBits int32 `json:"signature_bits,omitempty"`
 
 	// The requested Time To Live for the certificate; sets the expiration date. If not specified the role default, backend default, or system default TTL is used, in that order. Cannot be larger than the role max TTL.
-	Ttl int32 `json:"ttl,omitempty"`
+	Ttl string `json:"ttl,omitempty"`
 
 	// The requested URI SANs, if any, in a comma-delimited list.
 	UriSans []string `json:"uri_sans,omitempty"`
@@ -63,21 +63,4 @@ type PkiIssuerSignVerbatimWithRoleRequest struct {
 
 	// The requested user_ids value to place in the subject, if any, in a comma-delimited list. Restricted by allowed_user_ids. Any values are added with OID 0.9.2342.19200300.100.1.1.
 	UserIds []string `json:"user_ids,omitempty"`
-}
-
-// NewPkiIssuerSignVerbatimWithRoleRequestWithDefaults instantiates a new PkiIssuerSignVerbatimWithRoleRequest object
-// This constructor will only assign default values to properties that have it defined,
-// but it doesn't guarantee that properties required by API are set
-func NewPkiIssuerSignVerbatimWithRoleRequestWithDefaults() *PkiIssuerSignVerbatimWithRoleRequest {
-	var this PkiIssuerSignVerbatimWithRoleRequest
-
-	this.Csr = ""
-	this.ExcludeCnFromSans = false
-	this.Format = "pem"
-	this.PrivateKeyFormat = "der"
-	this.RemoveRootsFromChain = false
-	this.SignatureBits = 0
-	this.UsePss = false
-
-	return &this
 }
