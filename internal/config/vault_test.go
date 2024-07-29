@@ -9,7 +9,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	assert "github.com/stretchr/testify/require"
+	"gotest.tools/v3/assert"
 
 	"github.com/tomcz/s3backup/internal/utils"
 )
@@ -94,7 +94,7 @@ func TestLookupWithAppRole(t *testing.T) {
 
 	ctx := context.Background()
 	cfg, err := LookupWithAppRole(ctx, ts.URL, "", "test-role", "test-secret", "secret/myteam/backup")
-	assert.NoError(t, err)
+	assert.NilError(t, err)
 
 	assert.Equal(t, "use me to encrypt", cfg.CipherKey)
 	assert.Equal(t, "aws access", cfg.S3AccessKey)
@@ -111,11 +111,11 @@ func TestLookupWithToken(t *testing.T) {
 	cert := ts.Certificate()
 	encoded := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: cert.Raw})
 	certFile, err := utils.CreateTempFile("vault", encoded)
-	assert.NoError(t, err)
+	assert.NilError(t, err)
 
 	ctx := context.Background()
 	cfg, err := LookupWithToken(ctx, ts.URL, certFile, "5b1a0318-679c-9c45-e5c6-d1b9a9035d49", "secret/myteam/backup")
-	assert.NoError(t, err)
+	assert.NilError(t, err)
 
 	assert.Equal(t, "use me to encrypt", cfg.CipherKey)
 	assert.Equal(t, "aws access", cfg.S3AccessKey)

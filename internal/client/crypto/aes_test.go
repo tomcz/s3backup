@@ -4,14 +4,14 @@ import (
 	"os"
 	"testing"
 
-	assert "github.com/stretchr/testify/require"
+	"gotest.tools/v3/assert"
 
 	"github.com/tomcz/s3backup/internal/utils"
 )
 
 func TestRoundTripAESEncryptDecrypt_GeneratedKey(t *testing.T) {
 	key, err := GenerateAESKeyString()
-	assert.NoError(t, err, "Cannot generate AES key")
+	assert.NilError(t, err, "Cannot generate AES key")
 	testRoundTrip(t, key)
 }
 
@@ -21,14 +21,14 @@ func TestRoundTripAESEncryptDecrypt_ArbitraryKey(t *testing.T) {
 
 func testRoundTrip(t *testing.T, key string) {
 	expected, err := utils.Random(1024)
-	assert.NoError(t, err, "Cannot create file contents")
+	assert.NilError(t, err, "Cannot create file contents")
 
 	file, err := utils.CreateTempFile("aes", expected)
-	assert.NoError(t, err, "Cannot create file to encrypt")
+	assert.NilError(t, err, "Cannot create file to encrypt")
 	defer os.Remove(file)
 
 	cipher, err := NewAESCipher(key)
-	assert.NoError(t, err, "Cannot create AES cipher")
+	assert.NilError(t, err, "Cannot create AES cipher")
 
 	encryptedFile := file + ".enc"
 	defer os.Remove(encryptedFile)
@@ -36,11 +36,11 @@ func testRoundTrip(t *testing.T, key string) {
 	decryptedFile := file + ".dec"
 	defer os.Remove(decryptedFile)
 
-	assert.NoError(t, cipher.Encrypt(file, encryptedFile), "Cannot encrypt file")
-	assert.NoError(t, cipher.Decrypt(encryptedFile, decryptedFile), "Cannot decrypt file")
+	assert.NilError(t, cipher.Encrypt(file, encryptedFile), "Cannot encrypt file")
+	assert.NilError(t, cipher.Decrypt(encryptedFile, decryptedFile), "Cannot decrypt file")
 
 	actual, err := os.ReadFile(decryptedFile)
-	assert.NoError(t, err, "Cannot read decrypted file")
+	assert.NilError(t, err, "Cannot read decrypted file")
 
-	assert.Equal(t, expected, actual)
+	assert.DeepEqual(t, expected, actual)
 }

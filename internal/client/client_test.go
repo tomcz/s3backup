@@ -3,14 +3,15 @@ package client
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"gotest.tools/v3/assert"
+	is "gotest.tools/v3/assert/cmp"
 )
 
 func TestGetRemoteFileWithoutDecryption(t *testing.T) {
 	hash := &HashStub{
 		VerifyFunc: func(filePath string, expectedChecksum string) error {
-			assert.Equal(t, "bar.txt", filePath)
-			assert.Equal(t, "muahahaha", expectedChecksum)
+			assert.Check(t, is.Equal("bar.txt", filePath))
+			assert.Check(t, is.Equal("muahahaha", expectedChecksum))
 			return nil
 		},
 	}
@@ -27,8 +28,8 @@ func TestGetRemoteFileWithoutDecryption(t *testing.T) {
 			}
 		},
 		DownloadFileFunc: func(remotePath string, localPath string) (string, error) {
-			assert.Equal(t, "s3://foo/bar.txt", remotePath)
-			assert.Equal(t, "bar.txt", localPath)
+			assert.Check(t, is.Equal("s3://foo/bar.txt", remotePath))
+			assert.Check(t, is.Equal("bar.txt", localPath))
 			return "muahahaha", nil
 		},
 	}
@@ -36,14 +37,14 @@ func TestGetRemoteFileWithoutDecryption(t *testing.T) {
 		Hash:  hash,
 		Store: store,
 	}
-	assert.NoError(t, c.GetRemoteFile("bar.txt", "s3://foo/bar.txt"))
+	assert.NilError(t, c.GetRemoteFile("bar.txt", "s3://foo/bar.txt"))
 }
 
 func TestGetRemoteFileWithDecryption(t *testing.T) {
 	hash := &HashStub{
 		VerifyFunc: func(filePath string, expectedChecksum string) error {
-			assert.Equal(t, "bar.txt.tmp", filePath)
-			assert.Equal(t, "muahahaha", expectedChecksum)
+			assert.Check(t, is.Equal("bar.txt.tmp", filePath))
+			assert.Check(t, is.Equal("muahahaha", expectedChecksum))
 			return nil
 		},
 	}
@@ -60,15 +61,15 @@ func TestGetRemoteFileWithDecryption(t *testing.T) {
 			}
 		},
 		DownloadFileFunc: func(remotePath string, localPath string) (string, error) {
-			assert.Equal(t, "s3://foo/bar.txt", remotePath)
-			assert.Equal(t, "bar.txt.tmp", localPath)
+			assert.Check(t, is.Equal("s3://foo/bar.txt", remotePath))
+			assert.Check(t, is.Equal("bar.txt.tmp", localPath))
 			return "muahahaha", nil
 		},
 	}
 	cipher := &CipherStub{
 		DecryptFunc: func(cipherTextFile string, plainTextFile string) error {
-			assert.Equal(t, "bar.txt.tmp", cipherTextFile)
-			assert.Equal(t, "bar.txt", plainTextFile)
+			assert.Check(t, is.Equal("bar.txt.tmp", cipherTextFile))
+			assert.Check(t, is.Equal("bar.txt", plainTextFile))
 			return nil
 		},
 	}
@@ -77,13 +78,13 @@ func TestGetRemoteFileWithDecryption(t *testing.T) {
 		Store:  store,
 		Cipher: cipher,
 	}
-	assert.NoError(t, c.GetRemoteFile("s3://foo/bar.txt", "bar.txt"))
+	assert.NilError(t, c.GetRemoteFile("s3://foo/bar.txt", "bar.txt"))
 }
 
 func TestPutLocalFileWithoutEncryption(t *testing.T) {
 	hash := &HashStub{
 		CalculateFunc: func(filePath string) (string, error) {
-			assert.Equal(t, "bar.txt", filePath)
+			assert.Check(t, is.Equal("bar.txt", filePath))
 			return "woahahaha", nil
 		},
 	}
@@ -100,9 +101,9 @@ func TestPutLocalFileWithoutEncryption(t *testing.T) {
 			}
 		},
 		UploadFileFunc: func(remotePath string, localPath string, checksum string) error {
-			assert.Equal(t, "s3://foo/bar.txt", remotePath)
-			assert.Equal(t, "bar.txt", localPath)
-			assert.Equal(t, "woahahaha", checksum)
+			assert.Check(t, is.Equal("s3://foo/bar.txt", remotePath))
+			assert.Check(t, is.Equal("bar.txt", localPath))
+			assert.Check(t, is.Equal("woahahaha", checksum))
 			return nil
 		},
 	}
@@ -110,13 +111,13 @@ func TestPutLocalFileWithoutEncryption(t *testing.T) {
 		Hash:  hash,
 		Store: store,
 	}
-	assert.NoError(t, c.PutLocalFile("bar.txt", "s3://foo/bar.txt"))
+	assert.NilError(t, c.PutLocalFile("bar.txt", "s3://foo/bar.txt"))
 }
 
 func TestPutLocalFileWithEncryption(t *testing.T) {
 	hash := &HashStub{
 		CalculateFunc: func(filePath string) (string, error) {
-			assert.Equal(t, "bar.txt.tmp", filePath)
+			assert.Check(t, is.Equal("bar.txt.tmp", filePath))
 			return "woahahaha", nil
 		},
 	}
@@ -133,16 +134,16 @@ func TestPutLocalFileWithEncryption(t *testing.T) {
 			}
 		},
 		UploadFileFunc: func(remotePath string, localPath string, checksum string) error {
-			assert.Equal(t, "s3://foo/bar.txt", remotePath)
-			assert.Equal(t, "bar.txt.tmp", localPath)
-			assert.Equal(t, "woahahaha", checksum)
+			assert.Check(t, is.Equal("s3://foo/bar.txt", remotePath))
+			assert.Check(t, is.Equal("bar.txt.tmp", localPath))
+			assert.Check(t, is.Equal("woahahaha", checksum))
 			return nil
 		},
 	}
 	cipher := &CipherStub{
 		EncryptFunc: func(plainTextFile string, cipherTextFile string) error {
-			assert.Equal(t, "bar.txt", plainTextFile)
-			assert.Equal(t, "bar.txt.tmp", cipherTextFile)
+			assert.Check(t, is.Equal("bar.txt", plainTextFile))
+			assert.Check(t, is.Equal("bar.txt.tmp", cipherTextFile))
 			return nil
 		},
 	}
@@ -151,5 +152,5 @@ func TestPutLocalFileWithEncryption(t *testing.T) {
 		Store:  store,
 		Cipher: cipher,
 	}
-	assert.NoError(t, c.PutLocalFile("s3://foo/bar.txt", "bar.txt"))
+	assert.NilError(t, c.PutLocalFile("s3://foo/bar.txt", "bar.txt"))
 }
