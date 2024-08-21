@@ -11,7 +11,7 @@ import (
 
 	"gotest.tools/v3/assert"
 
-	"github.com/tomcz/s3backup/internal/utils"
+	"github.com/tomcz/s3backup/v2/internal/utils"
 )
 
 const loginJSON = `{

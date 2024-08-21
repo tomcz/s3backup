@@ -12,7 +12,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/tomcz/s3backup/internal/utils"
+	"github.com/tomcz/s3backup/v2/internal/utils"
 )
 
 const (

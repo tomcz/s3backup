@@ -9,11 +9,11 @@ import (
 
 	"github.com/urfave/cli/v2"
 
-	"github.com/tomcz/s3backup/internal/client"
-	"github.com/tomcz/s3backup/internal/client/crypto"
-	"github.com/tomcz/s3backup/internal/client/store"
-	"github.com/tomcz/s3backup/internal/config"
-	"github.com/tomcz/s3backup/internal/utils"
+	"github.com/tomcz/s3backup/v2/internal/client"
+	"github.com/tomcz/s3backup/v2/internal/client/crypto"
+	"github.com/tomcz/s3backup/v2/internal/client/store"
+	"github.com/tomcz/s3backup/v2/internal/config"
+	"github.com/tomcz/s3backup/v2/internal/utils"
 )
 
 var (

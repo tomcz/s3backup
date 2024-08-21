@@ -1,4 +1,4 @@
-module github.com/tomcz/s3backup
+module github.com/tomcz/s3backup/v2
 
 go 1.22
 

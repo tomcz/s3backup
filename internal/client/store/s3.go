@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 
-	"github.com/tomcz/s3backup/internal/client"
+	"github.com/tomcz/s3backup/v2/internal/client"
 )
 
 const checksumKey = "S3-Backup-Checksum"

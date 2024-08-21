@@ -11,7 +11,7 @@ import (
 	"github.com/johannesboyne/gofakes3/backend/s3mem"
 	"gotest.tools/v3/assert"
 
-	"github.com/tomcz/s3backup/internal/utils"
+	"github.com/tomcz/s3backup/v2/internal/utils"
 )
 
 func TestSplitRemotePath(t *testing.T) {
