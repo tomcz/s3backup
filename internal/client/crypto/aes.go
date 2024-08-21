@@ -8,8 +8,8 @@ import (
 	"io"
 	"os"
 
-	"github.com/tomcz/s3backup/internal/client"
-	"github.com/tomcz/s3backup/internal/utils"
+	"github.com/tomcz/s3backup/v2/internal/client"
+	"github.com/tomcz/s3backup/v2/internal/utils"
 )
 
 type aesCipher struct {
