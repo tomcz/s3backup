@@ -42,7 +42,7 @@ generate:
 .PHONY: compile
 compile: target
 	go build -ldflags "${LDFLAGS}" -o target/${OUTFILE} ./cmd/s3backup/...
-	gzip -c < target/${OUTFILE} > target/${OUTFILE}.gz
+	gzip -k target/${OUTFILE}
 
 .PHONY: cross-compile
 cross-compile:
