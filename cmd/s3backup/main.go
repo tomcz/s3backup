@@ -321,12 +321,6 @@ func maybeRemoveKeyFile() {
 }
 
 func initWithVault(encrypt bool) error {
-	log.Println("Fetching configuration from vault")
-
-	if vaultPath == "" {
-		return errors.New("vault secret path not provided")
-	}
-
 	cfg, err := configFromVault()
 	if err != nil {
 		return err
@@ -349,11 +343,14 @@ func initWithVault(encrypt bool) error {
 	awsToken = cfg.S3Token
 	awsRegion = cfg.S3Region
 	awsEndpoint = cfg.S3Endpoint
-
 	return nil
 }
 
 func configFromVault() (*config.Config, error) {
+	log.Println("Fetching configuration from vault")
+	if vaultPath == "" {
+		return nil, errors.New("vault secret path not provided")
+	}
 	ctx := context.Background()
 	if vaultToken != "" {
 		return config.LookupWithToken(ctx, vaultAddr, vaultCaCert, vaultToken, vaultPath)
