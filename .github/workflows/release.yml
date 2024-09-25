@@ -22,6 +22,8 @@ jobs:
             version: latest
       - name: Build
         run: make commit
+        env:
+          GOTOOLCHAIN: 'local'
       - name: Automatic Releases
         uses: marvinpinto/action-automatic-releases@v1.2.1
         with:

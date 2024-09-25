@@ -21,3 +21,5 @@ jobs:
           version: latest
       - name: Build
         run: make commit
+        env:
+          GOTOOLCHAIN: 'local'
