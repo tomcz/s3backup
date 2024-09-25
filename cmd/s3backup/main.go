@@ -327,16 +327,7 @@ func initWithVault(encrypt bool) error {
 		return errors.New("vault secret path not provided")
 	}
 
-	var err error
-	var cfg *config.Config
-	ctx := context.Background()
-	if vaultToken != "" {
-		cfg, err = config.LookupWithToken(ctx, vaultAddr, vaultCaCert, vaultToken, vaultPath)
-	} else if vaultRoleID != "" && vaultSecretID != "" {
-		cfg, err = config.LookupWithAppRole(ctx, vaultAddr, vaultCaCert, vaultRoleID, vaultSecretID, vaultPath)
-	} else {
-		err = errors.New("vault credentials not provided")
-	}
+	cfg, err := configFromVault()
 	if err != nil {
 		return err
 	}
@@ -360,6 +351,17 @@ func initWithVault(encrypt bool) error {
 	awsEndpoint = cfg.S3Endpoint
 
 	return nil
+}
+
+func configFromVault() (*config.Config, error) {
+	ctx := context.Background()
+	if vaultToken != "" {
+		return config.LookupWithToken(ctx, vaultAddr, vaultCaCert, vaultToken, vaultPath)
+	}
+	if vaultRoleID != "" && vaultSecretID != "" {
+		return config.LookupWithAppRole(ctx, vaultAddr, vaultCaCert, vaultRoleID, vaultSecretID, vaultPath)
+	}
+	return nil, errors.New("vault credentials not provided")
 }
 
 func newClient() (*client.Client, error) {
