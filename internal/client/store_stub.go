@@ -20,9 +20,6 @@ var _ Store = &StoreStub{}
 //			DownloadFileFunc: func(remotePath string, localPath string) (string, error) {
 //				panic("mock out the DownloadFile method")
 //			},
-//			IsRemoteFunc: func(path string) bool {
-//				panic("mock out the IsRemote method")
-//			},
 //			UploadFileFunc: func(remotePath string, localPath string, checksum string) error {
 //				panic("mock out the UploadFile method")
 //			},
@@ -36,9 +33,6 @@ type StoreStub struct {
 	// DownloadFileFunc mocks the DownloadFile method.
 	DownloadFileFunc func(remotePath string, localPath string) (string, error)
 
-	// IsRemoteFunc mocks the IsRemote method.
-	IsRemoteFunc func(path string) bool
-
 	// UploadFileFunc mocks the UploadFile method.
 	UploadFileFunc func(remotePath string, localPath string, checksum string) error
 
@@ -51,11 +45,6 @@ type StoreStub struct {
 			// LocalPath is the localPath argument value.
 			LocalPath string
 		}
-		// IsRemote holds details about calls to the IsRemote method.
-		IsRemote []struct {
-			// Path is the path argument value.
-			Path string
-		}
 		// UploadFile holds details about calls to the UploadFile method.
 		UploadFile []struct {
 			// RemotePath is the remotePath argument value.
@@ -67,7 +56,6 @@ type StoreStub struct {
 		}
 	}
 	lockDownloadFile sync.RWMutex
-	lockIsRemote     sync.RWMutex
 	lockUploadFile   sync.RWMutex
 }
 
@@ -104,38 +92,6 @@ func (mock *StoreStub) DownloadFileCalls() []struct {
 	mock.lockDownloadFile.RLock()
 	calls = mock.calls.DownloadFile
 	mock.lockDownloadFile.RUnlock()
-	return calls
-}
-
-// IsRemote calls IsRemoteFunc.
-func (mock *StoreStub) IsRemote(path string) bool {
-	if mock.IsRemoteFunc == nil {
-		panic("StoreStub.IsRemoteFunc: method is nil but Store.IsRemote was just called")
-	}
-	callInfo := struct {
-		Path string
-	}{
-		Path: path,
-	}
-	mock.lockIsRemote.Lock()
-	mock.calls.IsRemote = append(mock.calls.IsRemote, callInfo)
-	mock.lockIsRemote.Unlock()
-	return mock.IsRemoteFunc(path)
-}
-
-// IsRemoteCalls gets all the calls that were made to IsRemote.
-// Check the length with:
-//
-//	len(mockedStore.IsRemoteCalls())
-func (mock *StoreStub) IsRemoteCalls() []struct {
-	Path string
-} {
-	var calls []struct {
-		Path string
-	}
-	mock.lockIsRemote.RLock()
-	calls = mock.calls.IsRemote
-	mock.lockIsRemote.RUnlock()
 	return calls
 }
 

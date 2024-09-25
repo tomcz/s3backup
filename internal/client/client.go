@@ -1,7 +1,6 @@
 package client
 
 import (
-	"errors"
 	"log"
 	"os"
 )
@@ -15,13 +14,6 @@ type Client struct {
 }
 
 func (c *Client) GetRemoteFile(remotePath, localPath string) error {
-	if err := c.checkPaths(remotePath, localPath); err != nil {
-		return err
-	}
-	if c.Store.IsRemote(localPath) {
-		localPath, remotePath = remotePath, localPath
-	}
-
 	tempFile := localPath
 	if c.Cipher != nil {
 		tempFile += tempFileSuffix
@@ -52,13 +44,6 @@ func (c *Client) GetRemoteFile(remotePath, localPath string) error {
 }
 
 func (c *Client) PutLocalFile(remotePath, localPath string) error {
-	if err := c.checkPaths(remotePath, localPath); err != nil {
-		return err
-	}
-	if c.Store.IsRemote(localPath) {
-		localPath, remotePath = remotePath, localPath
-	}
-
 	tempFile := localPath
 	if c.Cipher != nil {
 		tempFile += tempFileSuffix
@@ -82,16 +67,6 @@ func (c *Client) PutLocalFile(remotePath, localPath string) error {
 
 	log.Println("Uploading", tempFile, "as", remotePath)
 	return c.Store.UploadFile(remotePath, tempFile, checksum)
-}
-
-func (c *Client) checkPaths(remotePath, localPath string) error {
-	if c.Store.IsRemote(remotePath) && c.Store.IsRemote(localPath) {
-		return errors.New("cannot have two remote paths")
-	}
-	if !c.Store.IsRemote(remotePath) && !c.Store.IsRemote(localPath) {
-		return errors.New("cannot have two local paths")
-	}
-	return nil
 }
 
 func remove(filePath string) {

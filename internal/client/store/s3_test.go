@@ -14,27 +14,6 @@ import (
 	"github.com/tomcz/s3backup/v2/internal/utils"
 )
 
-func TestSplitRemotePath(t *testing.T) {
-	bucket, objectKey, err := splitRemotePath("s3://bucket/object.key")
-	assert.NilError(t, err)
-	assert.Equal(t, "bucket", bucket)
-	assert.Equal(t, "object.key", objectKey)
-
-	bucket, objectKey, err = splitRemotePath("s3://some-bucket/some/path/to/object.foo")
-	assert.NilError(t, err)
-	assert.Equal(t, "some-bucket", bucket)
-	assert.Equal(t, "some/path/to/object.foo", objectKey)
-
-	_, _, err = splitRemotePath("http://example.com/wibble.bar")
-	assert.ErrorContains(t, err, "not a valid S3 path")
-}
-
-func TestIsRemote(t *testing.T) {
-	store := &s3store{}
-	assert.Assert(t, store.IsRemote("s3://bucket/object.key"))
-	assert.Assert(t, !store.IsRemote("wibble.txt"))
-}
-
 func TestRoundTripUploadDownload_withChecksum(t *testing.T) {
 	backend := s3mem.New()
 	faker := gofakes3.New(backend)

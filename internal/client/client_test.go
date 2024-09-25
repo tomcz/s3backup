@@ -16,17 +16,6 @@ func TestGetRemoteFileWithoutDecryption(t *testing.T) {
 		},
 	}
 	store := &StoreStub{
-		IsRemoteFunc: func(path string) bool {
-			switch path {
-			case "bar.txt":
-				return false
-			case "s3://foo/bar.txt":
-				return true
-			default:
-				t.Errorf("unexpected path: %q", path)
-				return false
-			}
-		},
 		DownloadFileFunc: func(remotePath string, localPath string) (string, error) {
 			assert.Check(t, is.Equal("s3://foo/bar.txt", remotePath))
 			assert.Check(t, is.Equal("bar.txt", localPath))
@@ -37,7 +26,7 @@ func TestGetRemoteFileWithoutDecryption(t *testing.T) {
 		Hash:  hash,
 		Store: store,
 	}
-	assert.NilError(t, c.GetRemoteFile("bar.txt", "s3://foo/bar.txt"))
+	assert.NilError(t, c.GetRemoteFile("s3://foo/bar.txt", "bar.txt"))
 }
 
 func TestGetRemoteFileWithDecryption(t *testing.T) {
@@ -49,17 +38,6 @@ func TestGetRemoteFileWithDecryption(t *testing.T) {
 		},
 	}
 	store := &StoreStub{
-		IsRemoteFunc: func(path string) bool {
-			switch path {
-			case "bar.txt":
-				return false
-			case "s3://foo/bar.txt":
-				return true
-			default:
-				t.Errorf("unexpected path: %q", path)
-				return false
-			}
-		},
 		DownloadFileFunc: func(remotePath string, localPath string) (string, error) {
 			assert.Check(t, is.Equal("s3://foo/bar.txt", remotePath))
 			assert.Check(t, is.Equal("bar.txt.tmp", localPath))
@@ -89,17 +67,6 @@ func TestPutLocalFileWithoutEncryption(t *testing.T) {
 		},
 	}
 	store := &StoreStub{
-		IsRemoteFunc: func(path string) bool {
-			switch path {
-			case "bar.txt":
-				return false
-			case "s3://foo/bar.txt":
-				return true
-			default:
-				t.Errorf("unexpected path: %q", path)
-				return false
-			}
-		},
 		UploadFileFunc: func(remotePath string, localPath string, checksum string) error {
 			assert.Check(t, is.Equal("s3://foo/bar.txt", remotePath))
 			assert.Check(t, is.Equal("bar.txt", localPath))
@@ -111,7 +78,7 @@ func TestPutLocalFileWithoutEncryption(t *testing.T) {
 		Hash:  hash,
 		Store: store,
 	}
-	assert.NilError(t, c.PutLocalFile("bar.txt", "s3://foo/bar.txt"))
+	assert.NilError(t, c.PutLocalFile("s3://foo/bar.txt", "bar.txt"))
 }
 
 func TestPutLocalFileWithEncryption(t *testing.T) {
@@ -122,17 +89,6 @@ func TestPutLocalFileWithEncryption(t *testing.T) {
 		},
 	}
 	store := &StoreStub{
-		IsRemoteFunc: func(path string) bool {
-			switch path {
-			case "bar.txt":
-				return false
-			case "s3://foo/bar.txt":
-				return true
-			default:
-				t.Errorf("unexpected path: %q", path)
-				return false
-			}
-		},
 		UploadFileFunc: func(remotePath string, localPath string, checksum string) error {
 			assert.Check(t, is.Equal("s3://foo/bar.txt", remotePath))
 			assert.Check(t, is.Equal("bar.txt.tmp", localPath))

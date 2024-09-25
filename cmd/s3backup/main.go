@@ -42,6 +42,14 @@ var (
 	rsaPubKey     string
 )
 
+// command line args
+var (
+	remotePath string
+	localPath  string
+	inFile     string
+	outFile    string
+)
+
 func main() {
 	cmdVersion := &cli.Command{
 		Name:   "version",
@@ -52,6 +60,7 @@ func main() {
 		Name:      "put",
 		Usage:     "Upload file to S3 bucket using local credentials",
 		ArgsUsage: "local_file_path s3://bucket/objectkey",
+		Before:    setLocalRemote,
 		Action:    basicPut,
 		Flags:     basicFlags(true),
 	}
@@ -59,6 +68,7 @@ func main() {
 		Name:      "get",
 		Usage:     "Download file from S3 bucket using local credentials",
 		ArgsUsage: "s3://bucket/objectkey local_file_path",
+		Before:    setLocalRemote,
 		Action:    basicGet,
 		Flags:     basicFlags(false),
 	}
@@ -66,6 +76,7 @@ func main() {
 		Name:      "vault-put",
 		Usage:     "Upload file to S3 bucket using credentials from vault",
 		ArgsUsage: "local_file_path s3://bucket/objectkey",
+		Before:    setLocalRemote,
 		Action:    vaultPut,
 		Flags:     vaultFlags(true),
 	}
@@ -73,6 +84,7 @@ func main() {
 		Name:      "vault-get",
 		Usage:     "Download file from S3 bucket using credentials from vault",
 		ArgsUsage: "s3://bucket/objectkey local_file_path",
+		Before:    setLocalRemote,
 		Action:    vaultGet,
 		Flags:     vaultFlags(false),
 	}
@@ -96,6 +108,7 @@ func main() {
 		Name:      "encrypt",
 		Usage:     "Encrypt a local file",
 		ArgsUsage: "inFile outFile",
+		Before:    setInOutFiles,
 		Action:    encryptLocalFile,
 		Flags:     cipherFlags(true),
 	}
@@ -103,6 +116,7 @@ func main() {
 		Name:      "decrypt",
 		Usage:     "Decrypt a local file",
 		ArgsUsage: "inFile outFile",
+		Before:    setInOutFiles,
 		Action:    decryptLocalFile,
 		Flags:     cipherFlags(false),
 	}
@@ -272,44 +286,85 @@ func printVersion(*cli.Context) error {
 	return nil
 }
 
-func basicPut(ctx *cli.Context) error {
+func setLocalRemote(c *cli.Context) error {
+	if c.NArg() != 2 {
+		return errors.New("remote path & local path are required")
+	}
+	args := c.Args()
+	localPath = args.Get(0)
+	remotePath = args.Get(1)
+	return checkPaths()
+}
+
+func checkPaths() error {
+	if store.IsRemote(remotePath) && store.IsRemote(localPath) {
+		return errors.New("cannot have two remote paths")
+	}
+	if !store.IsRemote(remotePath) && !store.IsRemote(localPath) {
+		return errors.New("cannot have two local paths")
+	}
+	if store.IsRemote(localPath) {
+		localPath, remotePath = remotePath, localPath
+	}
+	return nil
+}
+
+func basicPut(*cli.Context) error {
 	c, err := newClient()
 	if err != nil {
 		return err
 	}
-	if ctx.NArg() != 2 {
-		return errors.New("remote path & local path are required")
-	}
-	args := ctx.Args()
-	return c.PutLocalFile(args.Get(0), args.Get(1))
+	return c.PutLocalFile(remotePath, localPath)
 }
 
-func basicGet(ctx *cli.Context) error {
+func basicGet(*cli.Context) error {
 	c, err := newClient()
 	if err != nil {
 		return err
 	}
-	if ctx.NArg() != 2 {
-		return errors.New("remote path & local path are required")
-	}
-	args := ctx.Args()
-	return c.GetRemoteFile(args.Get(0), args.Get(1))
+	return c.GetRemoteFile(remotePath, localPath)
 }
 
-func vaultPut(ctx *cli.Context) error {
+func newClient() (*client.Client, error) {
+	s3, err := store.NewS3(
+		awsAccessKey,
+		awsSecretKey,
+		awsToken,
+		awsRegion,
+		awsEndpoint,
+	)
+	if err != nil {
+		return nil, err
+	}
+	cipher, err := optionalCipher()
+	if err != nil {
+		return nil, err
+	}
+	var hash client.Hash
+	if !skipHash {
+		hash = crypto.NewHash()
+	}
+	return &client.Client{
+		Hash:   hash,
+		Cipher: cipher,
+		Store:  s3,
+	}, nil
+}
+
+func vaultPut(c *cli.Context) error {
 	if err := initWithVault(true); err != nil {
 		return err
 	}
 	defer maybeRemoveKeyFile()
-	return basicPut(ctx)
+	return basicPut(c)
 }
 
-func vaultGet(ctx *cli.Context) error {
+func vaultGet(c *cli.Context) error {
 	if err := initWithVault(false); err != nil {
 		return err
 	}
 	defer maybeRemoveKeyFile()
-	return basicGet(ctx)
+	return basicGet(c)
 }
 
 func maybeRemoveKeyFile() {
@@ -361,38 +416,6 @@ func configFromVault() (*config.Config, error) {
 	return nil, errors.New("vault credentials not provided")
 }
 
-func newClient() (*client.Client, error) {
-	s3, err := store.NewS3(
-		awsAccessKey,
-		awsSecretKey,
-		awsToken,
-		awsRegion,
-		awsEndpoint,
-	)
-	if err != nil {
-		return nil, err
-	}
-	var cipher client.Cipher
-	if symKey != "" {
-		cipher, err = crypto.NewAESCipher(symKey)
-	}
-	if pemKeyFile != "" {
-		cipher, err = crypto.NewRSACipher(pemKeyFile)
-	}
-	if err != nil {
-		return nil, err
-	}
-	var hash client.Hash
-	if !skipHash {
-		hash = crypto.NewHash()
-	}
-	return &client.Client{
-		Hash:   hash,
-		Cipher: cipher,
-		Store:  s3,
-	}, nil
-}
-
 func genSecretKey(*cli.Context) error {
 	key, err := crypto.GenerateAESKeyString()
 	if err != nil {
@@ -406,41 +429,46 @@ func genKeyPair(*cli.Context) error {
 	return crypto.GenerateRSAKeyPair(rsaPrivKey, rsaPubKey)
 }
 
-func encryptLocalFile(ctx *cli.Context) error {
-	cipher, err := initLocalFileOps(ctx)
+func setInOutFiles(c *cli.Context) error {
+	if c.NArg() != 2 {
+		return errors.New("in and out files are required")
+	}
+	args := c.Args()
+	inFile = args.Get(0)
+	outFile = args.Get(1)
+	return nil
+}
+
+func encryptLocalFile(*cli.Context) error {
+	cipher, err := requiredCipher()
 	if err != nil {
 		return err
 	}
-	args := ctx.Args()
-	return cipher.Encrypt(args.Get(0), args.Get(1))
+	return cipher.Encrypt(inFile, outFile)
 }
 
-func decryptLocalFile(ctx *cli.Context) error {
-	cipher, err := initLocalFileOps(ctx)
+func decryptLocalFile(*cli.Context) error {
+	cipher, err := requiredCipher()
 	if err != nil {
 		return err
 	}
-	args := ctx.Args()
-	return cipher.Decrypt(args.Get(0), args.Get(1))
+	return cipher.Decrypt(inFile, outFile)
 }
 
-func initLocalFileOps(ctx *cli.Context) (client.Cipher, error) {
-	if ctx.NArg() != 2 {
-		return nil, errors.New("in and out files are required")
-	}
-	var err error
-	var cipher client.Cipher
+func optionalCipher() (client.Cipher, error) {
 	if symKey != "" {
-		cipher, err = crypto.NewAESCipher(symKey)
+		return crypto.NewAESCipher(symKey)
 	}
 	if pemKeyFile != "" {
-		cipher, err = crypto.NewRSACipher(pemKeyFile)
+		return crypto.NewRSACipher(pemKeyFile)
 	}
-	if err != nil {
-		return nil, err
+	return nil, nil
+}
+
+func requiredCipher() (client.Cipher, error) {
+	cipher, err := optionalCipher()
+	if err != nil || cipher != nil {
+		return cipher, err
 	}
-	if cipher == nil {
-		return nil, errors.New("either one of symKey or pemKey is required")
-	}
-	return cipher, nil
+	return nil, errors.New("either one of symKey or pemKey is required")
 }

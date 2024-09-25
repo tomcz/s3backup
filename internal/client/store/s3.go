@@ -3,7 +3,6 @@ package store
 import (
 	"fmt"
 	"os"
-	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
@@ -16,8 +15,6 @@ import (
 )
 
 const checksumKey = "S3-Backup-Checksum"
-
-var s3PathPattern = regexp.MustCompile(`^s3://([^/]+)/(.+)$`)
 
 type s3store struct {
 	api *s3.S3
@@ -50,10 +47,6 @@ func NewS3(awsAccessKey, awsSecretKey, awsToken, awsRegion, awsEndpoint string) 
 		return nil, err
 	}
 	return &s3store{s3.New(awsSession)}, nil
-}
-
-func (s *s3store) IsRemote(path string) bool {
-	return s3PathPattern.MatchString(path)
 }
 
 func (s *s3store) UploadFile(remotePath, localPath, checksum string) error {
@@ -107,14 +100,4 @@ func (s *s3store) DownloadFile(remotePath, localPath string) (string, error) {
 		return "", fmt.Errorf("download failed: %w", err)
 	}
 	return checksum, nil
-}
-
-func splitRemotePath(remotePath string) (bucket string, objectKey string, err error) {
-	if md := s3PathPattern.FindStringSubmatch(remotePath); md != nil {
-		bucket = md[1]
-		objectKey = md[2]
-	} else {
-		err = fmt.Errorf("%q is not a valid S3 path", remotePath)
-	}
-	return // bucket, objectKey, err
 }
