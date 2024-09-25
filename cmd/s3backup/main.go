@@ -16,6 +16,13 @@ import (
 	"github.com/tomcz/s3backup/v2/internal/utils"
 )
 
+// build information
+var (
+	commit string
+	tag    string
+)
+
+// command line flags
 var (
 	symKey        string
 	pemKeyFile    string
@@ -102,7 +109,7 @@ func main() {
 	app := &cli.App{
 		Name:    "s3backup",
 		Usage:   "S3 backup script in a single binary",
-		Version: config.Version(),
+		Version: version(),
 		Commands: []*cli.Command{
 			cmdVersion,
 			cmdBasicPut,
@@ -256,8 +263,12 @@ func genKeyFlags() []cli.Flag {
 	}
 }
 
+func version() string {
+	return fmt.Sprintf("%s (%s)", tag, commit)
+}
+
 func printVersion(*cli.Context) error {
-	fmt.Println(config.Version())
+	fmt.Println(version())
 	return nil
 }
 
@@ -329,7 +340,6 @@ func initWithVault(encrypt bool) error {
 	if err != nil {
 		return err
 	}
-
 	if encrypt && cfg.PublicKey != "" {
 		pemKeyFile, err = utils.CreateTempFile("pub", []byte(cfg.PublicKey))
 		if err != nil {
