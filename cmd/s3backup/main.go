@@ -141,6 +141,10 @@ func main() {
 	}
 }
 
+// ============================================================
+// CLI flags
+// ============================================================
+
 func basicFlags(encrypt bool) []cli.Flag {
 	sym := "decryption"
 	asym := "private"
@@ -278,24 +282,9 @@ func genKeyFlags() []cli.Flag {
 	}
 }
 
-func version() string {
-	if tag != "" && commit != "" {
-		return fmt.Sprintf("%s (%s)", tag, commit)
-	}
-	if info, ok := debug.ReadBuildInfo(); ok {
-		for _, setting := range info.Settings {
-			if setting.Key == "vcs.revision" {
-				return setting.Value
-			}
-		}
-	}
-	return "unknown"
-}
-
-func printVersion(*cli.Context) error {
-	fmt.Println(version())
-	return nil
-}
+// ============================================================
+// CLI args
+// ============================================================
 
 func setLocalRemote(c *cli.Context) error {
 	if c.NArg() != 2 {
@@ -320,6 +309,25 @@ func checkPaths() error {
 	return nil
 }
 
+func setInOutFiles(c *cli.Context) error {
+	if c.NArg() != 2 {
+		return errors.New("in and out files are required")
+	}
+	args := c.Args()
+	inFile = args.Get(0)
+	outFile = args.Get(1)
+	return nil
+}
+
+// ============================================================
+// CLI commands
+// ============================================================
+
+func printVersion(*cli.Context) error {
+	fmt.Println(version())
+	return nil
+}
+
 func basicPut(*cli.Context) error {
 	c, err := newClient()
 	if err != nil {
@@ -334,6 +342,69 @@ func basicGet(*cli.Context) error {
 		return err
 	}
 	return c.GetRemoteFile(remotePath, localPath)
+}
+
+func vaultPut(c *cli.Context) error {
+	if err := initWithVault(true); err != nil {
+		return err
+	}
+	defer removePemKeyFile()
+	return basicPut(c)
+}
+
+func vaultGet(c *cli.Context) error {
+	if err := initWithVault(false); err != nil {
+		return err
+	}
+	defer removePemKeyFile()
+	return basicGet(c)
+}
+
+func genSecretKey(*cli.Context) error {
+	key, err := crypto.GenerateAESKeyString()
+	if err != nil {
+		return err
+	}
+	fmt.Println(key)
+	return nil
+}
+
+func genKeyPair(*cli.Context) error {
+	return crypto.GenerateRSAKeyPair(rsaPrivKey, rsaPubKey)
+}
+
+func encryptLocalFile(*cli.Context) error {
+	cipher, err := requiredCipher()
+	if err != nil {
+		return err
+	}
+	return cipher.Encrypt(inFile, outFile)
+}
+
+func decryptLocalFile(*cli.Context) error {
+	cipher, err := requiredCipher()
+	if err != nil {
+		return err
+	}
+	return cipher.Decrypt(inFile, outFile)
+}
+
+// ============================================================
+// Common actions
+// ============================================================
+
+func version() string {
+	if tag != "" && commit != "" {
+		return fmt.Sprintf("%s (%s)", tag, commit)
+	}
+	if info, ok := debug.ReadBuildInfo(); ok {
+		for _, setting := range info.Settings {
+			if setting.Key == "vcs.revision" {
+				return setting.Value
+			}
+		}
+	}
+	return "unknown"
 }
 
 func newClient() (*client.Client, error) {
@@ -362,28 +433,22 @@ func newClient() (*client.Client, error) {
 	}, nil
 }
 
-func vaultPut(c *cli.Context) error {
-	if err := initWithVault(true); err != nil {
-		return err
+func optionalCipher() (client.Cipher, error) {
+	if symKey != "" {
+		return crypto.NewAESCipher(symKey)
 	}
-	defer maybeRemoveKeyFile()
-	return basicPut(c)
-}
-
-func vaultGet(c *cli.Context) error {
-	if err := initWithVault(false); err != nil {
-		return err
-	}
-	defer maybeRemoveKeyFile()
-	return basicGet(c)
-}
-
-func maybeRemoveKeyFile() {
 	if pemKeyFile != "" {
-		if err := os.Remove(pemKeyFile); err != nil {
-			log.Printf("WARNING: unable to remove key file %s: %v\n", pemKeyFile, err)
-		}
+		return crypto.NewRSACipher(pemKeyFile)
 	}
+	return nil, nil
+}
+
+func requiredCipher() (client.Cipher, error) {
+	cipher, err := optionalCipher()
+	if err != nil || cipher != nil {
+		return cipher, err
+	}
+	return nil, errors.New("either one of symKey or pemKey is required")
 }
 
 func initWithVault(encrypt bool) error {
@@ -427,59 +492,10 @@ func configFromVault() (*config.Config, error) {
 	return nil, errors.New("vault credentials not provided")
 }
 
-func genSecretKey(*cli.Context) error {
-	key, err := crypto.GenerateAESKeyString()
-	if err != nil {
-		return err
-	}
-	fmt.Println(key)
-	return nil
-}
-
-func genKeyPair(*cli.Context) error {
-	return crypto.GenerateRSAKeyPair(rsaPrivKey, rsaPubKey)
-}
-
-func setInOutFiles(c *cli.Context) error {
-	if c.NArg() != 2 {
-		return errors.New("in and out files are required")
-	}
-	args := c.Args()
-	inFile = args.Get(0)
-	outFile = args.Get(1)
-	return nil
-}
-
-func encryptLocalFile(*cli.Context) error {
-	cipher, err := requiredCipher()
-	if err != nil {
-		return err
-	}
-	return cipher.Encrypt(inFile, outFile)
-}
-
-func decryptLocalFile(*cli.Context) error {
-	cipher, err := requiredCipher()
-	if err != nil {
-		return err
-	}
-	return cipher.Decrypt(inFile, outFile)
-}
-
-func optionalCipher() (client.Cipher, error) {
-	if symKey != "" {
-		return crypto.NewAESCipher(symKey)
-	}
+func removePemKeyFile() {
 	if pemKeyFile != "" {
-		return crypto.NewRSACipher(pemKeyFile)
+		if err := os.Remove(pemKeyFile); err != nil {
+			log.Printf("WARNING: unable to remove key file %s: %v\n", pemKeyFile, err)
+		}
 	}
-	return nil, nil
-}
-
-func requiredCipher() (client.Cipher, error) {
-	cipher, err := optionalCipher()
-	if err != nil || cipher != nil {
-		return cipher, err
-	}
-	return nil, errors.New("either one of symKey or pemKey is required")
 }
