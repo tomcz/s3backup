@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"runtime/debug"
 
 	"github.com/urfave/cli/v2"
 
@@ -278,7 +279,17 @@ func genKeyFlags() []cli.Flag {
 }
 
 func version() string {
-	return fmt.Sprintf("%s (%s)", tag, commit)
+	if tag != "" && commit != "" {
+		return fmt.Sprintf("%s (%s)", tag, commit)
+	}
+	if info, ok := debug.ReadBuildInfo(); ok {
+		for _, setting := range info.Settings {
+			if setting.Key == "vcs.revision" {
+				return setting.Value
+			}
+		}
+	}
+	return "unknown"
 }
 
 func printVersion(*cli.Context) error {

@@ -2,7 +2,7 @@ BASE_DIR := $(shell git rev-parse --show-toplevel 2>/dev/null)
 GITCOMMIT := $(shell git rev-parse --short HEAD 2>/dev/null)
 GIT_TAG := $(shell git describe --tags 2>/dev/null)
 
-LDFLAGS := -s -w -X main.commit=${GITCOMMIT}
+LDFLAGS := -X main.commit=${GITCOMMIT}
 LDFLAGS := ${LDFLAGS} -X main.tag=${GIT_TAG}
 OUTFILE ?= s3backup
 
