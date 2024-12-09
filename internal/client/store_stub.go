@@ -11,29 +11,29 @@ import (
 // If this is not the case, regenerate this file with moq.
 var _ Store = &StoreStub{}
 
-// StoreStub is a mock implementation of Store.
+// StoreStub is a stub implementation of Store.
 //
 //	func TestSomethingThatUsesStore(t *testing.T) {
 //
-//		// make and configure a mocked Store
-//		mockedStore := &StoreStub{
+//		// make and configure a stubbed Store
+//		stubbedStore := &StoreStub{
 //			DownloadFileFunc: func(remotePath string, localPath string) (string, error) {
-//				panic("mock out the DownloadFile method")
+//				panic("stub out the DownloadFile method")
 //			},
 //			UploadFileFunc: func(remotePath string, localPath string, checksum string) error {
-//				panic("mock out the UploadFile method")
+//				panic("stub out the UploadFile method")
 //			},
 //		}
 //
-//		// use mockedStore in code that requires Store
+//		// use stubbedStore in code that requires Store
 //		// and then make assertions.
 //
 //	}
 type StoreStub struct {
-	// DownloadFileFunc mocks the DownloadFile method.
+	// DownloadFileFunc stubs the DownloadFile method.
 	DownloadFileFunc func(remotePath string, localPath string) (string, error)
 
-	// UploadFileFunc mocks the UploadFile method.
+	// UploadFileFunc stubs the UploadFile method.
 	UploadFileFunc func(remotePath string, localPath string, checksum string) error
 
 	// calls tracks calls to the methods.
@@ -60,8 +60,8 @@ type StoreStub struct {
 }
 
 // DownloadFile calls DownloadFileFunc.
-func (mock *StoreStub) DownloadFile(remotePath string, localPath string) (string, error) {
-	if mock.DownloadFileFunc == nil {
+func (stub *StoreStub) DownloadFile(remotePath string, localPath string) (string, error) {
+	if stub.DownloadFileFunc == nil {
 		panic("StoreStub.DownloadFileFunc: method is nil but Store.DownloadFile was just called")
 	}
 	callInfo := struct {
@@ -71,17 +71,17 @@ func (mock *StoreStub) DownloadFile(remotePath string, localPath string) (string
 		RemotePath: remotePath,
 		LocalPath:  localPath,
 	}
-	mock.lockDownloadFile.Lock()
-	mock.calls.DownloadFile = append(mock.calls.DownloadFile, callInfo)
-	mock.lockDownloadFile.Unlock()
-	return mock.DownloadFileFunc(remotePath, localPath)
+	stub.lockDownloadFile.Lock()
+	stub.calls.DownloadFile = append(stub.calls.DownloadFile, callInfo)
+	stub.lockDownloadFile.Unlock()
+	return stub.DownloadFileFunc(remotePath, localPath)
 }
 
 // DownloadFileCalls gets all the calls that were made to DownloadFile.
 // Check the length with:
 //
-//	len(mockedStore.DownloadFileCalls())
-func (mock *StoreStub) DownloadFileCalls() []struct {
+//	len(stubbedStore.DownloadFileCalls())
+func (stub *StoreStub) DownloadFileCalls() []struct {
 	RemotePath string
 	LocalPath  string
 } {
@@ -89,15 +89,15 @@ func (mock *StoreStub) DownloadFileCalls() []struct {
 		RemotePath string
 		LocalPath  string
 	}
-	mock.lockDownloadFile.RLock()
-	calls = mock.calls.DownloadFile
-	mock.lockDownloadFile.RUnlock()
+	stub.lockDownloadFile.RLock()
+	calls = stub.calls.DownloadFile
+	stub.lockDownloadFile.RUnlock()
 	return calls
 }
 
 // UploadFile calls UploadFileFunc.
-func (mock *StoreStub) UploadFile(remotePath string, localPath string, checksum string) error {
-	if mock.UploadFileFunc == nil {
+func (stub *StoreStub) UploadFile(remotePath string, localPath string, checksum string) error {
+	if stub.UploadFileFunc == nil {
 		panic("StoreStub.UploadFileFunc: method is nil but Store.UploadFile was just called")
 	}
 	callInfo := struct {
@@ -109,17 +109,17 @@ func (mock *StoreStub) UploadFile(remotePath string, localPath string, checksum 
 		LocalPath:  localPath,
 		Checksum:   checksum,
 	}
-	mock.lockUploadFile.Lock()
-	mock.calls.UploadFile = append(mock.calls.UploadFile, callInfo)
-	mock.lockUploadFile.Unlock()
-	return mock.UploadFileFunc(remotePath, localPath, checksum)
+	stub.lockUploadFile.Lock()
+	stub.calls.UploadFile = append(stub.calls.UploadFile, callInfo)
+	stub.lockUploadFile.Unlock()
+	return stub.UploadFileFunc(remotePath, localPath, checksum)
 }
 
 // UploadFileCalls gets all the calls that were made to UploadFile.
 // Check the length with:
 //
-//	len(mockedStore.UploadFileCalls())
-func (mock *StoreStub) UploadFileCalls() []struct {
+//	len(stubbedStore.UploadFileCalls())
+func (stub *StoreStub) UploadFileCalls() []struct {
 	RemotePath string
 	LocalPath  string
 	Checksum   string
@@ -129,8 +129,8 @@ func (mock *StoreStub) UploadFileCalls() []struct {
 		LocalPath  string
 		Checksum   string
 	}
-	mock.lockUploadFile.RLock()
-	calls = mock.calls.UploadFile
-	mock.lockUploadFile.RUnlock()
+	stub.lockUploadFile.RLock()
+	calls = stub.calls.UploadFile
+	stub.lockUploadFile.RUnlock()
 	return calls
 }

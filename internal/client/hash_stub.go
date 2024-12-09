@@ -11,29 +11,29 @@ import (
 // If this is not the case, regenerate this file with moq.
 var _ Hash = &HashStub{}
 
-// HashStub is a mock implementation of Hash.
+// HashStub is a stub implementation of Hash.
 //
 //	func TestSomethingThatUsesHash(t *testing.T) {
 //
-//		// make and configure a mocked Hash
-//		mockedHash := &HashStub{
+//		// make and configure a stubbed Hash
+//		stubbedHash := &HashStub{
 //			CalculateFunc: func(filePath string) (string, error) {
-//				panic("mock out the Calculate method")
+//				panic("stub out the Calculate method")
 //			},
 //			VerifyFunc: func(filePath string, expectedChecksum string) error {
-//				panic("mock out the Verify method")
+//				panic("stub out the Verify method")
 //			},
 //		}
 //
-//		// use mockedHash in code that requires Hash
+//		// use stubbedHash in code that requires Hash
 //		// and then make assertions.
 //
 //	}
 type HashStub struct {
-	// CalculateFunc mocks the Calculate method.
+	// CalculateFunc stubs the Calculate method.
 	CalculateFunc func(filePath string) (string, error)
 
-	// VerifyFunc mocks the Verify method.
+	// VerifyFunc stubs the Verify method.
 	VerifyFunc func(filePath string, expectedChecksum string) error
 
 	// calls tracks calls to the methods.
@@ -56,8 +56,8 @@ type HashStub struct {
 }
 
 // Calculate calls CalculateFunc.
-func (mock *HashStub) Calculate(filePath string) (string, error) {
-	if mock.CalculateFunc == nil {
+func (stub *HashStub) Calculate(filePath string) (string, error) {
+	if stub.CalculateFunc == nil {
 		panic("HashStub.CalculateFunc: method is nil but Hash.Calculate was just called")
 	}
 	callInfo := struct {
@@ -65,31 +65,31 @@ func (mock *HashStub) Calculate(filePath string) (string, error) {
 	}{
 		FilePath: filePath,
 	}
-	mock.lockCalculate.Lock()
-	mock.calls.Calculate = append(mock.calls.Calculate, callInfo)
-	mock.lockCalculate.Unlock()
-	return mock.CalculateFunc(filePath)
+	stub.lockCalculate.Lock()
+	stub.calls.Calculate = append(stub.calls.Calculate, callInfo)
+	stub.lockCalculate.Unlock()
+	return stub.CalculateFunc(filePath)
 }
 
 // CalculateCalls gets all the calls that were made to Calculate.
 // Check the length with:
 //
-//	len(mockedHash.CalculateCalls())
-func (mock *HashStub) CalculateCalls() []struct {
+//	len(stubbedHash.CalculateCalls())
+func (stub *HashStub) CalculateCalls() []struct {
 	FilePath string
 } {
 	var calls []struct {
 		FilePath string
 	}
-	mock.lockCalculate.RLock()
-	calls = mock.calls.Calculate
-	mock.lockCalculate.RUnlock()
+	stub.lockCalculate.RLock()
+	calls = stub.calls.Calculate
+	stub.lockCalculate.RUnlock()
 	return calls
 }
 
 // Verify calls VerifyFunc.
-func (mock *HashStub) Verify(filePath string, expectedChecksum string) error {
-	if mock.VerifyFunc == nil {
+func (stub *HashStub) Verify(filePath string, expectedChecksum string) error {
+	if stub.VerifyFunc == nil {
 		panic("HashStub.VerifyFunc: method is nil but Hash.Verify was just called")
 	}
 	callInfo := struct {
@@ -99,17 +99,17 @@ func (mock *HashStub) Verify(filePath string, expectedChecksum string) error {
 		FilePath:         filePath,
 		ExpectedChecksum: expectedChecksum,
 	}
-	mock.lockVerify.Lock()
-	mock.calls.Verify = append(mock.calls.Verify, callInfo)
-	mock.lockVerify.Unlock()
-	return mock.VerifyFunc(filePath, expectedChecksum)
+	stub.lockVerify.Lock()
+	stub.calls.Verify = append(stub.calls.Verify, callInfo)
+	stub.lockVerify.Unlock()
+	return stub.VerifyFunc(filePath, expectedChecksum)
 }
 
 // VerifyCalls gets all the calls that were made to Verify.
 // Check the length with:
 //
-//	len(mockedHash.VerifyCalls())
-func (mock *HashStub) VerifyCalls() []struct {
+//	len(stubbedHash.VerifyCalls())
+func (stub *HashStub) VerifyCalls() []struct {
 	FilePath         string
 	ExpectedChecksum string
 } {
@@ -117,8 +117,8 @@ func (mock *HashStub) VerifyCalls() []struct {
 		FilePath         string
 		ExpectedChecksum string
 	}
-	mock.lockVerify.RLock()
-	calls = mock.calls.Verify
-	mock.lockVerify.RUnlock()
+	stub.lockVerify.RLock()
+	calls = stub.calls.Verify
+	stub.lockVerify.RUnlock()
 	return calls
 }

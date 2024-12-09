@@ -11,29 +11,29 @@ import (
 // If this is not the case, regenerate this file with moq.
 var _ Cipher = &CipherStub{}
 
-// CipherStub is a mock implementation of Cipher.
+// CipherStub is a stub implementation of Cipher.
 //
 //	func TestSomethingThatUsesCipher(t *testing.T) {
 //
-//		// make and configure a mocked Cipher
-//		mockedCipher := &CipherStub{
+//		// make and configure a stubbed Cipher
+//		stubbedCipher := &CipherStub{
 //			DecryptFunc: func(cipherTextFile string, plainTextFile string) error {
-//				panic("mock out the Decrypt method")
+//				panic("stub out the Decrypt method")
 //			},
 //			EncryptFunc: func(plainTextFile string, cipherTextFile string) error {
-//				panic("mock out the Encrypt method")
+//				panic("stub out the Encrypt method")
 //			},
 //		}
 //
-//		// use mockedCipher in code that requires Cipher
+//		// use stubbedCipher in code that requires Cipher
 //		// and then make assertions.
 //
 //	}
 type CipherStub struct {
-	// DecryptFunc mocks the Decrypt method.
+	// DecryptFunc stubs the Decrypt method.
 	DecryptFunc func(cipherTextFile string, plainTextFile string) error
 
-	// EncryptFunc mocks the Encrypt method.
+	// EncryptFunc stubs the Encrypt method.
 	EncryptFunc func(plainTextFile string, cipherTextFile string) error
 
 	// calls tracks calls to the methods.
@@ -58,8 +58,8 @@ type CipherStub struct {
 }
 
 // Decrypt calls DecryptFunc.
-func (mock *CipherStub) Decrypt(cipherTextFile string, plainTextFile string) error {
-	if mock.DecryptFunc == nil {
+func (stub *CipherStub) Decrypt(cipherTextFile string, plainTextFile string) error {
+	if stub.DecryptFunc == nil {
 		panic("CipherStub.DecryptFunc: method is nil but Cipher.Decrypt was just called")
 	}
 	callInfo := struct {
@@ -69,17 +69,17 @@ func (mock *CipherStub) Decrypt(cipherTextFile string, plainTextFile string) err
 		CipherTextFile: cipherTextFile,
 		PlainTextFile:  plainTextFile,
 	}
-	mock.lockDecrypt.Lock()
-	mock.calls.Decrypt = append(mock.calls.Decrypt, callInfo)
-	mock.lockDecrypt.Unlock()
-	return mock.DecryptFunc(cipherTextFile, plainTextFile)
+	stub.lockDecrypt.Lock()
+	stub.calls.Decrypt = append(stub.calls.Decrypt, callInfo)
+	stub.lockDecrypt.Unlock()
+	return stub.DecryptFunc(cipherTextFile, plainTextFile)
 }
 
 // DecryptCalls gets all the calls that were made to Decrypt.
 // Check the length with:
 //
-//	len(mockedCipher.DecryptCalls())
-func (mock *CipherStub) DecryptCalls() []struct {
+//	len(stubbedCipher.DecryptCalls())
+func (stub *CipherStub) DecryptCalls() []struct {
 	CipherTextFile string
 	PlainTextFile  string
 } {
@@ -87,15 +87,15 @@ func (mock *CipherStub) DecryptCalls() []struct {
 		CipherTextFile string
 		PlainTextFile  string
 	}
-	mock.lockDecrypt.RLock()
-	calls = mock.calls.Decrypt
-	mock.lockDecrypt.RUnlock()
+	stub.lockDecrypt.RLock()
+	calls = stub.calls.Decrypt
+	stub.lockDecrypt.RUnlock()
 	return calls
 }
 
 // Encrypt calls EncryptFunc.
-func (mock *CipherStub) Encrypt(plainTextFile string, cipherTextFile string) error {
-	if mock.EncryptFunc == nil {
+func (stub *CipherStub) Encrypt(plainTextFile string, cipherTextFile string) error {
+	if stub.EncryptFunc == nil {
 		panic("CipherStub.EncryptFunc: method is nil but Cipher.Encrypt was just called")
 	}
 	callInfo := struct {
@@ -105,17 +105,17 @@ func (mock *CipherStub) Encrypt(plainTextFile string, cipherTextFile string) err
 		PlainTextFile:  plainTextFile,
 		CipherTextFile: cipherTextFile,
 	}
-	mock.lockEncrypt.Lock()
-	mock.calls.Encrypt = append(mock.calls.Encrypt, callInfo)
-	mock.lockEncrypt.Unlock()
-	return mock.EncryptFunc(plainTextFile, cipherTextFile)
+	stub.lockEncrypt.Lock()
+	stub.calls.Encrypt = append(stub.calls.Encrypt, callInfo)
+	stub.lockEncrypt.Unlock()
+	return stub.EncryptFunc(plainTextFile, cipherTextFile)
 }
 
 // EncryptCalls gets all the calls that were made to Encrypt.
 // Check the length with:
 //
-//	len(mockedCipher.EncryptCalls())
-func (mock *CipherStub) EncryptCalls() []struct {
+//	len(stubbedCipher.EncryptCalls())
+func (stub *CipherStub) EncryptCalls() []struct {
 	PlainTextFile  string
 	CipherTextFile string
 } {
@@ -123,8 +123,8 @@ func (mock *CipherStub) EncryptCalls() []struct {
 		PlainTextFile  string
 		CipherTextFile string
 	}
-	mock.lockEncrypt.RLock()
-	calls = mock.calls.Encrypt
-	mock.lockEncrypt.RUnlock()
+	stub.lockEncrypt.RLock()
+	calls = stub.calls.Encrypt
+	stub.lockEncrypt.RUnlock()
 	return calls
 }

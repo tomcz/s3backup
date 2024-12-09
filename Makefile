@@ -38,6 +38,7 @@ test:
 .PHONY: generate
 generate:
 	go generate ./internal/...
+	./tools/stubs.sh
 
 .PHONY: compile
 compile: target
