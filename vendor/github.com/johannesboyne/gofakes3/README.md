@@ -2,33 +2,27 @@
 [![Codecov](https://codecov.io/gh/johannesboyne/gofakes3/branch/master/graph/badge.svg)](https://codecov.io/gh/johannesboyne/gofakes3)
 
 ![Logo](/GoFakeS3.png)
+
 # AWS (GOFAKE)S3
 
-AWS S3 fake server and testing library for extensive S3 test integrations.
-Either by running a test-server, e.g. for testing of AWS Lambda functions
-accessing S3. Or, to have a simple and convencience S3 mock- and test-server.
+AWS S3 fake server and testing library for comprehensive S3 integration testing.
+This tool can be used to run a test server, for example, to support testing AWS Lambda functions that interact with S3. It also serves as a straightforward and convenient S3 mock and test server for various development needs.
 
-## What to use it for?
+## Intended Use
 
-We're using it for the local development of S3 dependent Lambda functions,
-to test AWS S3 golang implementations and access, and
-to test browser based direct uploads to S3 locally.
+**GOFAKE)S3** is primarily designed for:
+- Local development of S3-dependent AWS Lambda functions.
+- Testing implementations with AWS S3 access.
+- Facilitating browser-based direct uploads to S3 in a local testing environment.
 
+## When Not to Use (GOFAKE)S3?
 
-## What not to use it for?
+**(GOFAKE)S3** should not be used as a production service. Its primary purpose is to aid in development and testing:
+- **(GOFAKE)S3** is not designed for production-level data storage or handling.
+- It lacks the robustness required for safe, persistent access to production data.
+- The tool is still under development with significant portions of the AWS S3 API yet to be implemented. Consequently, breaking changes are expected.
 
-Please don't use gofakes3 as a production service. The intended use case for
-gofakes3 is currently to facilitate testing. It's not meant to be used for
-safe, persistent access to production data at the moment.
-
-There's no reason we couldn't set that as a stretch goal at a later date, but
-it's a long way down the road, especially while we have so much of the API left
-to implement; breaking changes are inevitable.
-
-In the meantime, there are more battle-hardened solutions for production
-workloads out there, some of which are listed in the "Similar Notable Projects"
-section below.
-
+For production environments, consider more established solutions. Some recommended alternatives can be found in the "Similar Notable Projects" section below.
 
 ## How to use it?
 
@@ -78,7 +72,7 @@ _, err = s3Client.PutObject(&s3.PutObjectInput{
 
 ```golang
 backend := s3mem.New()
-faker := gofakes3.New(backend)
+faker := gofakes3.New(s3Backend, gofakes3.WithHostBucket(true))
 ts := httptest.NewServer(faker.Server())
 defer ts.Close()
 
@@ -87,18 +81,27 @@ defer ts.Close()
 // Setup a new config
 cfg, _ := config.LoadDefaultConfig(
 	context.TODO(),
-    config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider("KEY", "SECRET", "SESSION")),
-    config.WithHTTPClient(&http.Client{
-        Transport: &http.Transport{
-            TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-        },
-    }),
-    config.WithEndpointResolverWithOptions(
-        aws.EndpointResolverWithOptionsFunc(func(_, _ string, _ ...interface{}) (aws.Endpoint, error) {
-            return aws.Endpoint{URL: ts.URL}, nil
-        }),
-    ),
-)
+	config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider("KEY", "SECRET", "SESSION")),
+	config.WithHTTPClient(&http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+			// Override the dial address because the SDK uses the bucket name as a subdomain.
+			DialContext: func(ctx context.Context, network, _ string) (net.Conn, error) {
+				dialer := net.Dialer{
+					Timeout:   30 * time.Second,
+					KeepAlive: 30 * time.Second,
+				}
+				s3URL, _ := url.Parse(s3Server.URL)
+				return dialer.DialContext(ctx, network, s3URL.Host)
+			},
+		},
+	}),
+	config.WithEndpointResolverWithOptions(
+		aws.EndpointResolverWithOptionsFunc(func(_, _ string, _ ...interface{}) (aws.Endpoint, error) {
+			return aws.Endpoint{URL: ts.URL}, nil
+		}),
+		),
+	)
 
 // Create an Amazon S3 v2 client, important to use o.UsePathStyle
 // alternatively change local DNS settings, e.g., in /etc/hosts
@@ -115,10 +118,14 @@ issues), but be aware, this software is used internally and for the local
 development only. Thus, it has no demand for correctness, performance or
 security.
 
-There are two ways to run locally: using DNS, or using S3 path mode.
+There are different ways to run locally: e.g., using DNS, using S3 path mode, or V2 setting the ENV-Var:
+
+```
+os.Setenv("AWS_ENDPOINT_URL_S3", "http://localhost:9000")
+```
 
 S3 path mode is the most flexible and least restrictive, but it does require that you
-are able to modify your client code.In Go, the modification would look like so:
+are able to modify your client code. In Go, the modification would look like so:
 
 	config := aws.Config{}
 	config.WithS3ForcePathStyle(true)

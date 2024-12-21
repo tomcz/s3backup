@@ -96,7 +96,7 @@ func NewContentTime(t time.Time) ContentTime {
 func (c ContentTime) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
 	// This is the format expected by the aws xml code, not the default.
 	if !c.IsZero() {
-		var s = c.Format("2006-01-02T15:04:05.999Z")
+		var s = c.UTC().Format("2006-01-02T15:04:05.999Z")
 		return e.EncodeElement(s, start)
 	}
 	return nil
@@ -169,7 +169,7 @@ func (er ErrorResult) String() string {
 	return fmt.Sprintf("%s: [%s] %s", er.Key, er.Code, er.Message)
 }
 
-type InitiateMultipartUpload struct {
+type InitiateMultipartUploadResult struct {
 	Bucket   string   `xml:"Bucket"`
 	Key      string   `xml:"Key"`
 	UploadID UploadID `xml:"UploadId"`

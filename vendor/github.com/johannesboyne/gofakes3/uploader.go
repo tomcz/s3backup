@@ -1,9 +1,11 @@
 package gofakes3
 
 import (
+	"bytes"
 	"crypto/md5"
 	"encoding/hex"
 	"fmt"
+	"io"
 	"math/big"
 	"net/url"
 	"strings"
@@ -13,6 +15,8 @@ import (
 	"github.com/johannesboyne/gofakes3/internal/goskipiter"
 	"github.com/ryszard/goskiplist/skiplist"
 )
+
+var _ MultipartBackend = &uploader{}
 
 var add1 = new(big.Int).SetInt64(1)
 
@@ -24,6 +28,7 @@ A skiplist that maps object keys to upload ids is also maintained to
 support the ListMultipartUploads operation.
 
 From the docs:
+
 	In the response, the uploads are sorted by key. If your application has
 	initiated more than one multipart upload using the same object key,
 	then uploads in the response are first sorted by key. Additionally,
@@ -131,13 +136,13 @@ func (bu *bucketUploads) remove(uploadID UploadID) {
 // Multipart upload support has the following rather severe limitations (which
 // will hopefully be addressed in the future):
 //
-//	- uploads do not interface with the Backend, so they do not
-// 	  currently persist across reboots
+//   - uploads do not interface with the Backend, so they do not
+//     currently persist across reboots
 //
-//	- upload parts are held in memory, so if you want to upload something huge
-//	  in multiple parts (which is pretty much exactly what you'd want multipart
-//	  uploads for), you'll need to make sure your memory is also sufficiently
-//	  huge!
+//   - upload parts are held in memory, so if you want to upload something huge
+//     in multiple parts (which is pretty much exactly what you'd want multipart
+//     uploads for), you'll need to make sure your memory is also sufficiently
+//     huge!
 //
 // At this stage, the current thinking would be to add a second optional
 // Backend interface that allows persistent operations on multipart upload
@@ -146,8 +151,9 @@ func (bu *bucketUploads) remove(uploadID UploadID) {
 // good convenience for Backend implementers if their use case did not require
 // persistent multipart upload handling, or it could be satisfied by this
 // naive implementation.
-//
 type uploader struct {
+	timeSource TimeSource
+	storage    Backend
 	// uploadIDs use a big.Int to allow unbounded IDs (not that you'd be
 	// expected to ever generate 4.2 billion of these but who are we to judge?)
 	uploadID *big.Int
@@ -156,14 +162,16 @@ type uploader struct {
 	mu      sync.Mutex
 }
 
-func newUploader() *uploader {
+func newUploader(b Backend, timeSource TimeSource) *uploader {
 	return &uploader{
-		buckets:  make(map[string]*bucketUploads),
-		uploadID: new(big.Int),
+		buckets:    make(map[string]*bucketUploads),
+		storage:    b,
+		timeSource: timeSource,
+		uploadID:   new(big.Int),
 	}
 }
 
-func (u *uploader) Begin(bucket, object string, meta map[string]string, initiated time.Time) *multipartUpload {
+func (u *uploader) CreateMultipartUpload(bucket, object string, meta map[string]string) (UploadID, error) {
 	u.mu.Lock()
 	defer u.mu.Unlock()
 
@@ -174,7 +182,7 @@ func (u *uploader) Begin(bucket, object string, meta map[string]string, initiate
 		Bucket:    bucket,
 		Object:    object,
 		Meta:      meta,
-		Initiated: initiated,
+		Initiated: u.timeSource.Now(),
 	}
 
 	// FIXME: make sure the uploader responds to DeleteBucket
@@ -186,7 +194,7 @@ func (u *uploader) Begin(bucket, object string, meta map[string]string, initiate
 
 	bucketUploads.add(mpu)
 
-	return mpu
+	return mpu.ID, nil
 }
 
 func (u *uploader) ListParts(bucket, object string, uploadID UploadID, marker int, limit int64) (*ListMultipartUploadPartsResult, error) {
@@ -232,7 +240,7 @@ func (u *uploader) ListParts(bucket, object string, uploadID UploadID, marker in
 	return &result, nil
 }
 
-func (u *uploader) List(bucket string, marker *UploadListMarker, prefix Prefix, limit int64) (*ListMultipartUploadsResult, error) {
+func (u *uploader) ListMultipartUploads(bucket string, marker *UploadListMarker, prefix Prefix, limit int64) (*ListMultipartUploadsResult, error) {
 	u.mu.Lock()
 	defer u.mu.Unlock()
 
@@ -345,24 +353,122 @@ done:
 	return &result, nil
 }
 
-func (u *uploader) Complete(bucket, object string, id UploadID) (*multipartUpload, error) {
+func (u *uploader) AbortMultipartUpload(bucket, object string, id UploadID) error {
 	u.mu.Lock()
 	defer u.mu.Unlock()
-	up, err := u.getUnlocked(bucket, object, id)
+	_, err := u.getUnlocked(bucket, object, id)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	// if getUnlocked succeeded, so will this:
 	u.buckets[bucket].remove(id)
 
-	return up, nil
+	return nil
 }
 
-func (u *uploader) Get(bucket, object string, id UploadID) (mu *multipartUpload, err error) {
+func (u *uploader) UploadPart(bucket, object string, id UploadID, partNumber int, contentLength int64, input io.Reader) (etag string, err error) {
+	if partNumber > MaxUploadPartNumber {
+		return "", ErrInvalidPart
+	}
+	body, err := io.ReadAll(input)
+	if err != nil {
+		return "", err
+	}
+	if len(body) != int(contentLength) {
+		return "", ErrIncompleteBody
+	}
 	u.mu.Lock()
 	defer u.mu.Unlock()
-	return u.getUnlocked(bucket, object, id)
+	mpu, err := u.getUnlocked(bucket, object, id)
+	if err != nil {
+		return "", err
+	}
+
+	mpu.mu.Lock()
+	defer mpu.mu.Unlock()
+
+	// What the ETag actually is is not specified, so let's just invent any old thing
+	// from guaranteed unique input:
+	hash := md5.New()
+	hash.Write([]byte(body))
+	etag = fmt.Sprintf(`"%s"`, hex.EncodeToString(hash.Sum(nil)))
+
+	part := multipartUploadPart{
+		PartNumber:   partNumber,
+		Body:         body,
+		ETag:         etag,
+		LastModified: NewContentTime(u.timeSource.Now()),
+	}
+	if partNumber >= len(mpu.parts) {
+		mpu.parts = append(mpu.parts, make([]*multipartUploadPart, partNumber-len(mpu.parts)+1)...)
+	}
+	mpu.parts[partNumber] = &part
+	return etag, nil
+}
+
+func (u *uploader) CompleteMultipartUpload(bucket, object string, id UploadID, input *CompleteMultipartUploadRequest) (version VersionID, etag string, err error) {
+	u.mu.Lock()
+	defer u.mu.Unlock()
+
+	mpu, err := u.getUnlocked(bucket, object, id)
+	if err != nil {
+		return "", "", err
+	}
+
+	mpu.mu.Lock()
+	defer mpu.mu.Unlock()
+
+	mpuPartsLen := len(mpu.parts)
+
+	// FIXME: what does AWS do when mpu.Parts > input.Parts? Presumably you may
+	// end up uploading more parts than you need to assemble, so it should
+	// probably just ignore that?
+	if len(input.Parts) > mpuPartsLen {
+		return "", "", ErrInvalidPart
+	}
+
+	if !input.partsAreSorted() {
+		return "", "", ErrInvalidPartOrder
+	}
+
+	var size int64
+
+	for _, inPart := range input.Parts {
+		if inPart.PartNumber >= mpuPartsLen || mpu.parts[inPart.PartNumber] == nil {
+			return "", "", ErrorMessagef(ErrInvalidPart, "unexpected part number %d in complete request", inPart.PartNumber)
+		}
+
+		upPart := mpu.parts[inPart.PartNumber]
+		if strings.Trim(inPart.ETag, "\"") != strings.Trim(upPart.ETag, "\"") {
+			return "", "", ErrorMessagef(ErrInvalidPart, "unexpected part etag for number %d in complete request", inPart.PartNumber)
+		}
+
+		size += int64(len(upPart.Body))
+	}
+
+	body := make([]byte, 0, size)
+	hash := md5.New()
+	for _, inPart := range input.Parts {
+		upPart := mpu.parts[inPart.PartNumber]
+		body = append(body, upPart.Body...)
+		hashBytes, err := hex.DecodeString(strings.Trim(upPart.ETag, "\""))
+		if err != nil {
+			return "", "", ErrorMessagef(ErrInternal, "invalid etag for number %d is stored: %s", inPart.PartNumber, err)
+		}
+		hash.Write(hashBytes)
+	}
+
+	etag = fmt.Sprintf(`"%s-%d"`, hex.EncodeToString(hash.Sum(nil)), len(input.Parts))
+
+	result, err := u.storage.PutObject(bucket, object, mpu.Meta, bytes.NewReader(body), int64(len(body)))
+	if err != nil {
+		return "", "", err
+	}
+
+	// if getUnlocked succeeded, so will this:
+	u.buckets[bucket].remove(id)
+	return result.VersionID, etag, nil
 }
 
 func (u *uploader) getUnlocked(bucket, object string, id UploadID) (mu *multipartUpload, err error) {
@@ -446,73 +552,4 @@ type multipartUpload struct {
 	parts []*multipartUploadPart
 
 	mu sync.Mutex
-}
-
-func (mpu *multipartUpload) AddPart(partNumber int, at time.Time, body []byte) (etag string, err error) {
-	if partNumber > MaxUploadPartNumber {
-		return "", ErrInvalidPart
-	}
-
-	mpu.mu.Lock()
-	defer mpu.mu.Unlock()
-
-	// What the ETag actually is is not specified, so let's just invent any old thing
-	// from guaranteed unique input:
-	hash := md5.New()
-	hash.Write([]byte(body))
-	etag = fmt.Sprintf(`"%s"`, hex.EncodeToString(hash.Sum(nil)))
-
-	part := multipartUploadPart{
-		PartNumber:   partNumber,
-		Body:         body,
-		ETag:         etag,
-		LastModified: NewContentTime(at),
-	}
-	if partNumber >= len(mpu.parts) {
-		mpu.parts = append(mpu.parts, make([]*multipartUploadPart, partNumber-len(mpu.parts)+1)...)
-	}
-	mpu.parts[partNumber] = &part
-	return etag, nil
-}
-
-func (mpu *multipartUpload) Reassemble(input *CompleteMultipartUploadRequest) (body []byte, etag string, err error) {
-	mpu.mu.Lock()
-	defer mpu.mu.Unlock()
-
-	mpuPartsLen := len(mpu.parts)
-
-	// FIXME: what does AWS do when mpu.Parts > input.Parts? Presumably you may
-	// end up uploading more parts than you need to assemble, so it should
-	// probably just ignore that?
-	if len(input.Parts) > mpuPartsLen {
-		return nil, "", ErrInvalidPart
-	}
-
-	if !input.partsAreSorted() {
-		return nil, "", ErrInvalidPartOrder
-	}
-
-	var size int64
-
-	for _, inPart := range input.Parts {
-		if inPart.PartNumber >= mpuPartsLen || mpu.parts[inPart.PartNumber] == nil {
-			return nil, "", ErrorMessagef(ErrInvalidPart, "unexpected part number %d in complete request", inPart.PartNumber)
-		}
-
-		upPart := mpu.parts[inPart.PartNumber]
-		if strings.Trim(inPart.ETag, "\"") != strings.Trim(upPart.ETag, "\"") {
-			return nil, "", ErrorMessagef(ErrInvalidPart, "unexpected part etag for number %d in complete request", inPart.PartNumber)
-		}
-
-		size += int64(len(upPart.Body))
-	}
-
-	body = make([]byte, 0, size)
-	for _, part := range input.Parts {
-		body = append(body, mpu.parts[part.PartNumber].Body...)
-	}
-
-	hash := fmt.Sprintf("%x", md5.Sum(body))
-
-	return body, hash, nil
 }

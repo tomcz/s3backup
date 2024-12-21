@@ -1,4 +1,4 @@
-# github.com/aws/aws-sdk-go v1.55.3
+# github.com/aws/aws-sdk-go v1.55.5
 ## explicit; go 1.19
 github.com/aws/aws-sdk-go/aws
 github.com/aws/aws-sdk-go/aws/arn
@@ -53,8 +53,8 @@ github.com/aws/aws-sdk-go/service/sso/ssoiface
 github.com/aws/aws-sdk-go/service/ssooidc
 github.com/aws/aws-sdk-go/service/sts
 github.com/aws/aws-sdk-go/service/sts/stsiface
-# github.com/cpuguy83/go-md2man/v2 v2.0.4
-## explicit; go 1.11
+# github.com/cpuguy83/go-md2man/v2 v2.0.6
+## explicit; go 1.12
 github.com/cpuguy83/go-md2man/v2/md2man
 # github.com/google/go-cmp v0.6.0
 ## explicit; go 1.13
@@ -82,14 +82,14 @@ github.com/hashicorp/vault-client-go/schema
 # github.com/jmespath/go-jmespath v0.4.0
 ## explicit; go 1.14
 github.com/jmespath/go-jmespath
-# github.com/johannesboyne/gofakes3 v0.0.0-20230506070712-04da935ef877
+# github.com/johannesboyne/gofakes3 v0.0.0-20241026070602-0da3aa9c32ca
 ## explicit; go 1.16
 github.com/johannesboyne/gofakes3
 github.com/johannesboyne/gofakes3/backend/s3mem
 github.com/johannesboyne/gofakes3/internal/goskipiter
 github.com/johannesboyne/gofakes3/internal/s3io
-# github.com/matryer/moq v0.3.4
-## explicit; go 1.18
+# github.com/matryer/moq v0.5.1
+## explicit; go 1.23
 github.com/matryer/moq
 github.com/matryer/moq/internal/registry
 github.com/matryer/moq/internal/template
@@ -109,31 +109,31 @@ github.com/ryanuber/go-glob
 # github.com/ryszard/goskiplist v0.0.0-20150312221310-2dfbae5fcf46
 ## explicit
 github.com/ryszard/goskiplist/skiplist
-# github.com/shabbyrobe/gocovmerge v0.0.0-20190829150210-3e036491d500
-## explicit; go 1.12
-github.com/shabbyrobe/gocovmerge
-# github.com/urfave/cli/v2 v2.27.3
+# github.com/urfave/cli/v2 v2.27.5
 ## explicit; go 1.18
 github.com/urfave/cli/v2
 # github.com/xrash/smetrics v0.0.0-20240521201337-686a1a2994c1
 ## explicit; go 1.15
 github.com/xrash/smetrics
-# golang.org/x/mod v0.19.0
+# go.shabbyrobe.org/gocovmerge v0.0.0-20230507111327-fa4f82cfbf4d
+## explicit; go 1.20
+go.shabbyrobe.org/gocovmerge
+# golang.org/x/mod v0.20.0
 ## explicit; go 1.18
 golang.org/x/mod/internal/lazyregexp
 golang.org/x/mod/module
 golang.org/x/mod/semver
-# golang.org/x/sync v0.7.0
+# golang.org/x/sync v0.8.0
 ## explicit; go 1.18
 golang.org/x/sync/errgroup
-# golang.org/x/sys v0.22.0
+# golang.org/x/sys v0.28.0
 ## explicit; go 1.18
 golang.org/x/sys/unix
 golang.org/x/sys/windows
-# golang.org/x/time v0.5.0
+# golang.org/x/time v0.8.0
 ## explicit; go 1.18
 golang.org/x/time/rate
-# golang.org/x/tools v0.23.0
+# golang.org/x/tools v0.24.0
 ## explicit; go 1.19
 golang.org/x/tools/cover
 golang.org/x/tools/go/ast/astutil
