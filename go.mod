@@ -4,10 +4,10 @@ go 1.23
 
 require (
 	github.com/aws/aws-sdk-go v1.55.5
+	github.com/go-viper/mapstructure/v2 v2.2.1
 	github.com/hashicorp/vault-client-go v0.4.3
 	github.com/johannesboyne/gofakes3 v0.0.0-20241026070602-0da3aa9c32ca
 	github.com/matryer/moq v0.5.1
-	github.com/mitchellh/mapstructure v1.5.0
 	github.com/urfave/cli/v2 v2.27.5
 	gotest.tools/v3 v3.5.1
 )

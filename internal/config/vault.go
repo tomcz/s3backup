@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/go-viper/mapstructure/v2"
 	"github.com/hashicorp/vault-client-go"
 	"github.com/hashicorp/vault-client-go/schema"
-	"github.com/mitchellh/mapstructure"
 )
 
 func LookupWithAppRole(ctx context.Context, vaultAddr, caCertFile, roleID, secretID, path string) (*Config, error) {
