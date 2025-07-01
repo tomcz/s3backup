@@ -156,5 +156,5 @@ OPTIONS:
 
 ## Build
 
-1. Install Go 1.23 from https://golang.org/
+1. Install Go 1.24 from https://golang.org/
 2. Build the binaries: `make build`
