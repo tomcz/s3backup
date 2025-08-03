@@ -85,14 +85,14 @@ type vaultGetCommand struct {
 }
 
 type encryptCommand struct {
-	InFile  string `arg:""`
-	OutFile string `arg:""`
+	InputFile  string `arg:"" help:"File to encrypt"`
+	OutputFile string `arg:"" help:"Encrypted file"`
 	encryptFlags
 }
 
 type decryptCommand struct {
-	InFile  string `arg:""`
-	OutFile string `arg:""`
+	InputFile  string `arg:"" help:"File to decrypt"`
+	OutputFile string `arg:"" help:"Decrypted file"`
 	decryptFlags
 }
 
@@ -258,7 +258,7 @@ func (c *encryptCommand) Run() error {
 	if cipher == nil {
 		return errors.New("either one of symKey or pemKey is required")
 	}
-	return cipher.Encrypt(c.InFile, c.OutFile)
+	return cipher.Encrypt(c.InputFile, c.OutputFile)
 }
 
 func (c *decryptCommand) Run() error {
@@ -269,7 +269,7 @@ func (c *decryptCommand) Run() error {
 	if cipher == nil {
 		return errors.New("either one of symKey or pemKey is required")
 	}
-	return cipher.Decrypt(c.InFile, c.OutFile)
+	return cipher.Decrypt(c.InputFile, c.OutputFile)
 }
 
 func checkPaths(inRemote, inLocal string) (outRemote string, outLocal string, err error) {
