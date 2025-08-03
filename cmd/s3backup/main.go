@@ -146,21 +146,9 @@ func (c *versionCommand) Run() error {
 }
 
 func (c *putCommand) Run() error {
-	backend, err := store.NewS3(c.AccessKey, c.SecretKey, c.Token, c.Region, c.Endpoint)
+	app, err := newClient(c.awsFlags, cipherOpts{symKey: c.SymKey, pemKey: c.PemKey}, c.SkipHash)
 	if err != nil {
 		return err
-	}
-	cipher, err := clientCipher(c.SymKey, c.PemKey)
-	if err != nil {
-		return err
-	}
-	app := &client.Client{
-		Hash:   crypto.NewHash(),
-		Cipher: cipher,
-		Store:  backend,
-	}
-	if c.SkipHash {
-		app.Hash = nil
 	}
 	remote, local, err := checkPaths(c.RemotePath, c.LocalPath)
 	if err != nil {
@@ -170,21 +158,9 @@ func (c *putCommand) Run() error {
 }
 
 func (c *getCommand) Run() error {
-	backend, err := store.NewS3(c.AccessKey, c.SecretKey, c.Token, c.Region, c.Endpoint)
+	app, err := newClient(c.awsFlags, cipherOpts{symKey: c.SymKey, pemKey: c.PemKey}, c.SkipHash)
 	if err != nil {
 		return err
-	}
-	cipher, err := clientCipher(c.SymKey, c.PemKey)
-	if err != nil {
-		return err
-	}
-	app := &client.Client{
-		Hash:   crypto.NewHash(),
-		Cipher: cipher,
-		Store:  backend,
-	}
-	if c.SkipHash {
-		app.Hash = nil
 	}
 	remote, local, err := checkPaths(c.RemotePath, c.LocalPath)
 	if err != nil {
@@ -251,7 +227,10 @@ func (c *genRsaCommand) Run() error {
 }
 
 func (c *encryptCommand) Run() error {
-	cipher, err := clientCipher(c.SymKey, c.PemKey)
+	cipher, err := newCipher(cipherOpts{
+		symKey: c.SymKey,
+		pemKey: c.PemKey,
+	})
 	if err != nil {
 		return err
 	}
@@ -262,7 +241,10 @@ func (c *encryptCommand) Run() error {
 }
 
 func (c *decryptCommand) Run() error {
-	cipher, err := clientCipher(c.SymKey, c.PemKey)
+	cipher, err := newCipher(cipherOpts{
+		symKey: c.SymKey,
+		pemKey: c.PemKey,
+	})
 	if err != nil {
 		return err
 	}
@@ -270,6 +252,41 @@ func (c *decryptCommand) Run() error {
 		return errors.New("either one of symKey or pemKey is required")
 	}
 	return cipher.Decrypt(c.InputFile, c.OutputFile)
+}
+
+func newClient(af awsFlags, co cipherOpts, skipHash bool) (*client.Client, error) {
+	backend, err := store.NewS3(af.AccessKey, af.SecretKey, af.Token, af.Region, af.Endpoint)
+	if err != nil {
+		return nil, err
+	}
+	cipher, err := newCipher(co)
+	if err != nil {
+		return nil, err
+	}
+	app := &client.Client{
+		Hash:   crypto.NewHash(),
+		Cipher: cipher,
+		Store:  backend,
+	}
+	if skipHash {
+		app.Hash = nil
+	}
+	return app, nil
+}
+
+type cipherOpts struct {
+	symKey string
+	pemKey string
+}
+
+func newCipher(co cipherOpts) (client.Cipher, error) {
+	if co.symKey != "" {
+		return crypto.NewAESCipher(co.symKey)
+	}
+	if co.pemKey != "" {
+		return crypto.NewRSACipher(co.pemKey)
+	}
+	return nil, nil
 }
 
 func checkPaths(inRemote, inLocal string) (outRemote string, outLocal string, err error) {
@@ -284,20 +301,10 @@ func checkPaths(inRemote, inLocal string) (outRemote string, outLocal string, er
 	outLocal = inLocal
 	outRemote = inRemote
 	if store.IsRemote(inLocal) {
-		outLocal = inRemote
 		outRemote = inLocal
+		outLocal = inRemote
 	}
 	return
-}
-
-func clientCipher(symKey, pemKey string) (client.Cipher, error) {
-	if symKey != "" {
-		return crypto.NewAESCipher(symKey)
-	}
-	if pemKey != "" {
-		return crypto.NewRSACipher(pemKey)
-	}
-	return nil, nil
 }
 
 func vaultConfig(f vaultFlags) (*config.Config, error) {
