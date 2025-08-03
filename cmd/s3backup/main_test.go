@@ -7,21 +7,27 @@ import (
 )
 
 func TestCheckPaths(t *testing.T) {
-	localPath = "s3://foo/bar.txt"
-	remotePath = "s3://foo/bar.txt"
-	assert.Error(t, checkPaths(), "cannot have two remote paths")
+	inLocal := "s3://foo/bar.txt"
+	inRemote := "s3://foo/bar.txt"
+	_, _, err := checkPaths(inRemote, inLocal)
+	assert.Error(t, err, "cannot have two remote paths")
 
-	localPath = "bar.txt"
-	remotePath = "bar.txt"
-	assert.Error(t, checkPaths(), "cannot have two local paths")
+	inLocal = "bar.txt"
+	inRemote = "bar.txt"
+	_, _, err = checkPaths(inRemote, inLocal)
+	assert.Error(t, err, "cannot have two local paths")
 
-	localPath = "bar.txt"
-	remotePath = "s3://foo/bar.txt"
-	assert.NilError(t, checkPaths())
+	inLocal = "bar.txt"
+	inRemote = "s3://foo/bar.txt"
+	outRemote, outLocal, err := checkPaths(inRemote, inLocal)
+	assert.NilError(t, err)
+	assert.Equal(t, inLocal, outLocal)
+	assert.Equal(t, inRemote, outRemote)
 
-	localPath = "s3://foo/bar.txt"
-	remotePath = "bar.txt"
-	assert.NilError(t, checkPaths())
-	assert.Equal(t, "bar.txt", localPath)
-	assert.Equal(t, "s3://foo/bar.txt", remotePath)
+	inLocal = "s3://foo/bar.txt"
+	inRemote = "bar.txt"
+	outRemote, outLocal, err = checkPaths(inRemote, inLocal)
+	assert.NilError(t, err)
+	assert.Equal(t, inLocal, outRemote)
+	assert.Equal(t, inRemote, outLocal)
 }
