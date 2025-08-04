@@ -23,26 +23,25 @@ You can download the latest release from [here](https://github.com/tomcz/s3backu
 ## Usage
 
 ```
-NAME:
-   s3backup - S3 backup script in a single binary
+Usage: s3backup <command>
 
-USAGE:
-   s3backup [global options] command [command options] [arguments...]
+S3 backup script in a single binary
 
-COMMANDS:
-   version    Print version and exit
-   put        Upload file to S3 bucket using local credentials
-   get        Download file from S3 bucket using local credentials
-   vault-put  Upload file to S3 bucket using credentials from vault
-   vault-get  Download file from S3 bucket using credentials from vault
-   keygen     Generate RSA and AES backup keys
-   encrypt    Encrypt a local file
-   decrypt    Decrypt a local file
-   help, h    Shows a list of commands or help for one command
+Flags:
+  -h, --help    Show context-sensitive help.
 
-GLOBAL OPTIONS:
-   --help, -h     show help (default: false)
-   --version, -v  print the version (default: false)
+Commands:
+  put           Upload file to S3 bucket using local AWS credentials
+  get           Download file from S3 bucket using local AWS credentials
+  vault-put     Upload file to S3 bucket using AWS credentials from Vault
+  vault-get     Download file from S3 bucket using AWS credentials from Vault
+  keygen aes    Generate and print AES key
+  keygen rsa    Generate RSA key pair files
+  encrypt       Encrypt a local file
+  decrypt       Decrypt a local file
+  version       Print version and exit
+
+Run "s3backup <command> --help" for more information on a command.
 ```
 
 ### AWS S3 Credentials
@@ -52,41 +51,53 @@ AWS S3 integration in `s3backup` can be configured from the command line, and us
 #### s3backup put
 
 ```
-NAME:
-   s3backup put - Upload file to S3 bucket using local credentials
+Usage: s3backup put <local-path> <remote-path> [flags]
 
-USAGE:
-   s3backup put [command options] local_file_path s3://bucket/objectkey
+Upload file to S3 bucket using local AWS credentials
 
-OPTIONS:
-   --symKey value     Password to use for symmetric AES encryption (optional)
-   --pemKey FILE      Path to PEM-encoded public key FILE (optional)
-   --accessKey value  AWS Access Key ID (if not using default AWS credentials)
-   --secretKey value  AWS Secret Key (required when accessKey is provided)
-   --token value      AWS Token (effective only when accessKey is provided, depends on your AWS setup)
-   --region value     AWS Region (we use AWS defaults if not provided)
-   --endpoint URL     Custom AWS Endpoint URL (optional)
-   --nocheck          Do not create backup checksums (default: false)
+Arguments:
+  <local-path>     Required local file path
+  <remote-path>    Required s3 path (s3://bucket/objectkey)
+
+Flags:
+  -h, --help               Show context-sensitive help.
+
+      --nocheck            Do not create backup checksums
+      --symKey=value       Password to use for symmetric AES encryption
+      --pemKey=FILE        Path to PEM-encoded public key file
+      --accessKey=value    AWS Access Key ID (if not using default AWS
+                           credentials)
+      --secretKey=value    AWS Secret Key (required when accessKey is provided)
+      --token=value        AWS Token (effective only when accessKey is provided,
+                           depends on your AWS setup)
+      --region=value       AWS Region (we use AWS defaults if not provided)
+      --endpoint=URL       Custom AWS Endpoint URL (optional)
 ```
 
 #### s3backup get
 
 ```
-NAME:
-   s3backup get - Download file from S3 bucket using local credentials
+Usage: s3backup get <remote-path> <local-path> [flags]
 
-USAGE:
-   s3backup get [command options] s3://bucket/objectkey local_file_path
+Download file from S3 bucket using local AWS credentials
 
-OPTIONS:
-   --symKey value     Password to use for symmetric AES decryption (optional)
-   --pemKey FILE      Path to PEM-encoded private key FILE (optional)
-   --accessKey value  AWS Access Key ID (if not using default AWS credentials)
-   --secretKey value  AWS Secret Key (required when accessKey is provided)
-   --token value      AWS Token (effective only when accessKey is provided, depends on your AWS setup)
-   --region value     AWS Region (we use AWS defaults if not provided)
-   --endpoint URL     Custom AWS Endpoint URL (optional)
-   --nocheck          Do not verify backup checksums (default: false)
+Arguments:
+  <remote-path>    Required s3 path (s3://bucket/objectkey)
+  <local-path>     Required local file path
+
+Flags:
+  -h, --help               Show context-sensitive help.
+
+      --nocheck            Do not verify backup checksums
+      --symKey=value       Password to use for symmetric AES decryption
+      --pemKey=FILE        Path to PEM-encoded private key file
+      --accessKey=value    AWS Access Key ID (if not using default AWS
+                           credentials)
+      --secretKey=value    AWS Secret Key (required when accessKey is provided)
+      --token=value        AWS Token (effective only when accessKey is provided,
+                           depends on your AWS setup)
+      --region=value       AWS Region (we use AWS defaults if not provided)
+      --endpoint=URL       Custom AWS Endpoint URL (optional)
 ```
 
 ### HashiCorp Vault
@@ -98,39 +109,55 @@ Vault integration in `s3backup` can be configured from the command line, and usi
 #### s3backup vault-put
 
 ```
-NAME:
-   s3backup vault-put - Upload file to S3 bucket using credentials from vault
+Usage: s3backup vault-put --path=value --vault=URL <local-path> <remote-path> [flags]
 
-USAGE:
-   s3backup vault-put [command options] local_file_path s3://bucket/objectkey
+Upload file to S3 bucket using AWS credentials from Vault
 
-OPTIONS:
-   --role value    Vault role_id to retrieve backup credentials (either role & secret, or token)
-   --secret value  Vault secret_id to retrieve backup credentials (either role & secret, or token)
-   --token value   Vault token to retrieve backup credentials (either role & secret, or token)
-   --path value    Vault secret path containing backup credentials (required)
-   --caCert FILE   Vault root certificate FILE (optional)
-   --vault URL     Vault service URL (required)
-   --nocheck       Do not create backup checksums (default: false)
+Arguments:
+  <local-path>     Required local file path
+  <remote-path>    Required s3 path (s3://bucket/objectkey)
+
+Flags:
+  -h, --help            Show context-sensitive help.
+
+      --nocheck         Do not create backup checksums
+      --role=value      Vault role_id to retrieve backup credentials (either
+                        role & secret, or token are required)
+      --secret=value    Vault secret_id to retrieve backup credentials (either
+                        role & secret, or token are required)
+      --token=value     Vault token to retrieve backup credentials (either role
+                        & secret, or token are required)
+      --path=value      Vault secret path containing backup credentials
+                        (required)
+      --caCert=FILE     Vault Root CA certificate (optional)
+      --vault=URL       Vault service URL (required)
 ```
 
 #### s3backup vault-get
 
 ```
-NAME:
-   s3backup vault-get - Download file from S3 bucket using credentials from vault
+Usage: s3backup vault-get --path=value --vault=URL <remote-path> <local-path> [flags]
 
-USAGE:
-   s3backup vault-get [command options] s3://bucket/objectkey local_file_path
+Download file from S3 bucket using AWS credentials from Vault
 
-OPTIONS:
-   --role value    Vault role_id to retrieve backup credentials (either role & secret, or token)
-   --secret value  Vault secret_id to retrieve backup credentials (either role & secret, or token)
-   --token value   Vault token to retrieve backup credentials (either role & secret, or token)
-   --path value    Vault secret path containing backup credentials (required)
-   --caCert FILE   Vault root certificate FILE (optional)
-   --vault URL     Vault service URL (required)
-   --nocheck       Do not verify backup checksums (default: false)
+Arguments:
+  <remote-path>    Required s3 path (s3://bucket/objectkey)
+  <local-path>     Required local file path
+
+Flags:
+  -h, --help            Show context-sensitive help.
+
+      --nocheck         Do not verify backup checksums
+      --role=value      Vault role_id to retrieve backup credentials (either
+                        role & secret, or token are required)
+      --secret=value    Vault secret_id to retrieve backup credentials (either
+                        role & secret, or token are required)
+      --token=value     Vault token to retrieve backup credentials (either role
+                        & secret, or token are required)
+      --path=value      Vault secret path containing backup credentials
+                        (required)
+      --caCert=FILE     Vault Root CA certificate (optional)
+      --vault=URL       Vault service URL (required)
 ```
 
 ## Backup key generation
@@ -138,20 +165,16 @@ OPTIONS:
 To make things easier, `s3backup` also provides `keygen` commands to create 256-bit symmetric keys and 4096-bit RSA private/public key pairs suitable for use by `s3backup`.
 
 ```
-NAME:
-   s3backup keygen - Generate RSA and AES backup keys
+Usage: s3backup keygen <command>
 
-USAGE:
-   s3backup keygen command [command options] [arguments...]
+Generate RSA or AES backup keys
 
-COMMANDS:
-   aes      Generate and print AES key
-   rsa      Generate RSA key pair files
-   help, h  Shows a list of commands or help for one command
+Flags:
+  -h, --help    Show context-sensitive help.
 
-OPTIONS:
-   --help, -h     show help (default: false)
-   --version, -v  print the version (default: false)
+Commands:
+  keygen aes    Generate and print AES key
+  keygen rsa    Generate RSA key pair files
 ```
 
 ## Build
