@@ -36,30 +36,30 @@ type getFlags struct {
 }
 
 type encryptFlags struct {
-	SymKey string `name:"symKey" help:"Password to use for symmetric AES encryption"`
-	PemKey string `name:"pemKey" help:"Path to PEM-encoded public key file"`
+	SymKey string `name:"symKey" placeholder:"value" help:"Password to use for symmetric AES encryption"`
+	PemKey string `name:"pemKey" placeholder:"FILE"  help:"Path to PEM-encoded public key file"`
 }
 
 type decryptFlags struct {
-	SymKey string `name:"symKey" help:"Password to use for symmetric AES decryption"`
-	PemKey string `name:"pemKey" help:"Path to PEM-encoded private key file"`
+	SymKey string `name:"symKey" placeholder:"value" help:"Password to use for symmetric AES decryption"`
+	PemKey string `name:"pemKey" placeholder:"FILE"  help:"Path to PEM-encoded private key file"`
 }
 
 type awsFlags struct {
-	AccessKey string `name:"accessKey" help:"AWS Access Key ID (if not using default AWS credentials)"`
-	SecretKey string `name:"secretKey" help:"AWS Secret Key (required when accessKey is provided)"`
-	Token     string `name:"token" help:"AWS Token (effective only when accessKey is provided, depends on your AWS setup)"`
-	Region    string `name:"region" help:"AWS Region (we use AWS defaults if not provided)"`
-	Endpoint  string `name:"endpoint" help:"Custom AWS Endpoint URL (optional)"`
+	AccessKey string `name:"accessKey" placeholder:"value" help:"AWS Access Key ID (if not using default AWS credentials)"`
+	SecretKey string `name:"secretKey" placeholder:"value" help:"AWS Secret Key (required when accessKey is provided)"`
+	Token     string `name:"token"     placeholder:"value" help:"AWS Token (effective only when accessKey is provided, depends on your AWS setup)"`
+	Region    string `name:"region"    placeholder:"value" help:"AWS Region (we use AWS defaults if not provided)"`
+	Endpoint  string `name:"endpoint"  placeholder:"URL"   help:"Custom AWS Endpoint URL (optional)"`
 }
 
 type vaultFlags struct {
-	RoleID   string `name:"role" help:"Vault role_id to retrieve backup credentials (either role & secret, or token are required)"`
-	SecretID string `name:"secret" help:"Vault secret_id to retrieve backup credentials (either role & secret, or token are required)"`
-	Token    string `name:"token" help:"Vault token to retrieve backup credentials (either role & secret, or token are required)"`
-	Path     string `name:"path" required:"" help:"Vault secret path containing backup credentials (required)"`
-	CaCert   string `name:"caCert" help:"Vault Root CA certificate (optional)"`
-	Address  string `name:"vault" required:"" help:"Vault service URL (required)"`
+	RoleID   string `name:"role"   placeholder:"value" help:"Vault role_id to retrieve backup credentials (either role & secret, or token are required)"`
+	SecretID string `name:"secret" placeholder:"value" help:"Vault secret_id to retrieve backup credentials (either role & secret, or token are required)"`
+	Token    string `name:"token"  placeholder:"value" help:"Vault token to retrieve backup credentials (either role & secret, or token are required)"`
+	Path     string `name:"path"   placeholder:"value" help:"Vault secret path containing backup credentials (required)" required:""`
+	CaCert   string `name:"caCert" placeholder:"FILE"  help:"Vault Root CA certificate (optional)"`
+	Address  string `name:"vault"  placeholder:"URL"   help:"Vault service URL (required)" required:""`
 }
 
 type putCommand struct {
