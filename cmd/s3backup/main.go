@@ -146,7 +146,7 @@ func (c *versionCommand) Run() error {
 }
 
 func (c *putCommand) Run() error {
-	app, err := newClient(c.awsFlags, cipherOpts{symKey: c.SymKey, pemKey: c.PemKey}, c.SkipHash)
+	app, err := newClient(c.awsFlags, c.SymKey, c.PemKey, c.SkipHash)
 	if err != nil {
 		return err
 	}
@@ -158,7 +158,7 @@ func (c *putCommand) Run() error {
 }
 
 func (c *getCommand) Run() error {
-	app, err := newClient(c.awsFlags, cipherOpts{symKey: c.SymKey, pemKey: c.PemKey}, c.SkipHash)
+	app, err := newClient(c.awsFlags, c.SymKey, c.PemKey, c.SkipHash)
 	if err != nil {
 		return err
 	}
@@ -227,10 +227,7 @@ func (c *genRsaCommand) Run() error {
 }
 
 func (c *encryptCommand) Run() error {
-	cipher, err := newCipher(cipherOpts{
-		symKey: c.SymKey,
-		pemKey: c.PemKey,
-	})
+	cipher, err := newCipher(c.SymKey, c.PemKey)
 	if err != nil {
 		return err
 	}
@@ -241,10 +238,7 @@ func (c *encryptCommand) Run() error {
 }
 
 func (c *decryptCommand) Run() error {
-	cipher, err := newCipher(cipherOpts{
-		symKey: c.SymKey,
-		pemKey: c.PemKey,
-	})
+	cipher, err := newCipher(c.SymKey, c.PemKey)
 	if err != nil {
 		return err
 	}
@@ -254,12 +248,12 @@ func (c *decryptCommand) Run() error {
 	return cipher.Decrypt(c.InputFile, c.OutputFile)
 }
 
-func newClient(af awsFlags, co cipherOpts, skipHash bool) (*client.Client, error) {
+func newClient(af awsFlags, symKey, pemKey string, skipHash bool) (*client.Client, error) {
 	backend, err := store.NewS3(af.AccessKey, af.SecretKey, af.Token, af.Region, af.Endpoint)
 	if err != nil {
 		return nil, err
 	}
-	cipher, err := newCipher(co)
+	cipher, err := newCipher(symKey, pemKey)
 	if err != nil {
 		return nil, err
 	}
@@ -274,17 +268,12 @@ func newClient(af awsFlags, co cipherOpts, skipHash bool) (*client.Client, error
 	return app, nil
 }
 
-type cipherOpts struct {
-	symKey string
-	pemKey string
-}
-
-func newCipher(co cipherOpts) (client.Cipher, error) {
-	if co.symKey != "" {
-		return crypto.NewAESCipher(co.symKey)
+func newCipher(symKey, pemKey string) (client.Cipher, error) {
+	if symKey != "" {
+		return crypto.NewAESCipher(symKey)
 	}
-	if co.pemKey != "" {
-		return crypto.NewRSACipher(co.pemKey)
+	if pemKey != "" {
+		return crypto.NewRSACipher(pemKey)
 	}
 	return nil, nil
 }
