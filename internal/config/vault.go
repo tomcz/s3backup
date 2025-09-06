@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net/http"
 
 	"github.com/go-viper/mapstructure/v2"
 	"github.com/hashicorp/vault-client-go"
@@ -18,11 +17,7 @@ func LookupWithAppRole(ctx context.Context, vaultAddr, caCertFile, roleID, secre
 	}
 	resp, err := client.Auth.AppRoleLogin(ctx, schema.AppRoleLoginRequest{RoleId: roleID, SecretId: secretID})
 	if err != nil {
-		var verr *vault.ResponseError
-		if errors.As(err, &verr) && verr.OriginalRequest != nil {
-			return nil, expandError(verr.OriginalRequest, err)
-		}
-		return nil, fmt.Errorf("approle.Login: %w", err)
+		return nil, fmt.Errorf("approle.Login: %w", responseError(err))
 	}
 	if err = client.SetToken(resp.Auth.ClientToken); err != nil {
 		return nil, fmt.Errorf("approle.SetToken: %w", err)
@@ -60,11 +55,7 @@ func newClient(vaultAddr, caCertFile string) (*vault.Client, error) {
 func lookup(ctx context.Context, client *vault.Client, path string) (*Config, error) {
 	secret, err := client.Read(ctx, path)
 	if err != nil {
-		var verr *vault.ResponseError
-		if errors.As(err, &verr) && verr.OriginalRequest != nil {
-			return nil, expandError(verr.OriginalRequest, err)
-		}
-		return nil, fmt.Errorf("vault.Read: %w", err)
+		return nil, fmt.Errorf("vault.Read: %w", responseError(err))
 	}
 	if secret == nil || secret.Data == nil {
 		return nil, fmt.Errorf("secret not found at path %q", path)
@@ -76,8 +67,12 @@ func lookup(ctx context.Context, client *vault.Client, path string) (*Config, er
 	return &cfg, nil
 }
 
-func expandError(req *http.Request, err error) error {
-	return fmt.Errorf("%s %s: %w", req.Method, req.URL.String(), err)
+func responseError(err error) error {
+	var verr *vault.ResponseError
+	if errors.As(err, &verr) && verr.OriginalRequest != nil {
+		return fmt.Errorf("%s %s: %w", verr.OriginalRequest.Method, verr.OriginalRequest.URL.String(), err)
+	}
+	return err
 }
 
 func logout(ctx context.Context, client *vault.Client, shouldLogout bool) {
