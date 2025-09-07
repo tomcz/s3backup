@@ -16,29 +16,37 @@ import (
 
 const checksumKey = "S3-Backup-Checksum"
 
+type AwsOpts struct {
+	AccessKey string
+	SecretKey string
+	Token     string
+	Region    string
+	Endpoint  string
+}
+
 type s3store struct {
 	api *s3.S3
 }
 
-func NewS3(awsAccessKey, awsSecretKey, awsToken, awsRegion, awsEndpoint string) (client.Store, error) {
+func NewS3(opts AwsOpts) (client.Store, error) {
 	var cfg []*aws.Config
-	if awsAccessKey != "" && awsSecretKey != "" {
+	if opts.AccessKey != "" && opts.SecretKey != "" {
 		cfg = append(cfg, &aws.Config{
 			Credentials: credentials.NewStaticCredentials(
-				awsAccessKey,
-				awsSecretKey,
-				awsToken,
+				opts.AccessKey,
+				opts.SecretKey,
+				opts.Token,
 			),
 		})
 	}
-	if awsRegion != "" {
+	if opts.Region != "" {
 		cfg = append(cfg, &aws.Config{
-			Region: aws.String(awsRegion),
+			Region: aws.String(opts.Region),
 		})
 	}
-	if awsEndpoint != "" {
+	if opts.Endpoint != "" {
 		cfg = append(cfg, &aws.Config{
-			Endpoint:         aws.String(awsEndpoint),
+			Endpoint:         aws.String(opts.Endpoint),
 			S3ForcePathStyle: aws.Bool(true), // gofakes3 and DigitalOcean's Spaces need this
 		})
 	}

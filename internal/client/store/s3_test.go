@@ -29,7 +29,12 @@ func TestRoundTripUploadDownload_withChecksum(t *testing.T) {
 
 	accessKey := "AKIAIOSFODNN7EXAMPLE"
 	secretKey := "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
-	target, err := NewS3(accessKey, secretKey, "", "us-east-1", ts.URL)
+	target, err := NewS3(AwsOpts{
+		AccessKey: accessKey,
+		SecretKey: secretKey,
+		Region:    "us-east-1",
+		Endpoint:  ts.URL,
+	})
 	assert.NilError(t, err, "failed to create S3 client")
 
 	impl := target.(*s3store)
@@ -66,7 +71,12 @@ func TestRoundTripUploadDownload_withoutChecksum(t *testing.T) {
 
 	accessKey := "AKIAIOSFODNN7EXAMPLE"
 	secretKey := "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
-	target, err := NewS3(accessKey, secretKey, "", "us-east-1", ts.URL)
+	target, err := NewS3(AwsOpts{
+		AccessKey: accessKey,
+		SecretKey: secretKey,
+		Region:    "us-east-1",
+		Endpoint:  ts.URL,
+	})
 	assert.NilError(t, err, "failed to create S3 client")
 
 	impl := target.(*s3store)
