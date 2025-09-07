@@ -1,6 +1,7 @@
 package client
 
 import (
+	"context"
 	"log"
 	"os"
 )
@@ -13,7 +14,7 @@ type Client struct {
 	Store  Store
 }
 
-func (c *Client) GetRemoteFile(remotePath, localPath string) error {
+func (c *Client) GetRemoteFile(ctx context.Context, remotePath, localPath string) error {
 	tempFile := localPath
 	if c.Cipher != nil {
 		tempFile += tempFileSuffix
@@ -21,7 +22,7 @@ func (c *Client) GetRemoteFile(remotePath, localPath string) error {
 	}
 
 	log.Println("Downloading", remotePath, "to", tempFile)
-	checksum, cerr := c.Store.DownloadFile(remotePath, tempFile)
+	checksum, cerr := c.Store.DownloadFile(ctx, remotePath, tempFile)
 	if cerr != nil {
 		return cerr
 	}
@@ -43,7 +44,7 @@ func (c *Client) GetRemoteFile(remotePath, localPath string) error {
 	return nil
 }
 
-func (c *Client) PutLocalFile(remotePath, localPath string) error {
+func (c *Client) PutLocalFile(ctx context.Context, remotePath, localPath string) error {
 	tempFile := localPath
 	if c.Cipher != nil {
 		tempFile += tempFileSuffix
@@ -66,7 +67,7 @@ func (c *Client) PutLocalFile(remotePath, localPath string) error {
 	}
 
 	log.Println("Uploading", tempFile, "as", remotePath)
-	return c.Store.UploadFile(remotePath, tempFile, checksum)
+	return c.Store.UploadFile(ctx, remotePath, tempFile, checksum)
 }
 
 func remove(filePath string) {

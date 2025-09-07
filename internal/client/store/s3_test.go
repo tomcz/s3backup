@@ -41,11 +41,11 @@ func TestRoundTripUploadDownload_withChecksum(t *testing.T) {
 	_, err = impl.api.CreateBucket(&s3.CreateBucketInput{Bucket: aws.String("test-bucket")})
 	assert.NilError(t, err, "failed to create bucket")
 
-	err = target.UploadFile("s3://test-bucket/test-file", uploadFile, "wibble")
+	err = target.UploadFile(t.Context(), "s3://test-bucket/test-file", uploadFile, "wibble")
 	assert.NilError(t, err, "failed to upload file")
 
 	downloadFile := uploadFile + ".download"
-	checksum, err := target.DownloadFile("s3://test-bucket/test-file", downloadFile)
+	checksum, err := target.DownloadFile(t.Context(), "s3://test-bucket/test-file", downloadFile)
 	assert.NilError(t, err, "failed to download file")
 	defer os.Remove(downloadFile)
 
@@ -83,11 +83,11 @@ func TestRoundTripUploadDownload_withoutChecksum(t *testing.T) {
 	_, err = impl.api.CreateBucket(&s3.CreateBucketInput{Bucket: aws.String("test-bucket")})
 	assert.NilError(t, err, "failed to create bucket")
 
-	err = target.UploadFile("s3://test-bucket/test-file", uploadFile, "")
+	err = target.UploadFile(t.Context(), "s3://test-bucket/test-file", uploadFile, "")
 	assert.NilError(t, err, "failed to upload file")
 
 	downloadFile := uploadFile + ".download"
-	checksum, err := target.DownloadFile("s3://test-bucket/test-file", downloadFile)
+	checksum, err := target.DownloadFile(t.Context(), "s3://test-bucket/test-file", downloadFile)
 	assert.NilError(t, err, "failed to download file")
 	defer os.Remove(downloadFile)
 

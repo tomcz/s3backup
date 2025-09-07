@@ -4,6 +4,7 @@
 package client
 
 import (
+	"context"
 	"sync"
 )
 
@@ -17,10 +18,10 @@ var _ Store = &StoreStub{}
 //
 //		// make and configure a stubbed Store
 //		stubbedStore := &StoreStub{
-//			DownloadFileFunc: func(remotePath string, localPath string) (string, error) {
+//			DownloadFileFunc: func(ctx context.Context, remotePath string, localPath string) (string, error) {
 //				panic("stub out the DownloadFile method")
 //			},
-//			UploadFileFunc: func(remotePath string, localPath string, checksum string) error {
+//			UploadFileFunc: func(ctx context.Context, remotePath string, localPath string, checksum string) error {
 //				panic("stub out the UploadFile method")
 //			},
 //		}
@@ -31,15 +32,17 @@ var _ Store = &StoreStub{}
 //	}
 type StoreStub struct {
 	// DownloadFileFunc stubs the DownloadFile method.
-	DownloadFileFunc func(remotePath string, localPath string) (string, error)
+	DownloadFileFunc func(ctx context.Context, remotePath string, localPath string) (string, error)
 
 	// UploadFileFunc stubs the UploadFile method.
-	UploadFileFunc func(remotePath string, localPath string, checksum string) error
+	UploadFileFunc func(ctx context.Context, remotePath string, localPath string, checksum string) error
 
 	// calls tracks calls to the methods.
 	calls struct {
 		// DownloadFile holds details about calls to the DownloadFile method.
 		DownloadFile []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
 			// RemotePath is the remotePath argument value.
 			RemotePath string
 			// LocalPath is the localPath argument value.
@@ -47,6 +50,8 @@ type StoreStub struct {
 		}
 		// UploadFile holds details about calls to the UploadFile method.
 		UploadFile []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
 			// RemotePath is the remotePath argument value.
 			RemotePath string
 			// LocalPath is the localPath argument value.
@@ -60,21 +65,23 @@ type StoreStub struct {
 }
 
 // DownloadFile calls DownloadFileFunc.
-func (stub *StoreStub) DownloadFile(remotePath string, localPath string) (string, error) {
+func (stub *StoreStub) DownloadFile(ctx context.Context, remotePath string, localPath string) (string, error) {
 	if stub.DownloadFileFunc == nil {
 		panic("StoreStub.DownloadFileFunc: method is nil but Store.DownloadFile was just called")
 	}
 	callInfo := struct {
+		Ctx        context.Context
 		RemotePath string
 		LocalPath  string
 	}{
+		Ctx:        ctx,
 		RemotePath: remotePath,
 		LocalPath:  localPath,
 	}
 	stub.lockDownloadFile.Lock()
 	stub.calls.DownloadFile = append(stub.calls.DownloadFile, callInfo)
 	stub.lockDownloadFile.Unlock()
-	return stub.DownloadFileFunc(remotePath, localPath)
+	return stub.DownloadFileFunc(ctx, remotePath, localPath)
 }
 
 // DownloadFileCalls gets all the calls that were made to DownloadFile.
@@ -82,10 +89,12 @@ func (stub *StoreStub) DownloadFile(remotePath string, localPath string) (string
 //
 //	len(stubbedStore.DownloadFileCalls())
 func (stub *StoreStub) DownloadFileCalls() []struct {
+	Ctx        context.Context
 	RemotePath string
 	LocalPath  string
 } {
 	var calls []struct {
+		Ctx        context.Context
 		RemotePath string
 		LocalPath  string
 	}
@@ -96,15 +105,17 @@ func (stub *StoreStub) DownloadFileCalls() []struct {
 }
 
 // UploadFile calls UploadFileFunc.
-func (stub *StoreStub) UploadFile(remotePath string, localPath string, checksum string) error {
+func (stub *StoreStub) UploadFile(ctx context.Context, remotePath string, localPath string, checksum string) error {
 	if stub.UploadFileFunc == nil {
 		panic("StoreStub.UploadFileFunc: method is nil but Store.UploadFile was just called")
 	}
 	callInfo := struct {
+		Ctx        context.Context
 		RemotePath string
 		LocalPath  string
 		Checksum   string
 	}{
+		Ctx:        ctx,
 		RemotePath: remotePath,
 		LocalPath:  localPath,
 		Checksum:   checksum,
@@ -112,7 +123,7 @@ func (stub *StoreStub) UploadFile(remotePath string, localPath string, checksum 
 	stub.lockUploadFile.Lock()
 	stub.calls.UploadFile = append(stub.calls.UploadFile, callInfo)
 	stub.lockUploadFile.Unlock()
-	return stub.UploadFileFunc(remotePath, localPath, checksum)
+	return stub.UploadFileFunc(ctx, remotePath, localPath, checksum)
 }
 
 // UploadFileCalls gets all the calls that were made to UploadFile.
@@ -120,11 +131,13 @@ func (stub *StoreStub) UploadFile(remotePath string, localPath string, checksum 
 //
 //	len(stubbedStore.UploadFileCalls())
 func (stub *StoreStub) UploadFileCalls() []struct {
+	Ctx        context.Context
 	RemotePath string
 	LocalPath  string
 	Checksum   string
 } {
 	var calls []struct {
+		Ctx        context.Context
 		RemotePath string
 		LocalPath  string
 		Checksum   string

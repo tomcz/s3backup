@@ -1,6 +1,7 @@
 package store
 
 import (
+	"context"
 	"fmt"
 	"os"
 
@@ -57,7 +58,7 @@ func NewS3(opts AwsOpts) (client.Store, error) {
 	return &s3store{s3.New(awsSession)}, nil
 }
 
-func (s *s3store) UploadFile(remotePath, localPath, checksum string) error {
+func (s *s3store) UploadFile(ctx context.Context, remotePath, localPath, checksum string) error {
 	bucket, objectKey, err := splitRemotePath(remotePath)
 	if err != nil {
 		return err
@@ -80,14 +81,14 @@ func (s *s3store) UploadFile(remotePath, localPath, checksum string) error {
 			checksumKey: aws.String(checksum),
 		}
 	}
-	_, err = uploader.Upload(input)
+	_, err = uploader.UploadWithContext(ctx, input)
 	if err != nil {
 		return fmt.Errorf("failed to upload file: %w", err)
 	}
 	return nil
 }
 
-func (s *s3store) DownloadFile(remotePath, localPath string) (string, error) {
+func (s *s3store) DownloadFile(ctx context.Context, remotePath, localPath string) (string, error) {
 	bucket, objectKey, err := splitRemotePath(remotePath)
 	if err != nil {
 		return "", err
@@ -103,7 +104,7 @@ func (s *s3store) DownloadFile(remotePath, localPath string) (string, error) {
 	downloader := s3manager.NewDownloaderWithClient(s.api)
 	req := &s3.GetObjectInput{Bucket: aws.String(bucket), Key: aws.String(objectKey)}
 	opt := request.WithGetResponseHeader(fmt.Sprintf("x-amz-meta-%s", checksumKey), &checksum)
-	_, err = downloader.Download(file, req, s3manager.WithDownloaderRequestOptions(opt))
+	_, err = downloader.DownloadWithContext(ctx, file, req, s3manager.WithDownloaderRequestOptions(opt))
 	if err != nil {
 		return "", fmt.Errorf("download failed: %w", err)
 	}

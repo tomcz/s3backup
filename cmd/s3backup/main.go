@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/signal"
 	"runtime/debug"
 
 	"github.com/alecthomas/kong"
@@ -122,8 +123,13 @@ type appCfg struct {
 }
 
 func main() {
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer stop()
+
 	description := kong.Description("S3 backup script in a single binary")
 	app := kong.Parse(&appCfg{}, description, kong.HelpOptions{Compact: true})
+	app.BindTo(ctx, (*context.Context)(nil))
+
 	if err := app.Run(); err != nil {
 		log.Fatalln(err)
 	}
@@ -146,7 +152,7 @@ func (c *versionCommand) Run() error {
 	return nil
 }
 
-func (c *putCommand) Run() error {
+func (c *putCommand) Run(ctx context.Context) error {
 	app, err := newClient(c.awsFlags, c.SymKey, c.PemKey, c.SkipHash)
 	if err != nil {
 		return err
@@ -155,10 +161,10 @@ func (c *putCommand) Run() error {
 	if err != nil {
 		return err
 	}
-	return app.PutLocalFile(remote, local)
+	return app.PutLocalFile(ctx, remote, local)
 }
 
-func (c *getCommand) Run() error {
+func (c *getCommand) Run(ctx context.Context) error {
 	app, err := newClient(c.awsFlags, c.SymKey, c.PemKey, c.SkipHash)
 	if err != nil {
 		return err
@@ -167,11 +173,11 @@ func (c *getCommand) Run() error {
 	if err != nil {
 		return err
 	}
-	return app.GetRemoteFile(remote, local)
+	return app.GetRemoteFile(ctx, remote, local)
 }
 
-func (c *vaultPutCommand) Run() error {
-	cfg, err := vaultConfig(c.vaultFlags)
+func (c *vaultPutCommand) Run(ctx context.Context) error {
+	cfg, err := vaultConfig(ctx, c.vaultFlags)
 	if err != nil {
 		return err
 	}
@@ -189,11 +195,11 @@ func (c *vaultPutCommand) Run() error {
 		awsFlags:     awsConfig(cfg),
 		encryptFlags: encryptFlags{SymKey: cfg.CipherKey, PemKey: pubKeyFile},
 	}
-	return cmd.Run()
+	return cmd.Run(ctx)
 }
 
-func (c vaultGetCommand) Run() error {
-	cfg, err := vaultConfig(c.vaultFlags)
+func (c vaultGetCommand) Run(ctx context.Context) error {
+	cfg, err := vaultConfig(ctx, c.vaultFlags)
 	if err != nil {
 		return err
 	}
@@ -211,7 +217,7 @@ func (c vaultGetCommand) Run() error {
 		awsFlags:     awsConfig(cfg),
 		decryptFlags: decryptFlags{SymKey: cfg.CipherKey, PemKey: privKeyFile},
 	}
-	return cmd.Run()
+	return cmd.Run(ctx)
 }
 
 func (c *genAesCommand) Run() error {
@@ -303,8 +309,8 @@ func checkPaths(inRemote, inLocal string) (outRemote string, outLocal string, er
 	return
 }
 
-func vaultConfig(f vaultFlags) (*config.Config, error) {
-	return config.Lookup(context.Background(), config.VaultOpts{
+func vaultConfig(ctx context.Context, f vaultFlags) (*config.Config, error) {
+	return config.Lookup(ctx, config.VaultOpts{
 		Path:       f.Path,
 		Token:      f.Token,
 		RoleID:     f.RoleID,

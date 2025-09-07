@@ -1,7 +1,6 @@
 package config
 
 import (
-	"context"
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
@@ -92,8 +91,7 @@ func TestLookupWithAppRole(t *testing.T) {
 	ts := httptest.NewServer(testHandler())
 	defer ts.Close()
 
-	ctx := context.Background()
-	cfg, err := Lookup(ctx, VaultOpts{
+	cfg, err := Lookup(t.Context(), VaultOpts{
 		Path:      "secret/myteam/backup",
 		RoleID:    "test-role",
 		SecretID:  "test-secret",
@@ -118,8 +116,7 @@ func TestLookupWithToken(t *testing.T) {
 	certFile, err := utils.CreateTempFile("vault", encoded)
 	assert.NilError(t, err)
 
-	ctx := context.Background()
-	cfg, err := Lookup(ctx, VaultOpts{
+	cfg, err := Lookup(t.Context(), VaultOpts{
 		Path:       "secret/myteam/backup",
 		Token:      "5b1a0318-679c-9c45-e5c6-d1b9a9035d49",
 		VaultAddr:  ts.URL,
