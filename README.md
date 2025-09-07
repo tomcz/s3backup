@@ -109,7 +109,7 @@ Vault integration in `s3backup` can be configured from the command line, and usi
 #### s3backup vault-put
 
 ```
-Usage: s3backup vault-put --path=value --vault=URL <local-path> <remote-path> [flags]
+Usage: s3backup vault-put --path=value <local-path> <remote-path> [flags]
 
 Upload file to S3 bucket using AWS credentials from Vault
 
@@ -121,22 +121,23 @@ Flags:
   -h, --help            Show context-sensitive help.
 
       --nocheck         Do not create backup checksums
-      --role=value      Vault role_id to retrieve backup credentials (either
-                        role & secret, or token are required)
-      --secret=value    Vault secret_id to retrieve backup credentials (either
-                        role & secret, or token are required)
-      --token=value     Vault token to retrieve backup credentials (either role
-                        & secret, or token are required)
       --path=value      Vault secret path containing backup credentials
                         (required)
-      --caCert=FILE     Vault Root CA certificate (optional)
-      --vault=URL       Vault service URL (required)
+      --role=value      Vault role_id to retrieve backup credentials (either
+                        role & secret, or token are required) ($VAULT_ROLE_ID)
+      --secret=value    Vault secret_id to retrieve backup credentials (either
+                        role & secret, or token are required) ($VAULT_SECRET_ID)
+      --token=value     Vault token to retrieve backup credentials (either role
+                        & secret, or token are required) ($VAULT_TOKEN)
+      --caCert=FILE     Vault Root CA certificate (optional, or use one of
+                        VAULT_CACERT, VAULT_CACERT_BYTES, VAULT_CAPATH env vars)
+      --vault=URL       Vault service URL (or use VAULT_ADDR env var)
 ```
 
 #### s3backup vault-get
 
 ```
-Usage: s3backup vault-get --path=value --vault=URL <remote-path> <local-path> [flags]
+Usage: s3backup vault-get --path=value <remote-path> <local-path> [flags]
 
 Download file from S3 bucket using AWS credentials from Vault
 
@@ -148,16 +149,17 @@ Flags:
   -h, --help            Show context-sensitive help.
 
       --nocheck         Do not verify backup checksums
-      --role=value      Vault role_id to retrieve backup credentials (either
-                        role & secret, or token are required)
-      --secret=value    Vault secret_id to retrieve backup credentials (either
-                        role & secret, or token are required)
-      --token=value     Vault token to retrieve backup credentials (either role
-                        & secret, or token are required)
       --path=value      Vault secret path containing backup credentials
                         (required)
-      --caCert=FILE     Vault Root CA certificate (optional)
-      --vault=URL       Vault service URL (required)
+      --role=value      Vault role_id to retrieve backup credentials (either
+                        role & secret, or token are required) ($VAULT_ROLE_ID)
+      --secret=value    Vault secret_id to retrieve backup credentials (either
+                        role & secret, or token are required) ($VAULT_SECRET_ID)
+      --token=value     Vault token to retrieve backup credentials (either role
+                        & secret, or token are required) ($VAULT_TOKEN)
+      --caCert=FILE     Vault Root CA certificate (optional, or use one of
+                        VAULT_CACERT, VAULT_CACERT_BYTES, VAULT_CAPATH env vars)
+      --vault=URL       Vault service URL (or use VAULT_ADDR env var)
 ```
 
 ## Backup key generation

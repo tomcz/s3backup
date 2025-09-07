@@ -54,12 +54,12 @@ type awsFlags struct {
 }
 
 type vaultFlags struct {
-	RoleID   string `name:"role"   placeholder:"value" help:"Vault role_id to retrieve backup credentials (either role & secret, or token are required)"`
-	SecretID string `name:"secret" placeholder:"value" help:"Vault secret_id to retrieve backup credentials (either role & secret, or token are required)"`
-	Token    string `name:"token"  placeholder:"value" help:"Vault token to retrieve backup credentials (either role & secret, or token are required)"`
 	Path     string `name:"path"   placeholder:"value" help:"Vault secret path containing backup credentials (required)" required:""`
-	CaCert   string `name:"caCert" placeholder:"FILE"  help:"Vault Root CA certificate (optional)"`
-	Address  string `name:"vault"  placeholder:"URL"   help:"Vault service URL (required)" required:""`
+	RoleID   string `name:"role"   placeholder:"value" help:"Vault role_id to retrieve backup credentials (either role & secret, or token are required)"   env:"VAULT_ROLE_ID"`
+	SecretID string `name:"secret" placeholder:"value" help:"Vault secret_id to retrieve backup credentials (either role & secret, or token are required)" env:"VAULT_SECRET_ID"`
+	Token    string `name:"token"  placeholder:"value" help:"Vault token to retrieve backup credentials (either role & secret, or token are required)"     env:"VAULT_TOKEN"`
+	CaCert   string `name:"caCert" placeholder:"FILE"  help:"Vault Root CA certificate (optional, or use one of VAULT_CACERT, VAULT_CACERT_BYTES, VAULT_CAPATH env vars)"`
+	Address  string `name:"vault"  placeholder:"URL"   help:"Vault service URL (or use VAULT_ADDR env var)"`
 }
 
 type putCommand struct {
@@ -122,7 +122,8 @@ type appCfg struct {
 }
 
 func main() {
-	app := kong.Parse(&appCfg{}, kong.Description("S3 backup script in a single binary"), kong.HelpOptions{Compact: true})
+	description := kong.Description("S3 backup script in a single binary")
+	app := kong.Parse(&appCfg{}, description, kong.HelpOptions{Compact: true})
 	if err := app.Run(); err != nil {
 		log.Fatalln(err)
 	}
@@ -249,7 +250,13 @@ func (c *decryptCommand) Run() error {
 }
 
 func newClient(af awsFlags, symKey, pemKey string, skipHash bool) (*client.Client, error) {
-	backend, err := store.NewS3(af.AccessKey, af.SecretKey, af.Token, af.Region, af.Endpoint)
+	backend, err := store.NewS3(store.AwsOpts{
+		AccessKey: af.AccessKey,
+		SecretKey: af.SecretKey,
+		Token:     af.Token,
+		Region:    af.Region,
+		Endpoint:  af.Endpoint,
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -297,15 +304,14 @@ func checkPaths(inRemote, inLocal string) (outRemote string, outLocal string, er
 }
 
 func vaultConfig(f vaultFlags) (*config.Config, error) {
-	log.Println("Fetching configuration from vault")
-	ctx := context.Background()
-	if f.Token != "" {
-		return config.LookupWithToken(ctx, f.Address, f.CaCert, f.Token, f.Path)
-	}
-	if f.RoleID != "" && f.SecretID != "" {
-		return config.LookupWithAppRole(ctx, f.Address, f.CaCert, f.RoleID, f.SecretID, f.Path)
-	}
-	return nil, errors.New("vault credentials not provided")
+	return config.Lookup(context.Background(), config.VaultOpts{
+		Path:       f.Path,
+		Token:      f.Token,
+		RoleID:     f.RoleID,
+		SecretID:   f.SecretID,
+		VaultAddr:  f.Address,
+		CaCertFile: f.CaCert,
+	})
 }
 
 func awsConfig(cfg *config.Config) awsFlags {

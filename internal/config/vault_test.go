@@ -93,7 +93,12 @@ func TestLookupWithAppRole(t *testing.T) {
 	defer ts.Close()
 
 	ctx := context.Background()
-	cfg, err := LookupWithAppRole(ctx, ts.URL, "", "test-role", "test-secret", "secret/myteam/backup")
+	cfg, err := Lookup(ctx, VaultOpts{
+		Path:      "secret/myteam/backup",
+		RoleID:    "test-role",
+		SecretID:  "test-secret",
+		VaultAddr: ts.URL,
+	})
 	assert.NilError(t, err)
 
 	assert.Equal(t, "use me to encrypt", cfg.CipherKey)
@@ -114,7 +119,12 @@ func TestLookupWithToken(t *testing.T) {
 	assert.NilError(t, err)
 
 	ctx := context.Background()
-	cfg, err := LookupWithToken(ctx, ts.URL, certFile, "5b1a0318-679c-9c45-e5c6-d1b9a9035d49", "secret/myteam/backup")
+	cfg, err := Lookup(ctx, VaultOpts{
+		Path:       "secret/myteam/backup",
+		Token:      "5b1a0318-679c-9c45-e5c6-d1b9a9035d49",
+		VaultAddr:  ts.URL,
+		CaCertFile: certFile,
+	})
 	assert.NilError(t, err)
 
 	assert.Equal(t, "use me to encrypt", cfg.CipherKey)
