@@ -9,6 +9,7 @@ require (
 	github.com/hashicorp/vault-client-go v0.4.3
 	github.com/johannesboyne/gofakes3 v0.0.0-20241026070602-0da3aa9c32ca
 	github.com/matryer/moq v0.5.3
+	golang.org/x/term v0.7.0
 	gotest.tools/v3 v3.5.1
 )
 

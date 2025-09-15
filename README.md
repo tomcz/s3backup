@@ -64,6 +64,7 @@ Flags:
 
       --nocheck            Do not create backup checksums
       --symKey=value       Password to use for symmetric AES encryption
+                           (Use 'ask' to get a prompt to enter a password)
       --pemKey=FILE        Path to PEM-encoded public key file
       --accessKey=value    AWS Access Key ID (if not using default AWS
                            credentials)
@@ -90,6 +91,7 @@ Flags:
 
       --nocheck            Do not verify backup checksums
       --symKey=value       Password to use for symmetric AES decryption
+                           (Use 'ask' to get a prompt to enter a password)
       --pemKey=FILE        Path to PEM-encoded private key file
       --accessKey=value    AWS Access Key ID (if not using default AWS
                            credentials)

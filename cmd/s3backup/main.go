@@ -2,14 +2,17 @@ package main
 
 import (
 	"context"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"log"
 	"os"
 	"os/signal"
 	"runtime/debug"
+	"syscall"
 
 	"github.com/alecthomas/kong"
+	"golang.org/x/term"
 
 	"github.com/tomcz/s3backup/v2/internal/client"
 	"github.com/tomcz/s3backup/v2/internal/client/crypto"
@@ -37,12 +40,12 @@ type getFlags struct {
 }
 
 type encryptFlags struct {
-	SymKey string `name:"symKey" placeholder:"value" help:"Password to use for symmetric AES encryption"`
+	SymKey string `name:"symKey" placeholder:"value" help:"Password to use for symmetric AES encryption (Use 'ask' to get a prompt to enter a password)"`
 	PemKey string `name:"pemKey" placeholder:"FILE"  help:"Path to PEM-encoded public key file"`
 }
 
 type decryptFlags struct {
-	SymKey string `name:"symKey" placeholder:"value" help:"Password to use for symmetric AES decryption"`
+	SymKey string `name:"symKey" placeholder:"value" help:"Password to use for symmetric AES decryption (Use 'ask' to get a prompt to enter a password)"`
 	PemKey string `name:"pemKey" placeholder:"FILE"  help:"Path to PEM-encoded private key file"`
 }
 
@@ -281,7 +284,20 @@ func newClient(af awsFlags, symKey, pemKey string, skipHash bool) (*client.Clien
 	return app, nil
 }
 
+//goland:noinspection ALL
 func newCipher(symKey, pemKey string) (client.Cipher, error) {
+	if symKey == "ask" {
+		fmt.Print("Enter password: ")
+		buf, err := term.ReadPassword(int(syscall.Stdin))
+		if err != nil {
+			return nil, err
+		}
+		fmt.Println()
+		if len(buf) == 0 {
+			return nil, errors.New("empty passwords are not allowed")
+		}
+		symKey = base64.StdEncoding.EncodeToString(buf)
+	}
 	if symKey != "" {
 		return crypto.NewAESCipher(symKey)
 	}
