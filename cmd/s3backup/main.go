@@ -276,13 +276,14 @@ func (c *decryptCommand) Run() error {
 }
 
 func newClient(af awsFlags, symKey, pemKey string, skipHash bool) (*client.Client, error) {
-	backend, err := store.NewS3(store.AwsOpts{
+	aws := store.AwsS3{
 		AccessKey: af.AccessKey,
 		SecretKey: af.SecretKey,
 		Token:     af.Token,
 		Region:    af.Region,
 		Endpoint:  af.Endpoint,
-	})
+	}
+	backend, err := aws.Store()
 	if err != nil {
 		return nil, err
 	}
@@ -291,12 +292,11 @@ func newClient(af awsFlags, symKey, pemKey string, skipHash bool) (*client.Clien
 		return nil, err
 	}
 	app := &client.Client{
-		Hash:   crypto.NewHash(),
 		Cipher: cipher,
 		Store:  backend,
 	}
-	if skipHash {
-		app.Hash = nil
+	if !skipHash {
+		app.Hash = crypto.NewHash()
 	}
 	return app, nil
 }

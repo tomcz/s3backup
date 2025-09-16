@@ -29,23 +29,24 @@ func TestRoundTripUploadDownload_withChecksum(t *testing.T) {
 
 	accessKey := "AKIAIOSFODNN7EXAMPLE"
 	secretKey := "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
-	target, err := NewS3(AwsOpts{
+	cfg := AwsS3{
 		AccessKey: accessKey,
 		SecretKey: secretKey,
 		Region:    "us-east-1",
 		Endpoint:  ts.URL,
-	})
+	}
+	store, err := cfg.Store()
 	assert.NilError(t, err, "failed to create S3 client")
 
-	impl := target.(*s3store)
+	impl := store.(*s3store)
 	_, err = impl.api.CreateBucket(&s3.CreateBucketInput{Bucket: aws.String("test-bucket")})
 	assert.NilError(t, err, "failed to create bucket")
 
-	err = target.UploadFile(t.Context(), "s3://test-bucket/test-file", uploadFile, "wibble")
+	err = store.UploadFile(t.Context(), "s3://test-bucket/test-file", uploadFile, "wibble")
 	assert.NilError(t, err, "failed to upload file")
 
 	downloadFile := uploadFile + ".download"
-	checksum, err := target.DownloadFile(t.Context(), "s3://test-bucket/test-file", downloadFile)
+	checksum, err := store.DownloadFile(t.Context(), "s3://test-bucket/test-file", downloadFile)
 	assert.NilError(t, err, "failed to download file")
 	defer os.Remove(downloadFile)
 
@@ -71,23 +72,24 @@ func TestRoundTripUploadDownload_withoutChecksum(t *testing.T) {
 
 	accessKey := "AKIAIOSFODNN7EXAMPLE"
 	secretKey := "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
-	target, err := NewS3(AwsOpts{
+	cfg := AwsS3{
 		AccessKey: accessKey,
 		SecretKey: secretKey,
 		Region:    "us-east-1",
 		Endpoint:  ts.URL,
-	})
+	}
+	store, err := cfg.Store()
 	assert.NilError(t, err, "failed to create S3 client")
 
-	impl := target.(*s3store)
+	impl := store.(*s3store)
 	_, err = impl.api.CreateBucket(&s3.CreateBucketInput{Bucket: aws.String("test-bucket")})
 	assert.NilError(t, err, "failed to create bucket")
 
-	err = target.UploadFile(t.Context(), "s3://test-bucket/test-file", uploadFile, "")
+	err = store.UploadFile(t.Context(), "s3://test-bucket/test-file", uploadFile, "")
 	assert.NilError(t, err, "failed to upload file")
 
 	downloadFile := uploadFile + ".download"
-	checksum, err := target.DownloadFile(t.Context(), "s3://test-bucket/test-file", downloadFile)
+	checksum, err := store.DownloadFile(t.Context(), "s3://test-bucket/test-file", downloadFile)
 	assert.NilError(t, err, "failed to download file")
 	defer os.Remove(downloadFile)
 
