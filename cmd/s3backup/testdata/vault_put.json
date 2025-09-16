@@ -1,0 +1,11 @@
+{
+  "nocheck": true,
+  "path": "secret/data/wibble/wobble",
+  "kv2": true,
+  "mount": "waggle",
+  "role": "test_role_id",
+  "secret": "test_secret_id",
+  "token": "test_token",
+  "caCert": "test_cert_path",
+  "vault": "test_vault_url"
+}

@@ -68,8 +68,8 @@ Flags:
   -h, --help               Show context-sensitive help.
 
       --nocheck            Do not create backup checksums
-      --symKey=value       Password to use for symmetric AES encryption
-                           (Use 'ask' to get a prompt to enter a password)
+      --symKey=value       Password to use for symmetric AES encryption (Use
+                           'ask' to enter a password via an interactive prompt)
       --pemKey=FILE        Path to PEM-encoded public key file
       --accessKey=value    AWS Access Key ID (if not using default AWS
                            credentials)
@@ -95,8 +95,8 @@ Flags:
   -h, --help               Show context-sensitive help.
 
       --nocheck            Do not verify backup checksums
-      --symKey=value       Password to use for symmetric AES decryption
-                           (Use 'ask' to get a prompt to enter a password)
+      --symKey=value       Password to use for symmetric AES decryption (Use
+                           'ask' to enter a password via an interactive prompt)
       --pemKey=FILE        Path to PEM-encoded private key file
       --accessKey=value    AWS Access Key ID (if not using default AWS
                            credentials)
@@ -130,10 +130,15 @@ Flags:
       --nocheck         Do not create backup checksums
       --path=value      Vault secret path containing backup credentials
                         (required)
-      --role=value      Vault role_id to retrieve backup credentials (either
-                        role & secret, or token are required) ($VAULT_ROLE_ID)
-      --secret=value    Vault secret_id to retrieve backup credentials (either
-                        role & secret, or token are required) ($VAULT_SECRET_ID)
+      --kv2             Vault secret path represents a key/value version 2
+                        secrets engine
+      --mount=value     Vault approle mount path (default: approle)
+      --role=value      Vault approle role_id to retrieve backup credentials
+                        (either role & secret, or token are required)
+                        ($VAULT_ROLE_ID)
+      --secret=value    Vault approle secret_id to retrieve backup credentials
+                        (either role & secret, or token are required)
+                        ($VAULT_SECRET_ID)
       --token=value     Vault token to retrieve backup credentials (either role
                         & secret, or token are required) ($VAULT_TOKEN)
       --caCert=FILE     Vault Root CA certificate (optional, or use one of
@@ -158,10 +163,15 @@ Flags:
       --nocheck         Do not verify backup checksums
       --path=value      Vault secret path containing backup credentials
                         (required)
-      --role=value      Vault role_id to retrieve backup credentials (either
-                        role & secret, or token are required) ($VAULT_ROLE_ID)
-      --secret=value    Vault secret_id to retrieve backup credentials (either
-                        role & secret, or token are required) ($VAULT_SECRET_ID)
+      --kv2             Vault secret path represents a key/value version 2
+                        secrets engine
+      --mount=value     Vault approle mount path (default: approle)
+      --role=value      Vault approle role_id to retrieve backup credentials
+                        (either role & secret, or token are required)
+                        ($VAULT_ROLE_ID)
+      --secret=value    Vault approle secret_id to retrieve backup credentials
+                        (either role & secret, or token are required)
+                        ($VAULT_SECRET_ID)
       --token=value     Vault token to retrieve backup credentials (either role
                         & secret, or token are required) ($VAULT_TOKEN)
       --caCert=FILE     Vault Root CA certificate (optional, or use one of

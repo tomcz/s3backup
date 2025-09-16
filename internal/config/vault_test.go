@@ -91,12 +91,13 @@ func TestLookupWithAppRole(t *testing.T) {
 	ts := httptest.NewServer(testHandler())
 	defer ts.Close()
 
-	cfg, err := Lookup(t.Context(), VaultOpts{
+	vault := Vault{
 		Path:      "secret/myteam/backup",
 		RoleID:    "test-role",
 		SecretID:  "test-secret",
 		VaultAddr: ts.URL,
-	})
+	}
+	cfg, err := vault.Lookup(t.Context())
 	assert.NilError(t, err)
 
 	assert.Equal(t, "use me to encrypt", cfg.CipherKey)
@@ -116,12 +117,13 @@ func TestLookupWithToken(t *testing.T) {
 	certFile, err := utils.CreateTempFile("vault", encoded)
 	assert.NilError(t, err)
 
-	cfg, err := Lookup(t.Context(), VaultOpts{
+	vault := Vault{
 		Path:       "secret/myteam/backup",
 		Token:      "5b1a0318-679c-9c45-e5c6-d1b9a9035d49",
 		VaultAddr:  ts.URL,
 		CaCertFile: certFile,
-	})
+	}
+	cfg, err := vault.Lookup(t.Context())
 	assert.NilError(t, err)
 
 	assert.Equal(t, "use me to encrypt", cfg.CipherKey)

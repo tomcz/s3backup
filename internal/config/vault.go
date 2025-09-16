@@ -11,21 +11,23 @@ import (
 	"github.com/hashicorp/vault-client-go/schema"
 )
 
-type VaultOpts struct {
+type Vault struct {
 	Path       string
+	IsKV2      bool
 	Token      string
+	Mount      string
 	RoleID     string
 	SecretID   string
 	VaultAddr  string
 	CaCertFile string
 }
 
-func Lookup(ctx context.Context, opts VaultOpts) (*Config, error) {
-	client, err := newClient(opts.VaultAddr, opts.CaCertFile)
+func (v Vault) Lookup(ctx context.Context) (*Config, error) {
+	client, err := v.newClient()
 	if err != nil {
 		return nil, err
 	}
-	shouldLogout, err := login(ctx, client, opts.Token, opts.RoleID, opts.SecretID)
+	shouldLogout, err := v.login(ctx, client)
 	if err != nil {
 		return nil, err
 	}
@@ -34,18 +36,18 @@ func Lookup(ctx context.Context, opts VaultOpts) (*Config, error) {
 			_, _ = client.Auth.TokenRevokeSelf(ctx)
 		}
 	}()
-	return lookup(ctx, client, opts.Path)
+	return v.lookup(ctx, client)
 }
 
-func newClient(vaultAddr, caCertFile string) (*vault.Client, error) {
+func (v Vault) newClient() (*vault.Client, error) {
 	opts := []vault.ClientOption{vault.WithEnvironment()}
-	if vaultAddr != "" {
-		opts = append(opts, vault.WithAddress(vaultAddr))
+	if v.VaultAddr != "" {
+		opts = append(opts, vault.WithAddress(v.VaultAddr))
 	}
-	if caCertFile != "" {
+	if v.CaCertFile != "" {
 		opts = append(opts, vault.WithTLS(vault.TLSConfiguration{
 			ServerCertificate: vault.ServerCertificateEntry{
-				FromFile: caCertFile,
+				FromFile: v.CaCertFile,
 			},
 		}))
 	}
@@ -56,17 +58,25 @@ func newClient(vaultAddr, caCertFile string) (*vault.Client, error) {
 	return client, nil
 }
 
-func login(ctx context.Context, client *vault.Client, token, roleID, secretID string) (bool, error) {
-	if token != "" {
+func (v Vault) login(ctx context.Context, client *vault.Client) (bool, error) {
+	if v.Token != "" {
 		log.Println("Authenticating with vault using token")
-		if err := client.SetToken(token); err != nil {
+		if err := client.SetToken(v.Token); err != nil {
 			return false, fmt.Errorf("vault.SetToken: %w", err)
 		}
 		return false, nil
 	}
-	if roleID != "" && secretID != "" {
+	if v.RoleID != "" && v.SecretID != "" {
 		log.Println("Authenticating with vault using approle credentials")
-		resp, err := client.Auth.AppRoleLogin(ctx, schema.AppRoleLoginRequest{RoleId: roleID, SecretId: secretID})
+		var opts []vault.RequestOption
+		if v.Mount != "" {
+			opts = append(opts, vault.WithMountPath(v.Mount))
+		}
+		req := schema.AppRoleLoginRequest{
+			RoleId:   v.RoleID,
+			SecretId: v.SecretID,
+		}
+		resp, err := client.Auth.AppRoleLogin(ctx, req, opts...)
 		if err != nil {
 			return false, fmt.Errorf("approle.Login: %w", responseError(err))
 		}
@@ -78,20 +88,31 @@ func login(ctx context.Context, client *vault.Client, token, roleID, secretID st
 	return false, errors.New("vault credentials not provided")
 }
 
-func lookup(ctx context.Context, client *vault.Client, path string) (*Config, error) {
+func (v Vault) lookup(ctx context.Context, client *vault.Client) (*Config, error) {
 	log.Println("Fetching configuration from vault")
-	secret, err := client.Read(ctx, path)
+	secret, err := client.Read(ctx, v.Path)
 	if err != nil {
 		return nil, fmt.Errorf("vault.Read: %w", responseError(err))
 	}
-	if secret == nil || secret.Data == nil {
-		return nil, fmt.Errorf("secret not found at path %q", path)
+	data := getData(secret, v.IsKV2)
+	if data == nil {
+		return nil, fmt.Errorf("secret not found at path %q", v.Path)
 	}
 	var cfg Config
-	if err = mapstructure.Decode(secret.Data, &cfg); err != nil {
+	if err = mapstructure.Decode(data, &cfg); err != nil {
 		return nil, fmt.Errorf("secret.Decode: %w", err)
 	}
 	return &cfg, nil
+}
+
+func getData(secret *vault.Response[map[string]interface{}], isKV2 bool) any {
+	if secret == nil || secret.Data == nil {
+		return nil
+	}
+	if isKV2 {
+		return secret.Data["data"]
+	}
+	return secret.Data
 }
 
 func responseError(err error) error {

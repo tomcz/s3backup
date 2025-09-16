@@ -48,12 +48,12 @@ type getFlags struct {
 }
 
 type encryptFlags struct {
-	SymKey string `name:"symKey" placeholder:"value" help:"Password to use for symmetric AES encryption (Use 'ask' to get a prompt to enter a password)"`
+	SymKey string `name:"symKey" placeholder:"value" help:"Password to use for symmetric AES encryption (Use 'ask' to enter a password via an interactive prompt)"`
 	PemKey string `name:"pemKey" placeholder:"FILE"  help:"Path to PEM-encoded public key file"`
 }
 
 type decryptFlags struct {
-	SymKey string `name:"symKey" placeholder:"value" help:"Password to use for symmetric AES decryption (Use 'ask' to get a prompt to enter a password)"`
+	SymKey string `name:"symKey" placeholder:"value" help:"Password to use for symmetric AES decryption (Use 'ask' to enter a password via an interactive prompt)"`
 	PemKey string `name:"pemKey" placeholder:"FILE"  help:"Path to PEM-encoded private key file"`
 }
 
@@ -67,8 +67,10 @@ type awsFlags struct {
 
 type vaultFlags struct {
 	Path     string `name:"path"   placeholder:"value" help:"Vault secret path containing backup credentials (required)" required:""`
-	RoleID   string `name:"role"   placeholder:"value" help:"Vault role_id to retrieve backup credentials (either role & secret, or token are required)"   env:"VAULT_ROLE_ID"`
-	SecretID string `name:"secret" placeholder:"value" help:"Vault secret_id to retrieve backup credentials (either role & secret, or token are required)" env:"VAULT_SECRET_ID"`
+	IsKV2    bool   `name:"kv2"                        help:"Vault secret path represents a key/value version 2 secrets engine"`
+	Mount    string `name:"mount"  placeholder:"value" help:"Vault approle mount path (default: approle)"`
+	RoleID   string `name:"role"   placeholder:"value" help:"Vault approle role_id to retrieve backup credentials (either role & secret, or token are required)"   env:"VAULT_ROLE_ID"`
+	SecretID string `name:"secret" placeholder:"value" help:"Vault approle secret_id to retrieve backup credentials (either role & secret, or token are required)" env:"VAULT_SECRET_ID"`
 	Token    string `name:"token"  placeholder:"value" help:"Vault token to retrieve backup credentials (either role & secret, or token are required)"     env:"VAULT_TOKEN"`
 	CaCert   string `name:"caCert" placeholder:"FILE"  help:"Vault Root CA certificate (optional, or use one of VAULT_CACERT, VAULT_CACERT_BYTES, VAULT_CAPATH env vars)"`
 	Address  string `name:"vault"  placeholder:"URL"   help:"Vault service URL (or use VAULT_ADDR env var)"`
@@ -341,14 +343,17 @@ func checkPaths(inRemote, inLocal string) (outRemote string, outLocal string, er
 }
 
 func vaultConfig(ctx context.Context, f vaultFlags) (*config.Config, error) {
-	return config.Lookup(ctx, config.VaultOpts{
+	vault := config.Vault{
 		Path:       f.Path,
+		IsKV2:      f.IsKV2,
+		Mount:      f.Mount,
 		Token:      f.Token,
 		RoleID:     f.RoleID,
 		SecretID:   f.SecretID,
 		VaultAddr:  f.Address,
 		CaCertFile: f.CaCert,
-	})
+	}
+	return vault.Lookup(ctx)
 }
 
 func awsConfig(cfg *config.Config) awsFlags {

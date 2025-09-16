@@ -68,3 +68,41 @@ func TestJsonConfig_Put(t *testing.T) {
 	assert.Equal(t, app.Put.Region, "test_region")
 	assert.Equal(t, app.Put.Endpoint, "test_endpoint")
 }
+
+func TestJsonConfig_VaultPut(t *testing.T) {
+	var app appCfg
+	parser, err := kong.New(&app, kong.Configuration(kong.JSON, "testdata/vault_put.json"))
+	assert.NilError(t, err)
+	_, err = parser.Parse([]string{"vault-put", "local", "remote"})
+	assert.NilError(t, err)
+	assert.Equal(t, app.VaultPut.LocalPath, "local")
+	assert.Equal(t, app.VaultPut.RemotePath, "remote")
+	assert.Equal(t, app.VaultPut.SkipHash, true)
+	assert.Equal(t, app.VaultPut.Path, "secret/data/wibble/wobble")
+	assert.Equal(t, app.VaultPut.IsKV2, true)
+	assert.Equal(t, app.VaultPut.Mount, "waggle")
+	assert.Equal(t, app.VaultPut.RoleID, "test_role_id")
+	assert.Equal(t, app.VaultPut.SecretID, "test_secret_id")
+	assert.Equal(t, app.VaultPut.Token, "test_token")
+	assert.Equal(t, app.VaultPut.CaCert, "test_cert_path")
+	assert.Equal(t, app.VaultPut.Address, "test_vault_url")
+}
+
+func TestJsonConfig_VaultGet(t *testing.T) {
+	var app appCfg
+	parser, err := kong.New(&app, kong.Configuration(kong.JSON, "testdata/vault_get.json"))
+	assert.NilError(t, err)
+	_, err = parser.Parse([]string{"vault-get", "remote", "local"})
+	assert.NilError(t, err)
+	assert.Equal(t, app.VaultGet.LocalPath, "local")
+	assert.Equal(t, app.VaultGet.RemotePath, "remote")
+	assert.Equal(t, app.VaultGet.SkipHash, false)
+	assert.Equal(t, app.VaultGet.Path, "secret/wibble/wobble")
+	assert.Equal(t, app.VaultGet.IsKV2, false)
+	assert.Equal(t, app.VaultGet.Mount, "")
+	assert.Equal(t, app.VaultGet.RoleID, "test_role_id")
+	assert.Equal(t, app.VaultGet.SecretID, "test_secret_id")
+	assert.Equal(t, app.VaultGet.Token, "")
+	assert.Equal(t, app.VaultGet.CaCert, "")
+	assert.Equal(t, app.VaultGet.Address, "test_vault_url")
+}
