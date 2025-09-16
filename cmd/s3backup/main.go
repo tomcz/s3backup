@@ -27,6 +27,14 @@ var (
 	tag    string
 )
 
+const description = `
+S3 backup script in a single binary.
+
+NOTE: Command flag values can optionally be retrieved from a JSON configuration file.
+The path to this configuration file is provided at runtime by the S3BACKUP_JSON environment variable.
+This JSON file should contain an object whose keys must match the command flags they are meant to configure.
+`
+
 type putFlags struct {
 	LocalPath  string `arg:"" help:"Required local file path"`
 	RemotePath string `arg:"" help:"Required s3 path (s3://bucket/objectkey)"`
@@ -129,10 +137,17 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
 
-	description := kong.Description("S3 backup script in a single binary")
-	app := kong.Parse(&appCfg{}, description, kong.HelpOptions{Compact: true})
-	app.BindTo(ctx, (*context.Context)(nil))
+	opts := []kong.Option{
+		kong.Description(description),
+		kong.HelpOptions{Compact: true},
+	}
+	if file := os.Getenv("S3BACKUP_JSON"); file != "" {
+		log.Println("Using configuration from", file)
+		opts = append(opts, kong.Configuration(kong.JSON, file))
+	}
 
+	app := kong.Parse(&appCfg{}, opts...)
+	app.BindTo(ctx, (*context.Context)(nil))
 	if err := app.Run(); err != nil {
 		log.Fatalln(err)
 	}

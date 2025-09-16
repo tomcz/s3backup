@@ -25,7 +25,12 @@ You can download the latest release from [here](https://github.com/tomcz/s3backu
 ```
 Usage: s3backup <command>
 
-S3 backup script in a single binary
+S3 backup script in a single binary.
+
+NOTE: Command flag values can optionally be retrieved from a JSON configuration
+file. The path to this configuration file is provided at runtime by the
+S3BACKUP_JSON environment variable. This JSON file should contain an object
+whose keys must match the command flags they are meant to configure.
 
 Flags:
   -h, --help    Show context-sensitive help.
@@ -46,7 +51,7 @@ Run "s3backup <command> --help" for more information on a command.
 
 ### AWS S3 Credentials
 
-AWS S3 integration in `s3backup` can be configured from the command line, and using AWS environment variables and config files. [Click here](https://docs.aws.amazon.com/sdk-for-go/v1/developer-guide/configuring-sdk.html) for details on using default AWS credentials.
+AWS S3 integration in `s3backup` can be configured from the command line, and/or an optional JSON configuration file, and using AWS environment variables and config files. [Click here](https://docs.aws.amazon.com/sdk-for-go/v1/developer-guide/configuring-sdk.html) for details on using default AWS credentials.
 
 #### s3backup put
 
@@ -106,7 +111,7 @@ Flags:
 
 `s3backup` provides `vault-put` and `vault-get` commands that allow it to be configured using secrets held by a [vault](https://www.vaultproject.io/) instance so that you can store encryption keys and AWS credentials in a secure manner. The secrets that you need to hold in vault for `s3backup` are described [here](https://github.com/tomcz/s3backup/blob/master/config/config.go).
 
-Vault integration in `s3backup` can be configured from the command line, and using vault's own [environment variables](https://www.vaultproject.io/docs/commands/environment.html).
+Vault integration in `s3backup` can be configured from the command line, and/or an optional JSON configuration file, and using vault's own [environment variables](https://www.vaultproject.io/docs/commands/environment.html).
 
 #### s3backup vault-put
 
