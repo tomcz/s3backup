@@ -76,6 +76,6 @@ func remove(filePath string) {
 	}
 	log.Println("Removing", filePath)
 	if err := os.Remove(filePath); err != nil {
-		log.Printf("NOTE: unable to remove %v: %v\n", filePath, err)
+		log.Printf("NOTE: unable to remove %s: %v\n", filePath, err)
 	}
 }

@@ -9,7 +9,6 @@ import (
 	"os"
 
 	"github.com/tomcz/s3backup/v2/internal/client"
-	"github.com/tomcz/s3backup/v2/internal/utils"
 )
 
 type aesCipher struct {
@@ -30,10 +29,7 @@ func (c *aesCipher) Encrypt(plainTextFile, cipherTextFile string) error {
 		return err
 	}
 
-	iv, err := utils.Random(block.BlockSize())
-	if err != nil {
-		return err
-	}
+	iv := randomBytes(block.BlockSize())
 
 	outFile, err := os.Create(cipherTextFile)
 	if err != nil {
@@ -77,7 +73,7 @@ func (c *aesCipher) Decrypt(cipherTextFile, plainTextFile string) error {
 		return err
 	}
 	if !bytes.Equal(preamble, []byte(symKeyVersion)) {
-		return fmt.Errorf("file does not start with %v", symKeyVersion)
+		return fmt.Errorf("file does not start with %s", symKeyVersion)
 	}
 
 	iv := make([]byte, block.BlockSize())

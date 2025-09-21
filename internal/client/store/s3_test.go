@@ -1,8 +1,10 @@
 package store
 
 import (
+	"crypto/rand"
 	"net/http/httptest"
 	"os"
+	"path"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -10,8 +12,6 @@ import (
 	"github.com/johannesboyne/gofakes3"
 	"github.com/johannesboyne/gofakes3/backend/s3mem"
 	"gotest.tools/v3/assert"
-
-	"github.com/tomcz/s3backup/v2/internal/utils"
 )
 
 func TestRoundTripUploadDownload_withChecksum(t *testing.T) {
@@ -20,12 +20,12 @@ func TestRoundTripUploadDownload_withChecksum(t *testing.T) {
 	ts := httptest.NewServer(faker.Server())
 	defer ts.Close()
 
-	expected, err := utils.Random(4096)
-	assert.NilError(t, err, "Cannot create file contents")
+	expected := make([]byte, 4096)
+	_, _ = rand.Read(expected)
 
-	uploadFile, err := utils.CreateTempFile("upload", expected)
+	uploadFile := path.Join(t.TempDir(), "upload")
+	err := os.WriteFile(uploadFile, expected, 0600)
 	assert.NilError(t, err, "Cannot create file to upload")
-	defer os.Remove(uploadFile)
 
 	accessKey := "AKIAIOSFODNN7EXAMPLE"
 	secretKey := "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
@@ -48,7 +48,6 @@ func TestRoundTripUploadDownload_withChecksum(t *testing.T) {
 	downloadFile := uploadFile + ".download"
 	checksum, err := store.DownloadFile(t.Context(), "s3://test-bucket/test-file", downloadFile)
 	assert.NilError(t, err, "failed to download file")
-	defer os.Remove(downloadFile)
 
 	actual, err := os.ReadFile(downloadFile)
 	assert.NilError(t, err, "Cannot read downloaded file")
@@ -63,12 +62,12 @@ func TestRoundTripUploadDownload_withoutChecksum(t *testing.T) {
 	ts := httptest.NewServer(faker.Server())
 	defer ts.Close()
 
-	expected, err := utils.Random(4096)
-	assert.NilError(t, err, "Cannot create file contents")
+	expected := make([]byte, 4096)
+	_, _ = rand.Read(expected)
 
-	uploadFile, err := utils.CreateTempFile("upload", expected)
+	uploadFile := path.Join(t.TempDir(), "upload")
+	err := os.WriteFile(uploadFile, expected, 0600)
 	assert.NilError(t, err, "Cannot create file to upload")
-	defer os.Remove(uploadFile)
 
 	accessKey := "AKIAIOSFODNN7EXAMPLE"
 	secretKey := "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
@@ -91,7 +90,6 @@ func TestRoundTripUploadDownload_withoutChecksum(t *testing.T) {
 	downloadFile := uploadFile + ".download"
 	checksum, err := store.DownloadFile(t.Context(), "s3://test-bucket/test-file", downloadFile)
 	assert.NilError(t, err, "failed to download file")
-	defer os.Remove(downloadFile)
 
 	actual, err := os.ReadFile(downloadFile)
 	assert.NilError(t, err, "Cannot read downloaded file")

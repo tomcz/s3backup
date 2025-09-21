@@ -15,7 +15,6 @@ import (
 	"os"
 
 	"github.com/tomcz/s3backup/v2/internal/client"
-	"github.com/tomcz/s3backup/v2/internal/utils"
 )
 
 type rsaCipher struct {
@@ -36,10 +35,7 @@ func (c *rsaCipher) Encrypt(plainTextFile, cipherTextFile string) error {
 		return err
 	}
 
-	aesKey, err := GenerateAESKey()
-	if err != nil {
-		return err
-	}
+	aesKey := GenerateAESKey()
 
 	encAesKey, err := rsa.EncryptOAEP(sha256.New(), rand.Reader, pubKey, aesKey, nil)
 	if err != nil {
@@ -51,10 +47,7 @@ func (c *rsaCipher) Encrypt(plainTextFile, cipherTextFile string) error {
 		return err
 	}
 
-	iv, err := utils.Random(block.BlockSize())
-	if err != nil {
-		return err
-	}
+	iv := randomBytes(block.BlockSize())
 
 	outFile, err := os.Create(cipherTextFile)
 	if err != nil {
@@ -104,7 +97,7 @@ func (c *rsaCipher) Decrypt(cipherTextFile, plainTextFile string) error {
 		return err
 	}
 	if !bytes.Equal(preamble, []byte(asymKeyVersion)) {
-		return fmt.Errorf("file does not start with %v", asymKeyVersion)
+		return fmt.Errorf("file does not start with %s", asymKeyVersion)
 	}
 
 	var encAesKeyLen uint64

@@ -6,11 +6,11 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path"
 	"testing"
 
 	"gotest.tools/v3/assert"
-
-	"github.com/tomcz/s3backup/v2/internal/utils"
 )
 
 const loginJSON = `{
@@ -114,7 +114,9 @@ func TestLookupWithToken(t *testing.T) {
 
 	cert := ts.Certificate()
 	encoded := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: cert.Raw})
-	certFile, err := utils.CreateTempFile("vault", encoded)
+
+	certFile := path.Join(t.TempDir(), "vault")
+	err := os.WriteFile(certFile, encoded, 0644)
 	assert.NilError(t, err)
 
 	vault := Vault{

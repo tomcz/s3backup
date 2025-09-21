@@ -2,20 +2,18 @@ package crypto
 
 import (
 	"os"
+	"path"
 	"testing"
 
 	"gotest.tools/v3/assert"
-
-	"github.com/tomcz/s3backup/v2/internal/utils"
 )
 
 func TestVerifyHashOnSameFile(t *testing.T) {
-	buf, err := utils.Random(1024)
-	assert.NilError(t, err, "Cannot create file contents")
+	buf := randomBytes(1024)
 
-	file, err := utils.CreateTempFile("hash", buf)
+	file := path.Join(t.TempDir(), "data")
+	err := os.WriteFile(file, buf, 0600)
 	assert.NilError(t, err, "Cannot create file to hash")
-	defer os.Remove(file)
 
 	hash := NewHash()
 
@@ -26,19 +24,17 @@ func TestVerifyHashOnSameFile(t *testing.T) {
 }
 
 func TestVerifyHashOnDifferentFiles(t *testing.T) {
-	buf1, err := utils.Random(1024)
-	assert.NilError(t, err, "Cannot create file contents")
+	buf1 := randomBytes(1024)
+	buf2 := randomBytes(1024)
 
-	file1, err := utils.CreateTempFile("hash", buf1)
+	tempDir := t.TempDir()
+	file1 := path.Join(tempDir, "buf1")
+	file2 := path.Join(tempDir, "buf2")
+
+	err := os.WriteFile(file1, buf1, 0600)
 	assert.NilError(t, err, "Cannot create file to hash")
-	defer os.Remove(file1)
-
-	buf2, err := utils.Random(1024)
-	assert.NilError(t, err, "Cannot create file contents")
-
-	file2, err := utils.CreateTempFile("hash", buf2)
+	err = os.WriteFile(file2, buf2, 0600)
 	assert.NilError(t, err, "Cannot create file to hash")
-	defer os.Remove(file2)
 
 	hash := NewHash()
 

@@ -11,8 +11,6 @@ import (
 	"log"
 	"os"
 	"strings"
-
-	"github.com/tomcz/s3backup/v2/internal/utils"
 )
 
 const (
@@ -22,16 +20,20 @@ const (
 	rsaPrivateKey  = "PRIVATE KEY"
 )
 
-func GenerateAESKey() ([]byte, error) {
-	return utils.Random(32) // 256 bits
+func randomBytes(length int) []byte {
+	buf := make([]byte, length)
+	if _, err := rand.Read(buf); err != nil {
+		panic(err) // Read should always succeed according to sdk docs
+	}
+	return buf
 }
 
-func GenerateAESKeyString() (string, error) {
-	key, err := GenerateAESKey()
-	if err != nil {
-		return "", err
-	}
-	return base64.StdEncoding.EncodeToString(key), nil
+func GenerateAESKey() []byte {
+	return randomBytes(32) // 256 bits
+}
+
+func GenerateAESKeyString() string {
+	return base64.StdEncoding.EncodeToString(GenerateAESKey())
 }
 
 func parseAESKey(secretKey string) ([]byte, error) {
@@ -70,7 +72,7 @@ func GenerateRSAKeyPair(privKeyFile, pubKeyFile string) error {
 
 func decodePublicKey(block *pem.Block) (*rsa.PublicKey, error) {
 	if block.Type != rsaPublicKey {
-		return nil, fmt.Errorf("bad PEM block: expected %v, actual %v", rsaPublicKey, block.Type)
+		return nil, fmt.Errorf("bad PEM block: expected %s, actual %s", rsaPublicKey, block.Type)
 	}
 	pub, err := x509.ParsePKIXPublicKey(block.Bytes)
 	if err != nil {
@@ -85,7 +87,7 @@ func decodePublicKey(block *pem.Block) (*rsa.PublicKey, error) {
 
 func decodePrivateKey(block *pem.Block) (*rsa.PrivateKey, error) {
 	if block.Type != rsaPrivateKey {
-		return nil, fmt.Errorf("bad PEM block: expected %v, actual %v", rsaPrivateKey, block.Type)
+		return nil, fmt.Errorf("bad PEM block: expected %s, actual %s", rsaPrivateKey, block.Type)
 	}
 	return x509.ParsePKCS1PrivateKey(block.Bytes)
 }
@@ -116,7 +118,7 @@ func readFromPemFile(filePath string) (*pem.Block, error) {
 	}
 	block, _ := pem.Decode(buf)
 	if block == nil {
-		return nil, fmt.Errorf("%v does not contain a PEM block", filePath)
+		return nil, fmt.Errorf("%s does not contain a PEM block", filePath)
 	}
 	return block, nil
 }

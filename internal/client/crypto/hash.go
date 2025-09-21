@@ -24,7 +24,7 @@ func (h *shaHash) Calculate(filePath string) (string, error) {
 	defer file.Close()
 
 	hash := sha256.New()
-	if _, err := io.Copy(hash, file); err != nil {
+	if _, err = io.Copy(hash, file); err != nil {
 		return "", err
 	}
 
@@ -40,7 +40,7 @@ func (h *shaHash) Verify(filePath, expectedChecksum string) error {
 		return err
 	}
 	if expectedChecksum != actualChecksum {
-		return fmt.Errorf("checksum mismatch: expected %v, actual %v", expectedChecksum, actualChecksum)
+		return fmt.Errorf("checksum mismatch: expected %s, actual %s", expectedChecksum, actualChecksum)
 	}
 	return nil
 }

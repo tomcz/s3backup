@@ -18,7 +18,6 @@ import (
 	"github.com/tomcz/s3backup/v2/internal/client/crypto"
 	"github.com/tomcz/s3backup/v2/internal/client/store"
 	"github.com/tomcz/s3backup/v2/internal/config"
-	"github.com/tomcz/s3backup/v2/internal/utils"
 )
 
 // build information
@@ -203,7 +202,7 @@ func (c *vaultPutCommand) Run(ctx context.Context) error {
 	}
 	var pubKeyFile string
 	if cfg.PublicKey != "" {
-		pubKeyFile, err = utils.CreateTempFile("pub", []byte(cfg.PublicKey))
+		pubKeyFile, err = createPemKeyFile("pub", cfg.PublicKey)
 		if err != nil {
 			return err
 		}
@@ -225,7 +224,7 @@ func (c vaultGetCommand) Run(ctx context.Context) error {
 	}
 	var privKeyFile string
 	if cfg.PrivateKey != "" {
-		privKeyFile, err = utils.CreateTempFile("priv", []byte(cfg.PrivateKey))
+		privKeyFile, err = createPemKeyFile("priv", cfg.PrivateKey)
 		if err != nil {
 			return err
 		}
@@ -241,11 +240,7 @@ func (c vaultGetCommand) Run(ctx context.Context) error {
 }
 
 func (c *genAesCommand) Run() error {
-	key, err := crypto.GenerateAESKeyString()
-	if err != nil {
-		return err
-	}
-	fmt.Println(key)
+	fmt.Println(crypto.GenerateAESKeyString())
 	return nil
 }
 
@@ -364,6 +359,20 @@ func awsConfig(cfg *config.Config) awsFlags {
 		Region:    cfg.S3Region,
 		Endpoint:  cfg.S3Endpoint,
 	}
+}
+
+func createPemKeyFile(pattern string, contents string) (string, error) {
+	file, err := os.CreateTemp("", pattern)
+	if err != nil {
+		return "", err
+	}
+	defer file.Close()
+
+	_, err = file.WriteString(contents)
+	if err != nil {
+		return "", err
+	}
+	return file.Name(), nil
 }
 
 func removePemKeyFile(pemKeyFile string) {

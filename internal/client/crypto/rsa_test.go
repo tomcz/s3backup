@@ -2,28 +2,22 @@ package crypto
 
 import (
 	"os"
+	"path"
 	"testing"
 
 	"gotest.tools/v3/assert"
-
-	"github.com/tomcz/s3backup/v2/internal/utils"
 )
 
 func TestRoundTripRSAEncryptDecrypt(t *testing.T) {
-	expected, err := utils.Random(1024)
-	assert.NilError(t, err, "Cannot create file contents")
+	expected := randomBytes(1024)
 
-	file, err := utils.CreateTempFile("rsa", expected)
-	assert.NilError(t, err, "Cannot create file to encrypt")
-	defer os.Remove(file)
+	tmpDir := t.TempDir()
+	file := path.Join(tmpDir, "data")
+	privFile := path.Join(tmpDir, "priv")
+	pubFile := path.Join(tmpDir, "pub")
 
-	privFile, err := utils.CreateTempFile("privkey", []byte{})
-	assert.NilError(t, err, "Cannot create private key file")
-	defer os.Remove(privFile)
-
-	pubFile, err := utils.CreateTempFile("pubkey", []byte{})
-	assert.NilError(t, err, "Cannot create public key file")
-	defer os.Remove(pubFile)
+	err := os.WriteFile(file, expected, 0600)
+	assert.NilError(t, err, "Failed to write data file")
 
 	assert.NilError(t, GenerateRSAKeyPair(privFile, pubFile), "Cannot generate RSA key pair")
 
@@ -34,10 +28,7 @@ func TestRoundTripRSAEncryptDecrypt(t *testing.T) {
 	assert.NilError(t, err, "Cannot create RSA public cipher")
 
 	encryptedFile := file + ".enc"
-	defer os.Remove(encryptedFile)
-
 	decryptedFile := file + ".dec"
-	defer os.Remove(decryptedFile)
 
 	assert.NilError(t, pubCipher.Encrypt(file, encryptedFile), "Cannot encrypt file")
 	assert.NilError(t, privCipher.Decrypt(encryptedFile, decryptedFile), "Cannot decrypt file")
