@@ -94,7 +94,7 @@ func (v Vault) lookup(ctx context.Context, client *vault.Client) (*Config, error
 	if err != nil {
 		return nil, fmt.Errorf("vault.Read: %w", responseError(err))
 	}
-	data := getData(secret, v.IsKV2)
+	data := v.getData(secret)
 	if data == nil {
 		return nil, fmt.Errorf("secret not found at path %q", v.Path)
 	}
@@ -105,11 +105,11 @@ func (v Vault) lookup(ctx context.Context, client *vault.Client) (*Config, error
 	return &cfg, nil
 }
 
-func getData(secret *vault.Response[map[string]interface{}], isKV2 bool) any {
+func (v Vault) getData(secret *vault.Response[map[string]interface{}]) any {
 	if secret == nil || secret.Data == nil {
 		return nil
 	}
-	if isKV2 {
+	if v.IsKV2 {
 		return secret.Data["data"]
 	}
 	return secret.Data
