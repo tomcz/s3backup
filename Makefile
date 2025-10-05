@@ -25,7 +25,7 @@ target:
 
 .PHONY: format
 format:
-	goimports -w -local github.com/tomcz/s3backup cmd/ internal/ tools/
+	golangci-lint fmt
 
 .PHONY: lint
 lint:

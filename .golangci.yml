@@ -1,4 +1,14 @@
 version: "2"
+formatters:
+  enable:
+    - gci
+  settings:
+    gci:
+      custom-order: true
+      sections:
+        - standard
+        - default
+        - localmodule
 linters:
   exclusions:
     presets:
