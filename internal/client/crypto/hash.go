@@ -1,9 +1,10 @@
 package crypto
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"encoding/base64"
-	"fmt"
+	"errors"
 	"io"
 	"os"
 
@@ -17,30 +18,45 @@ func NewHash() client.Hash {
 }
 
 func (h *shaHash) Calculate(filePath string) (string, error) {
-	file, err := os.Open(filePath)
+	sum, err := h.shasum(filePath)
 	if err != nil {
 		return "", err
+	}
+	return base64.StdEncoding.EncodeToString(sum), nil
+}
+
+func (h *shaHash) Verify(filePath, expectedChecksum string) error {
+	expected, err := h.decode(expectedChecksum)
+	if err != nil {
+		return err
+	}
+	actual, err := h.shasum(filePath)
+	if err != nil {
+		return err
+	}
+	if bytes.Equal(actual, expected) {
+		return nil
+	}
+	return errors.New("checksum: mismatch")
+}
+
+func (h *shaHash) shasum(filePath string) ([]byte, error) {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return nil, err
 	}
 	defer file.Close()
 
 	hash := sha256.New()
 	if _, err = io.Copy(hash, file); err != nil {
-		return "", err
+		return nil, err
 	}
-
-	return base64.StdEncoding.EncodeToString(hash.Sum(nil)), nil
+	return hash.Sum(nil), nil
 }
 
-func (h *shaHash) Verify(filePath, expectedChecksum string) error {
-	if expectedChecksum == "" {
-		return fmt.Errorf("checksum error: expected is blank")
+func (h *shaHash) decode(expected string) ([]byte, error) {
+	if expected == "" {
+		return nil, errors.New("checksum: expected is blank")
 	}
-	actualChecksum, err := h.Calculate(filePath)
-	if err != nil {
-		return err
-	}
-	if expectedChecksum != actualChecksum {
-		return fmt.Errorf("checksum mismatch: expected %s, actual %s", expectedChecksum, actualChecksum)
-	}
-	return nil
+	return base64.StdEncoding.DecodeString(expected)
 }

@@ -20,7 +20,8 @@ func TestVerifyHashOnSameFile(t *testing.T) {
 	checksum, err := hash.Calculate(file)
 	assert.NilError(t, err, "Cannot create checksum")
 
-	assert.NilError(t, hash.Verify(file, checksum), "Unexpected mismatch")
+	err = hash.Verify(file, checksum)
+	assert.NilError(t, err, "Unexpected mismatch")
 }
 
 func TestVerifyHashOnDifferentFiles(t *testing.T) {
@@ -41,11 +42,12 @@ func TestVerifyHashOnDifferentFiles(t *testing.T) {
 	checksum, err := hash.Calculate(file1)
 	assert.NilError(t, err, "Cannot create checksum")
 
-	assert.ErrorContains(t, hash.Verify(file2, checksum), "checksum mismatch")
+	err = hash.Verify(file2, checksum)
+	assert.Error(t, err, "checksum: mismatch")
 }
 
 func TestVerifyHashBlank(t *testing.T) {
 	hash := NewHash()
 	err := hash.Verify("wibble", "")
-	assert.Error(t, err, "checksum error: expected is blank")
+	assert.Error(t, err, "checksum: expected is blank")
 }
