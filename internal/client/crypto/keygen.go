@@ -42,17 +42,12 @@ func parseAESKey(secretKey string) ([]byte, error) {
 		return nil, fmt.Errorf("cannot use blank secret key")
 	}
 	key, err := base64.StdEncoding.DecodeString(secretKey)
-	if err != nil {
-		// assume the key should be hashed instead
-		sum := sha256.Sum256([]byte(secretKey))
-		key = sum[:]
+	if err == nil && len(key) == 32 {
+		return key, nil
 	}
-	if len(key) != 32 {
-		// key is not quite right so we hash it
-		sum := sha256.Sum256(key)
-		key = sum[:]
-	}
-	return key, nil
+	log.Println("Note: derived AES keys offer better security")
+	sum := sha256.Sum256([]byte(secretKey))
+	return sum[:], nil
 }
 
 func GenerateRSAKeyPair(privKeyFile, pubKeyFile string) error {
