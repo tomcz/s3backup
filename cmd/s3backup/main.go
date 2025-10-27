@@ -8,9 +8,11 @@ import (
 	"os"
 	"os/signal"
 	"runtime/debug"
+	"slices"
+	"strings"
 
-	"github.com/AlecAivazis/survey/v2"
 	"github.com/alecthomas/kong"
+	"github.com/manifoldco/promptui"
 
 	"github.com/tomcz/s3backup/v2/internal/client"
 	"github.com/tomcz/s3backup/v2/internal/client/crypto"
@@ -354,16 +356,41 @@ func (o cipherOpts) Cipher() (client.Cipher, error) {
 	return nil, nil
 }
 
-func askForSymKey() (symKey string, err error) {
-	prompt := &survey.Password{Message: "Enter password or base64-encoded key:"}
-	err = survey.AskOne(prompt, &symKey, survey.WithValidator(survey.Required))
-	return
+func askForSymKey() (string, error) {
+	validate := func(s string) error {
+		if strings.TrimSpace(s) == "" {
+			//goland:noinspection GoErrorStringFormat
+			return errors.New("Non-blank value is required") //nolint
+		}
+		return nil
+	}
+	prompt := promptui.Prompt{
+		Label:    "Enter password or base64-encoded key",
+		Validate: validate,
+		Mask:     '*',
+	}
+	return prompt.Run()
 }
 
-func askToDerive() (derive bool, err error) {
-	prompt := &survey.Confirm{Message: "Derive AES key from password?", Default: true}
-	err = survey.AskOne(prompt, &derive)
-	return
+func askToDerive() (bool, error) {
+	valid := []string{"y", "yes", "n", "no"}
+	validate := func(s string) error {
+		value := strings.ToLower(s)
+		if !slices.Contains(valid, value) {
+			//goland:noinspection GoErrorStringFormat
+			return errors.New("Please use one of " + strings.Join(valid, ", ")) //nolint
+		}
+		return nil
+	}
+	prompt := promptui.Prompt{
+		Label:    "Derive AES key from password? (yes/no)",
+		Validate: validate,
+	}
+	res, err := prompt.Run()
+	if err != nil {
+		return false, err
+	}
+	return strings.HasPrefix(strings.ToLower(res), "y"), nil
 }
 
 func checkPaths(inRemote, inLocal string) (outRemote string, outLocal string, err error) {
