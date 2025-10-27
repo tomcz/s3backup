@@ -13,21 +13,23 @@ import (
 	"github.com/tomcz/s3backup/v2/internal/client"
 )
 
-type aesPwdCipher struct {
-	password []byte
-	saltSize int
+type derivedAesCipher struct {
+	password   []byte
+	saltSize   int
+	scryptCost int
 }
 
-func NewAesPwdCipher(password string) client.Cipher {
-	return &aesPwdCipher{
-		password: []byte(password),
-		saltSize: 16,
+func NewDerivedAESCipher(password string) client.Cipher {
+	return &derivedAesCipher{
+		password:   []byte(password),
+		saltSize:   16,
+		scryptCost: 1 << 20,
 	}
 }
 
-func (a *aesPwdCipher) Encrypt(plainTextFile, cipherTextFile string) error {
-	salt := randomBytes(a.saltSize)
-	key, err := a.deriveKey(salt)
+func (c *derivedAesCipher) Encrypt(plainTextFile, cipherTextFile string) error {
+	salt := randomBytes(c.saltSize)
+	key, err := c.deriveKey(salt)
 	if err != nil {
 		return err
 	}
@@ -65,7 +67,7 @@ func (a *aesPwdCipher) Encrypt(plainTextFile, cipherTextFile string) error {
 	return err
 }
 
-func (a *aesPwdCipher) Decrypt(cipherTextFile, plainTextFile string) error {
+func (c *derivedAesCipher) Decrypt(cipherTextFile, plainTextFile string) error {
 	inFile, err := os.Open(cipherTextFile)
 	if err != nil {
 		return err
@@ -79,11 +81,11 @@ func (a *aesPwdCipher) Decrypt(cipherTextFile, plainTextFile string) error {
 	if !bytes.Equal(preamble, []byte(pwdKeyVersion)) {
 		return fmt.Errorf("file does not start with %s", pwdKeyVersion)
 	}
-	salt := make([]byte, a.saltSize)
+	salt := make([]byte, c.saltSize)
 	if _, err = inFile.Read(salt); err != nil {
 		return err
 	}
-	key, err := a.deriveKey(salt)
+	key, err := c.deriveKey(salt)
 	if err != nil {
 		return err
 	}
@@ -108,6 +110,6 @@ func (a *aesPwdCipher) Decrypt(cipherTextFile, plainTextFile string) error {
 	return err
 }
 
-func (a *aesPwdCipher) deriveKey(salt []byte) ([]byte, error) {
-	return scrypt.Key(a.password, salt, 1<<20, 8, 1, 32)
+func (c *derivedAesCipher) deriveKey(salt []byte) ([]byte, error) {
+	return scrypt.Key(c.password, salt, c.scryptCost, 8, 1, 32)
 }
