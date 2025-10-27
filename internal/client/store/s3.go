@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/request"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/aws/aws-sdk-go/aws"                  //nolint:staticcheck
+	"github.com/aws/aws-sdk-go/aws/credentials"      //nolint:staticcheck
+	"github.com/aws/aws-sdk-go/aws/request"          //nolint:staticcheck
+	"github.com/aws/aws-sdk-go/aws/session"          //nolint:staticcheck
+	"github.com/aws/aws-sdk-go/service/s3"           //nolint:staticcheck
+	"github.com/aws/aws-sdk-go/service/s3/s3manager" //nolint:staticcheck
 
 	"github.com/tomcz/s3backup/v2/internal/client"
 )

@@ -7,8 +7,8 @@ import (
 	"path"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/aws"        //nolint:staticcheck
+	"github.com/aws/aws-sdk-go/service/s3" //nolint:staticcheck
 	"github.com/johannesboyne/gofakes3"
 	"github.com/johannesboyne/gofakes3/backend/s3mem"
 	"gotest.tools/v3/assert"
