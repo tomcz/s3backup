@@ -2,17 +2,15 @@ package main
 
 import (
 	"context"
-	"encoding/base64"
 	"errors"
 	"fmt"
 	"log"
 	"os"
 	"os/signal"
 	"runtime/debug"
-	"syscall"
 
+	"github.com/AlecAivazis/survey/v2"
 	"github.com/alecthomas/kong"
-	"golang.org/x/term"
 
 	"github.com/tomcz/s3backup/v2/internal/client"
 	"github.com/tomcz/s3backup/v2/internal/client/crypto"
@@ -47,14 +45,14 @@ type getFlags struct {
 }
 
 type encryptFlags struct {
-	Derive bool   `help:"Use secure key derivation for AES passwords"`
-	SymKey string `name:"symKey" placeholder:"value" help:"Password to use for symmetric AES encryption (Use 'ask' to enter a password via an interactive prompt)"`
+	SymKey string `name:"symKey" placeholder:"value" help:"Password or base64-encoded key to use for symmetric AES encryption (Use 'ask' to enter a password or key via an interactive prompt)"`
+	Derive bool   `help:"Use cryptographic key derivation from symKey passwords. Slower, but stronger and more secure keys"`
 	PemKey string `name:"pemKey" placeholder:"FILE"  help:"Path to PEM-encoded public key file"`
 }
 
 type decryptFlags struct {
-	Derive bool   `help:"Use secure key derivation for AES passwords"`
-	SymKey string `name:"symKey" placeholder:"value" help:"Password to use for symmetric AES decryption (Use 'ask' to enter a password via an interactive prompt)"`
+	SymKey string `name:"symKey" placeholder:"value" help:"Password or base64-encoded key to use for symmetric AES decryption (Use 'ask' to enter a password or key via an interactive prompt)"`
+	Derive bool   `help:"Use cryptographic key derivation from symKey passwords. Slower, but stronger and more secure keys"`
 	PemKey string `name:"pemKey" placeholder:"FILE"  help:"Path to PEM-encoded private key file"`
 }
 
@@ -152,7 +150,7 @@ func main() {
 	app := kong.Parse(&appCfg{}, opts...)
 	app.BindTo(ctx, (*context.Context)(nil))
 	if err := app.Run(); err != nil {
-		log.Fatalln(err)
+		log.Fatalln("Failed:", err)
 	}
 }
 
@@ -332,22 +330,20 @@ type cipherOpts struct {
 	derive bool
 }
 
-//goland:noinspection ALL
 func (o cipherOpts) Cipher() (client.Cipher, error) {
 	if o.symKey == "ask" {
-		fmt.Print("Enter password: ")
-		buf, err := term.ReadPassword(int(syscall.Stdin))
+		var err error
+		o.symKey, err = askForSymKey()
 		if err != nil {
 			return nil, err
 		}
-		fmt.Println()
-		if len(buf) == 0 {
-			return nil, errors.New("empty passwords are not allowed")
+		o.derive, err = askToDerive()
+		if err != nil {
+			return nil, err
 		}
-		o.symKey = base64.StdEncoding.EncodeToString(buf)
 	}
 	if o.symKey != "" && o.derive {
-		return crypto.NewAesPwdCipher(o.symKey), nil
+		return crypto.NewDerivedAESCipher(o.symKey), nil
 	}
 	if o.symKey != "" {
 		return crypto.NewAESCipher(o.symKey)
@@ -356,6 +352,18 @@ func (o cipherOpts) Cipher() (client.Cipher, error) {
 		return crypto.NewRSACipher(o.pemKey)
 	}
 	return nil, nil
+}
+
+func askForSymKey() (symKey string, err error) {
+	prompt := &survey.Password{Message: "Enter password or base64-encoded key:"}
+	err = survey.AskOne(prompt, &symKey, survey.WithValidator(survey.Required))
+	return
+}
+
+func askToDerive() (derive bool, err error) {
+	prompt := &survey.Confirm{Message: "Derive AES key from password?", Default: true}
+	err = survey.AskOne(prompt, &derive)
+	return
 }
 
 func checkPaths(inRemote, inLocal string) (outRemote string, outLocal string, err error) {
