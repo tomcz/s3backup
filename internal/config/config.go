@@ -1,6 +1,7 @@
 package config
 
 type Config struct {
+	DeriveKey   bool   `mapstructure:"derive_key"`    // Optional but highly recommended
 	CipherKey   string `mapstructure:"cipher_key"`    // Optional but highly recommended
 	PublicKey   string `mapstructure:"public_key"`    // Optional but highly recommended
 	PrivateKey  string `mapstructure:"private_key"`   // Optional but highly recommended

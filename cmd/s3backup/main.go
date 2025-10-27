@@ -47,11 +47,13 @@ type getFlags struct {
 }
 
 type encryptFlags struct {
+	Derive bool   `help:"Use secure key derivation for AES passwords"`
 	SymKey string `name:"symKey" placeholder:"value" help:"Password to use for symmetric AES encryption (Use 'ask' to enter a password via an interactive prompt)"`
 	PemKey string `name:"pemKey" placeholder:"FILE"  help:"Path to PEM-encoded public key file"`
 }
 
 type decryptFlags struct {
+	Derive bool   `help:"Use secure key derivation for AES passwords"`
 	SymKey string `name:"symKey" placeholder:"value" help:"Password to use for symmetric AES decryption (Use 'ask' to enter a password via an interactive prompt)"`
 	PemKey string `name:"pemKey" placeholder:"FILE"  help:"Path to PEM-encoded private key file"`
 }
@@ -172,7 +174,12 @@ func (c *versionCommand) Run() error {
 }
 
 func (c *putCommand) Run(ctx context.Context) error {
-	app, err := newClient(c.awsFlags, c.SymKey, c.PemKey, c.SkipHash)
+	co := cipherOpts{
+		symKey: c.SymKey,
+		pemKey: c.PemKey,
+		derive: c.Derive,
+	}
+	app, err := newClient(c.awsFlags, co, c.SkipHash)
 	if err != nil {
 		return err
 	}
@@ -184,7 +191,12 @@ func (c *putCommand) Run(ctx context.Context) error {
 }
 
 func (c *getCommand) Run(ctx context.Context) error {
-	app, err := newClient(c.awsFlags, c.SymKey, c.PemKey, c.SkipHash)
+	co := cipherOpts{
+		symKey: c.SymKey,
+		pemKey: c.PemKey,
+		derive: c.Derive,
+	}
+	app, err := newClient(c.awsFlags, co, c.SkipHash)
 	if err != nil {
 		return err
 	}
@@ -210,9 +222,13 @@ func (c *vaultPutCommand) Run(ctx context.Context) error {
 	defer removePemKeyFile(pubKeyFile)
 
 	cmd := &putCommand{
-		putFlags:     c.putFlags,
-		awsFlags:     awsConfig(cfg),
-		encryptFlags: encryptFlags{SymKey: cfg.CipherKey, PemKey: pubKeyFile},
+		putFlags: c.putFlags,
+		awsFlags: awsConfig(cfg),
+		encryptFlags: encryptFlags{
+			SymKey: cfg.CipherKey,
+			PemKey: pubKeyFile,
+			Derive: cfg.DeriveKey,
+		},
 	}
 	return cmd.Run(ctx)
 }
@@ -232,9 +248,13 @@ func (c vaultGetCommand) Run(ctx context.Context) error {
 	defer removePemKeyFile(privKeyFile)
 
 	cmd := &getCommand{
-		getFlags:     c.getFlags,
-		awsFlags:     awsConfig(cfg),
-		decryptFlags: decryptFlags{SymKey: cfg.CipherKey, PemKey: privKeyFile},
+		getFlags: c.getFlags,
+		awsFlags: awsConfig(cfg),
+		decryptFlags: decryptFlags{
+			SymKey: cfg.CipherKey,
+			PemKey: privKeyFile,
+			Derive: cfg.DeriveKey,
+		},
 	}
 	return cmd.Run(ctx)
 }
@@ -249,7 +269,12 @@ func (c *genRsaCommand) Run() error {
 }
 
 func (c *encryptCommand) Run() error {
-	cipher, err := newCipher(c.SymKey, c.PemKey)
+	co := cipherOpts{
+		symKey: c.SymKey,
+		pemKey: c.PemKey,
+		derive: c.Derive,
+	}
+	cipher, err := co.Cipher()
 	if err != nil {
 		return err
 	}
@@ -260,7 +285,12 @@ func (c *encryptCommand) Run() error {
 }
 
 func (c *decryptCommand) Run() error {
-	cipher, err := newCipher(c.SymKey, c.PemKey)
+	co := cipherOpts{
+		symKey: c.SymKey,
+		pemKey: c.PemKey,
+		derive: c.Derive,
+	}
+	cipher, err := co.Cipher()
 	if err != nil {
 		return err
 	}
@@ -270,7 +300,7 @@ func (c *decryptCommand) Run() error {
 	return cipher.Decrypt(c.InputFile, c.OutputFile)
 }
 
-func newClient(af awsFlags, symKey, pemKey string, skipHash bool) (*client.Client, error) {
+func newClient(af awsFlags, co cipherOpts, skipHash bool) (*client.Client, error) {
 	aws := store.AwsS3{
 		AccessKey: af.AccessKey,
 		SecretKey: af.SecretKey,
@@ -282,7 +312,7 @@ func newClient(af awsFlags, symKey, pemKey string, skipHash bool) (*client.Clien
 	if err != nil {
 		return nil, err
 	}
-	cipher, err := newCipher(symKey, pemKey)
+	cipher, err := co.Cipher()
 	if err != nil {
 		return nil, err
 	}
@@ -296,9 +326,15 @@ func newClient(af awsFlags, symKey, pemKey string, skipHash bool) (*client.Clien
 	return app, nil
 }
 
+type cipherOpts struct {
+	symKey string
+	pemKey string
+	derive bool
+}
+
 //goland:noinspection ALL
-func newCipher(symKey, pemKey string) (client.Cipher, error) {
-	if symKey == "ask" {
+func (o cipherOpts) Cipher() (client.Cipher, error) {
+	if o.symKey == "ask" {
 		fmt.Print("Enter password: ")
 		buf, err := term.ReadPassword(int(syscall.Stdin))
 		if err != nil {
@@ -308,13 +344,16 @@ func newCipher(symKey, pemKey string) (client.Cipher, error) {
 		if len(buf) == 0 {
 			return nil, errors.New("empty passwords are not allowed")
 		}
-		symKey = base64.StdEncoding.EncodeToString(buf)
+		o.symKey = base64.StdEncoding.EncodeToString(buf)
 	}
-	if symKey != "" {
-		return crypto.NewAESCipher(symKey)
+	if o.symKey != "" && o.derive {
+		return crypto.NewAesPwdCipher(o.symKey), nil
 	}
-	if pemKey != "" {
-		return crypto.NewRSACipher(pemKey)
+	if o.symKey != "" {
+		return crypto.NewAESCipher(o.symKey)
+	}
+	if o.pemKey != "" {
+		return crypto.NewRSACipher(o.pemKey)
 	}
 	return nil, nil
 }

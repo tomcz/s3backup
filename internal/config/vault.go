@@ -99,7 +99,7 @@ func (v Vault) lookup(ctx context.Context, client *vault.Client) (*Config, error
 		return nil, fmt.Errorf("secret not found at path %q", v.Path)
 	}
 	var cfg Config
-	if err = mapstructure.Decode(data, &cfg); err != nil {
+	if err = mapstructure.WeakDecode(data, &cfg); err != nil {
 		return nil, fmt.Errorf("secret.Decode: %w", err)
 	}
 	return &cfg, nil

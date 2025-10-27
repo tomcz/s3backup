@@ -1,15 +1,16 @@
 module github.com/tomcz/s3backup/v2
 
-go 1.24
+go 1.25
 
 require (
 	github.com/alecthomas/kong v1.12.1
-	github.com/aws/aws-sdk-go v1.55.7
-	github.com/go-viper/mapstructure/v2 v2.3.0
+	github.com/aws/aws-sdk-go v1.55.8
+	github.com/go-viper/mapstructure/v2 v2.4.0
 	github.com/hashicorp/vault-client-go v0.4.3
 	github.com/johannesboyne/gofakes3 v0.0.0-20241026070602-0da3aa9c32ca
 	github.com/matryer/moq v0.5.3
-	golang.org/x/term v0.7.0
+	golang.org/x/crypto v0.43.0
+	golang.org/x/term v0.36.0
 	gotest.tools/v3 v3.5.1
 )
 
@@ -26,7 +27,7 @@ require (
 	go.shabbyrobe.org/gocovmerge v0.0.0-20230507111327-fa4f82cfbf4d // indirect
 	golang.org/x/mod v0.23.0 // indirect
 	golang.org/x/sync v0.11.0 // indirect
-	golang.org/x/sys v0.33.0 // indirect
-	golang.org/x/time v0.12.0 // indirect
+	golang.org/x/sys v0.37.0 // indirect
+	golang.org/x/time v0.14.0 // indirect
 	golang.org/x/tools v0.30.0 // indirect
 )

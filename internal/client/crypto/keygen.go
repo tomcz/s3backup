@@ -15,6 +15,7 @@ import (
 
 const (
 	symKeyVersion  = "BSKv1"
+	pwdKeyVersion  = "BSKv2"
 	asymKeyVersion = "BAKv1"
 	rsaPublicKey   = "PUBLIC KEY"
 	rsaPrivateKey  = "PRIVATE KEY"
