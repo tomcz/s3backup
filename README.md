@@ -6,7 +6,7 @@ You can download the latest release from [here](https://github.com/tomcz/s3backu
 
 ## Upload process
 
-1. Encrypt the file to be backed up (optional but highly recommended). `s3backup` uses AES-256 encryption via a password of your choice, a Base64-encoded secret key, or a PEM-encoded RSA public key. If a public key is provided, `s3backup` will generate a random 256-bit symmetric key which will be encrypted using the public key and stored with the encrypted file. To make key creation easier, you can use the `keygen` commands as outlined [below](#backup-key-generation).
+1. Encrypt the file to be backed up (optional but highly recommended). `s3backup` uses AES-256 encryption via a password of your choice (with optional scrypt key derivation), a Base64-encoded secret key, or a PEM-encoded RSA public key. If a public key is provided, `s3backup` will generate a random 256-bit symmetric key which will be encrypted using the public key and stored with the encrypted file. To make key creation easier, you can use the `keygen` commands as outlined [below](#backup-key-generation).
 
 2. Calculate SHA-256 checksum for the file to be uploaded. For encrypted uploads the checksum is calculated on the encrypted file.
 
@@ -68,8 +68,11 @@ Flags:
   -h, --help               Show context-sensitive help.
 
       --nocheck            Do not create backup checksums
-      --symKey=value       Password to use for symmetric AES encryption (Use
-                           'ask' to enter a password via an interactive prompt)
+      --symKey=value       Password or base64-encoded key to use for symmetric
+                           AES encryption (Use 'ask' to enter a password or key
+                           via an interactive prompt)
+      --derive             Use cryptographic key derivation from symKey
+                           passwords. Slower, but stronger and more secure keys
       --pemKey=FILE        Path to PEM-encoded public key file
       --accessKey=value    AWS Access Key ID (if not using default AWS
                            credentials)
@@ -95,8 +98,11 @@ Flags:
   -h, --help               Show context-sensitive help.
 
       --nocheck            Do not verify backup checksums
-      --symKey=value       Password to use for symmetric AES decryption (Use
-                           'ask' to enter a password via an interactive prompt)
+      --symKey=value       Password or base64-encoded key to use for symmetric
+                           AES decryption (Use 'ask' to enter a password or key
+                           via an interactive prompt)
+      --derive             Use cryptographic key derivation from symKey
+                           passwords. Slower, but stronger and more secure keys
       --pemKey=FILE        Path to PEM-encoded private key file
       --accessKey=value    AWS Access Key ID (if not using default AWS
                            credentials)
