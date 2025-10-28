@@ -356,48 +356,42 @@ func (o cipherOpts) Cipher() (client.Cipher, error) {
 	return nil, nil
 }
 
+//goland:noinspection GoErrorStringFormat
 func askForSymKey() (string, error) {
-	validate := func(s string) error {
-		if strings.TrimSpace(s) == "" {
-			//goland:noinspection GoErrorStringFormat
-			return errors.New("Non-blank value is required") //nolint
-		}
-		return nil
-	}
 	prompt := promptui.Prompt{
-		Label:    "Enter password or base64-encoded key",
-		Mask:     '*',
-		Validate: validate,
-		Pointer:  betterPointer,
+		Label: "Enter password or base64-encoded key",
+		Mask:  '*',
+		Validate: func(s string) error {
+			if strings.TrimSpace(s) == "" {
+				return errors.New("Non-blank value is required.") //nolint
+			}
+			return nil
+		},
 	}
 	return prompt.Run()
 }
 
+//goland:noinspection GoErrorStringFormat
 func askToDerive() (bool, error) {
-	valid := []string{"y", "yes", "n", "no"}
-	validate := func(s string) error {
-		value := strings.ToLower(s)
-		if !slices.Contains(valid, value) {
-			//goland:noinspection GoErrorStringFormat
-			return errors.New("Please use one of " + strings.Join(valid, ", ")) //nolint
-		}
-		return nil
-	}
+	validYesNo := []string{"y", "yes", "n", "no"}
 	prompt := promptui.Prompt{
-		Label:    "Derive AES key from password? (Y/n)",
-		Default:  "Y",
-		Validate: validate,
-		Pointer:  betterPointer,
+		Label:   "Derive AES key from password? (Y/n)",
+		Default: "Y",
+		Validate: func(s string) error {
+			if !slices.Contains(validYesNo, strings.ToLower(s)) {
+				return fmt.Errorf("Please use one of %s.", strings.Join(validYesNo, ", ")) //nolint
+			}
+			return nil
+		},
+		Pointer: func(input []rune) []rune {
+			return slices.Concat(input, []rune("\u2588"))
+		},
 	}
 	res, err := prompt.Run()
 	if err != nil {
 		return false, err
 	}
 	return strings.HasPrefix(strings.ToLower(res), "y"), nil
-}
-
-func betterPointer(input []rune) []rune {
-	return slices.Concat(input, []rune("\u2588"))
 }
 
 func checkPaths(inRemote, inLocal string) (outRemote string, outLocal string, err error) {
