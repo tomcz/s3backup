@@ -366,8 +366,9 @@ func askForSymKey() (string, error) {
 	}
 	prompt := promptui.Prompt{
 		Label:    "Enter password or base64-encoded key",
-		Validate: validate,
 		Mask:     '*',
+		Validate: validate,
+		Pointer:  betterPointer,
 	}
 	return prompt.Run()
 }
@@ -383,14 +384,20 @@ func askToDerive() (bool, error) {
 		return nil
 	}
 	prompt := promptui.Prompt{
-		Label:    "Derive AES key from password? (yes/no)",
+		Label:    "Derive AES key from password? (Y/n)",
+		Default:  "Y",
 		Validate: validate,
+		Pointer:  betterPointer,
 	}
 	res, err := prompt.Run()
 	if err != nil {
 		return false, err
 	}
 	return strings.HasPrefix(strings.ToLower(res), "y"), nil
+}
+
+func betterPointer(input []rune) []rune {
+	return slices.Concat(input, []rune("\u2588"))
 }
 
 func checkPaths(inRemote, inLocal string) (outRemote string, outLocal string, err error) {
