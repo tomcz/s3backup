@@ -45,7 +45,6 @@ func parseAESKey(secretKey string) ([]byte, error) {
 	if err == nil && len(key) == 32 {
 		return key, nil
 	}
-	log.Println("Note: derived AES keys offer better security")
 	sum := sha256.Sum256([]byte(secretKey))
 	return sum[:], nil
 }
