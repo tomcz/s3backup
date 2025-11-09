@@ -36,7 +36,7 @@ const secretJSON = `{
   "auth": null,
   "data": {
     "cipher_key": "use me to encrypt",
-    "old_password": true,
+    "use_old_pass": true,
     "s3_access_key": "aws access",
     "s3_secret_key": "aws secret",
     "s3_token": "aws token",
