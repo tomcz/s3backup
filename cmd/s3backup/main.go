@@ -103,7 +103,7 @@ func main() {
 	cmdVaultGet := &cli.Command{
 		Name:      "vault-get",
 		Usage:     "Download file from S3 bucket using credentials from vault",
-		Arguments: putArgs(),
+		Arguments: getArgs(),
 		Action:    vaultGet,
 		Flags:     vaultFlags(false),
 	}
