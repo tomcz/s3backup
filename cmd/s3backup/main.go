@@ -190,7 +190,7 @@ func cipherFlags(encrypt bool) []cli.Flag {
 		&cli.StringFlag{
 			Name:        "symKey",
 			Aliases:     []string{"sym"},
-			Usage:       fmt.Sprintf("Password or base64-encoded key to use for symmetric AES %s; use \"ask\" to provide it via an interactive prompt", sym),
+			Usage:       fmt.Sprintf("Password or base64-encoded key to use for symmetric AES %s. Use \"ask\" as the value to provide a password via an interactive prompt", sym),
 			Destination: &symKeyValue,
 			Sources:     maybeFromEnvOrYaml("symKey"),
 		},
@@ -237,7 +237,7 @@ func basicFlags(encrypt bool) []cli.Flag {
 		},
 		&cli.StringFlag{
 			Name:        "token",
-			Usage:       "AWS Token (effective only when accessKey is provided, depends on your AWS setup)",
+			Usage:       "AWS Token (effective only when accessKey is provided & only if required by your AWS setup)",
 			Destination: &awsToken,
 			Sources:     maybeFromEnvOrYaml("token"),
 		},

@@ -61,17 +61,17 @@ USAGE:
 OPTIONS:
    --oldPass, --old, -o           Maintain password compatibility with older s3backup releases
    --symKey string, --sym string  Password or base64-encoded key to use for symmetric AES
-                                  encryption; use "ask" to provide it via an interactive prompt
+                                  encryption. Use "ask" as the value to provide a password via
+                                  an interactive prompt
    --pemKey FILE, --pem FILE      Path to PEM-encoded public key FILE
    --accessKey string             AWS Access Key ID (if not using default AWS credentials)
    --secretKey string             AWS Secret Key (required when accessKey is provided)
-   --token string                 AWS Token (effective only when accessKey is provided,
-                                  depends on your AWS setup)
+   --token string                 AWS Token (effective only when accessKey is provided & only
+                                  if required by your AWS setup)
    --region string                AWS Region (we use AWS defaults if not provided)
    --endpoint URL                 Custom AWS Endpoint URL (optional)
    --nocheck                      Do not create backup checksums
    --help, -h                     show help
-
 ```
 
 #### s3backup get
@@ -85,12 +85,13 @@ USAGE:
 
 OPTIONS:
    --symKey string, --sym string  Password or base64-encoded key to use for symmetric AES
-                                  decryption; use "ask" to provide it via an interactive prompt
+                                  decryption. Use "ask" as the value to provide a password
+                                  via an interactive prompt
    --pemKey FILE, --pem FILE      Path to PEM-encoded private key FILE
    --accessKey string             AWS Access Key ID (if not using default AWS credentials)
    --secretKey string             AWS Secret Key (required when accessKey is provided)
-   --token string                 AWS Token (effective only when accessKey is provided,
-                                  depends on your AWS setup)
+   --token string                 AWS Token (effective only when accessKey is provided & only
+                                  if required by your AWS setup)
    --region string                AWS Region (we use AWS defaults if not provided)
    --endpoint URL                 Custom AWS Endpoint URL (optional)
    --nocheck                      Do not verify backup checksums
