@@ -60,12 +60,13 @@ USAGE:
 
 OPTIONS:
    --oldPass, --old, -o           Maintain password compatiblilty with older s3backup releases
-   --symKey string, --sym string  Password or base64-encoded key to use for symmetric AES encryption;
-                                  use "ask" to provide it via an interactive prompt
+   --symKey string, --sym string  Password or base64-encoded key to use for symmetric AES
+                                  encryption; use "ask" to provide it via an interactive prompt
    --pemKey FILE, --pem FILE      Path to PEM-encoded public key FILE
    --accessKey string             AWS Access Key ID (if not using default AWS credentials)
    --secretKey string             AWS Secret Key (required when accessKey is provided)
-   --token string                 AWS Token (effective only when accessKey is provided, depends on your AWS setup)
+   --token string                 AWS Token (effective only when accessKey is provided,
+                                  depends on your AWS setup)
    --region string                AWS Region (we use AWS defaults if not provided)
    --endpoint URL                 Custom AWS Endpoint URL (optional)
    --nocheck                      Do not create backup checksums
@@ -83,12 +84,13 @@ USAGE:
    s3backup get [options] s3://bucket/objectkey local_file_path 
 
 OPTIONS:
-   --symKey string, --sym string  Password or base64-encoded key to use for symmetric AES decryption;
-                                  use "ask" to provide it via an interactive prompt
+   --symKey string, --sym string  Password or base64-encoded key to use for symmetric AES
+                                  decryption; use "ask" to provide it via an interactive prompt
    --pemKey FILE, --pem FILE      Path to PEM-encoded private key FILE
    --accessKey string             AWS Access Key ID (if not using default AWS credentials)
    --secretKey string             AWS Secret Key (required when accessKey is provided)
-   --token string                 AWS Token (effective only when accessKey is provided, depends on your AWS setup)
+   --token string                 AWS Token (effective only when accessKey is provided,
+                                  depends on your AWS setup)
    --region string                AWS Region (we use AWS defaults if not provided)
    --endpoint URL                 Custom AWS Endpoint URL (optional)
    --nocheck                      Do not verify backup checksums
@@ -114,10 +116,14 @@ OPTIONS:
    --path string    Vault secret path containing backup credentials (required)
    --kv2            Vault secret path represents a key/value version 2 secrets engine
    --mount string   Vault approle mount path (default: approle)
-   --role string    Vault role_id to retrieve backup credentials (either role & secret, or token) [$VAULT_ROLE_ID]
-   --secret string  Vault secret_id to retrieve backup credentials (either role & secret, or token) [$VAULT_SECRET_ID]
-   --token string   Vault token to retrieve backup credentials (either role & secret, or token) [$VAULT_TOKEN]
-   --caCert FILE    Vault root certificate FILE (optional, or use one of VAULT_CACERT, VAULT_CACERT_BYTES, VAULT_CAPATH env vars)
+   --role string    Vault role_id to retrieve backup credentials
+                    (either role & secret, or token) [$VAULT_ROLE_ID]
+   --secret string  Vault secret_id to retrieve backup credentials
+                    (either role & secret, or token) [$VAULT_SECRET_ID]
+   --token string   Vault token to retrieve backup credentials
+                    (either role & secret, or token) [$VAULT_TOKEN]
+   --caCert FILE    Vault root certificate FILE (optional, or use one of VAULT_CACERT,
+                    VAULT_CACERT_BYTES, VAULT_CAPATH env vars)
    --vault URL      Vault service URL (or use VAULT_ADDR env var)
    --nocheck        Do not create backup checksums
    --help, -h       show help
@@ -136,10 +142,14 @@ OPTIONS:
    --path string    Vault secret path containing backup credentials (required)
    --kv2            Vault secret path represents a key/value version 2 secrets engine
    --mount string   Vault approle mount path (default: approle)
-   --role string    Vault role_id to retrieve backup credentials (either role & secret, or token) [$VAULT_ROLE_ID]
-   --secret string  Vault secret_id to retrieve backup credentials (either role & secret, or token) [$VAULT_SECRET_ID]
-   --token string   Vault token to retrieve backup credentials (either role & secret, or token) [$VAULT_TOKEN]
-   --caCert FILE    Vault root certificate FILE (optional, or use one of VAULT_CACERT, VAULT_CACERT_BYTES, VAULT_CAPATH env vars)
+   --role string    Vault role_id to retrieve backup credentials
+                    (either role & secret, or token) [$VAULT_ROLE_ID]
+   --secret string  Vault secret_id to retrieve backup credentials
+                    (either role & secret, or token) [$VAULT_SECRET_ID]
+   --token string   Vault token to retrieve backup credentials
+                    (either role & secret, or token) [$VAULT_TOKEN]
+   --caCert FILE    Vault root certificate FILE (optional, or use one of VAULT_CACERT,
+                    VAULT_CACERT_BYTES, VAULT_CAPATH env vars)
    --vault URL      Vault service URL (or use VAULT_ADDR env var)
    --nocheck        Do not verify backup checksums
    --help, -h       show help
