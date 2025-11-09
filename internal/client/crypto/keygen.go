@@ -3,22 +3,20 @@ package crypto
 import (
 	"crypto/rand"
 	"crypto/rsa"
-	"crypto/sha256"
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/pem"
 	"fmt"
 	"log"
 	"os"
-	"strings"
 )
 
 const (
-	symKeyVersion  = "BSKv1"
-	pwdKeyVersion  = "BSKv2"
-	asymKeyVersion = "BAKv1"
-	rsaPublicKey   = "PUBLIC KEY"
-	rsaPrivateKey  = "PRIVATE KEY"
+	symV1Header   = "BSKv1"
+	symV2Header   = "BSKv2"
+	asymHeader    = "BAKv1"
+	rsaPublicKey  = "PUBLIC KEY"
+	rsaPrivateKey = "PRIVATE KEY"
 )
 
 func randomBytes(length int) []byte {
@@ -35,18 +33,6 @@ func GenerateAESKey() []byte {
 
 func GenerateAESKeyString() string {
 	return base64.StdEncoding.EncodeToString(GenerateAESKey())
-}
-
-func parseAESKey(secretKey string) ([]byte, error) {
-	if strings.TrimSpace(secretKey) == "" {
-		return nil, fmt.Errorf("cannot use blank secret key")
-	}
-	key, err := base64.StdEncoding.DecodeString(secretKey)
-	if err == nil && len(key) == 32 {
-		return key, nil
-	}
-	sum := sha256.Sum256([]byte(secretKey))
-	return sum[:], nil
 }
 
 func GenerateRSAKeyPair(privKeyFile, pubKeyFile string) error {

@@ -1,22 +1,28 @@
 package crypto
 
 import (
+	"crypto/rand"
 	"os"
 	"path"
+	"strings"
 	"testing"
 
 	"gotest.tools/v3/assert"
 )
 
 func TestRoundTripRSAEncryptDecrypt(t *testing.T) {
-	expected := randomBytes(1024)
+	var builder strings.Builder
+	for range 100 {
+		builder.WriteString(rand.Text())
+	}
+	expected := builder.String()
 
 	tmpDir := t.TempDir()
 	file := path.Join(tmpDir, "data")
 	privFile := path.Join(tmpDir, "priv")
 	pubFile := path.Join(tmpDir, "pub")
 
-	err := os.WriteFile(file, expected, 0600)
+	err := os.WriteFile(file, []byte(expected), 0600)
 	assert.NilError(t, err, "Failed to write data file")
 
 	assert.NilError(t, GenerateRSAKeyPair(privFile, pubFile), "Cannot generate RSA key pair")
@@ -35,6 +41,5 @@ func TestRoundTripRSAEncryptDecrypt(t *testing.T) {
 
 	actual, err := os.ReadFile(decryptedFile)
 	assert.NilError(t, err, "Cannot read decrypted file")
-
-	assert.DeepEqual(t, expected, actual)
+	assert.Equal(t, expected, string(actual))
 }

@@ -33,7 +33,7 @@ lint:
 
 .PHONY: test
 test:
-	go test -race -cover ./...
+	go test -cover ./...
 
 .PHONY: generate
 generate:

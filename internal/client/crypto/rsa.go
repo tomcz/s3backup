@@ -1,7 +1,6 @@
 package crypto
 
 import (
-	"bytes"
 	"crypto"
 	"crypto/aes"
 	"crypto/cipher"
@@ -55,7 +54,7 @@ func (c *rsaCipher) Encrypt(plainTextFile, cipherTextFile string) error {
 	}
 	defer outFile.Close()
 
-	if _, err = outFile.Write([]byte(asymKeyVersion)); err != nil {
+	if _, err = outFile.Write([]byte(asymHeader)); err != nil {
 		return err
 	}
 	if err = binary.Write(outFile, binary.LittleEndian, uint64(len(encAesKey))); err != nil {
@@ -92,12 +91,12 @@ func (c *rsaCipher) Decrypt(cipherTextFile, plainTextFile string) error {
 	}
 	defer inFile.Close()
 
-	preamble := make([]byte, len(asymKeyVersion))
-	if _, err = inFile.Read(preamble); err != nil {
+	header := make([]byte, len(asymHeader))
+	if _, err = inFile.Read(header); err != nil {
 		return err
 	}
-	if !bytes.Equal(preamble, []byte(asymKeyVersion)) {
-		return fmt.Errorf("file does not start with %s", asymKeyVersion)
+	if string(header) != asymHeader {
+		return fmt.Errorf("invalid file header %q, expected %q", string(header), asymHeader)
 	}
 
 	var encAesKeyLen uint64
