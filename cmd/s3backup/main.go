@@ -165,61 +165,6 @@ func main() {
 // CLI flags
 // ============================================================
 
-func putArgs() []cli.Argument {
-	return []cli.Argument{
-		&cli.StringArg{
-			Name:        "local-path",
-			UsageText:   "local_file_path",
-			Config:      cli.StringConfig{TrimSpace: true},
-			Destination: &localPath,
-		},
-		&cli.StringArg{
-			Name:        "remote-path",
-			UsageText:   "s3://bucket/objectkey",
-			Config:      cli.StringConfig{TrimSpace: true},
-			Destination: &remotePath,
-		},
-	}
-}
-
-func getArgs() []cli.Argument {
-	return []cli.Argument{
-		&cli.StringArg{
-			Name:        "remote-path",
-			UsageText:   "s3://bucket/objectkey",
-			Config:      cli.StringConfig{TrimSpace: true},
-			Destination: &remotePath,
-		},
-		&cli.StringArg{
-			Name:        "local-path",
-			UsageText:   "local_file_path",
-			Config:      cli.StringConfig{TrimSpace: true},
-			Destination: &localPath,
-		},
-	}
-}
-
-func inOutArgs() []cli.Argument {
-	return []cli.Argument{
-		&cli.StringArg{
-			Name:        "in-file",
-			UsageText:   "input_file_path",
-			Config:      cli.StringConfig{TrimSpace: true},
-			Destination: &inFile,
-		},
-		&cli.StringArg{
-			Name:        "out-file",
-			UsageText:   "output_file_path",
-			Config:      cli.StringConfig{TrimSpace: true},
-			Destination: &outFile,
-		},
-	}
-}
-
-// ============================================================
-// CLI flags
-// ============================================================
-
 func maybeFromEnvOrYaml(yamlKey string, envVars ...string) cli.ValueSourceChain {
 	var sources []cli.ValueSource
 	for _, envVar := range envVars {
@@ -393,6 +338,61 @@ func genKeyFlags() []cli.Flag {
 			Name:  "pub",
 			Usage: "Public key `FILE` for RSA key pair",
 			Value: "public.pem",
+		},
+	}
+}
+
+// ============================================================
+// CLI args
+// ============================================================
+
+func putArgs() []cli.Argument {
+	return []cli.Argument{
+		&cli.StringArg{
+			Name:        "local-path",
+			UsageText:   "local_file_path",
+			Config:      cli.StringConfig{TrimSpace: true},
+			Destination: &localPath,
+		},
+		&cli.StringArg{
+			Name:        "remote-path",
+			UsageText:   "s3://bucket/objectkey",
+			Config:      cli.StringConfig{TrimSpace: true},
+			Destination: &remotePath,
+		},
+	}
+}
+
+func getArgs() []cli.Argument {
+	return []cli.Argument{
+		&cli.StringArg{
+			Name:        "remote-path",
+			UsageText:   "s3://bucket/objectkey",
+			Config:      cli.StringConfig{TrimSpace: true},
+			Destination: &remotePath,
+		},
+		&cli.StringArg{
+			Name:        "local-path",
+			UsageText:   "local_file_path",
+			Config:      cli.StringConfig{TrimSpace: true},
+			Destination: &localPath,
+		},
+	}
+}
+
+func inOutArgs() []cli.Argument {
+	return []cli.Argument{
+		&cli.StringArg{
+			Name:        "in-file",
+			UsageText:   "input_file_path",
+			Config:      cli.StringConfig{TrimSpace: true},
+			Destination: &inFile,
+		},
+		&cli.StringArg{
+			Name:        "out-file",
+			UsageText:   "output_file_path",
+			Config:      cli.StringConfig{TrimSpace: true},
+			Destination: &outFile,
 		},
 	}
 }
