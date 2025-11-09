@@ -30,13 +30,16 @@ var (
 // from S3BACKUP_YAML env var
 var configFile string
 
-// command line flags
+// cipher flags
 var (
-	forceV1  bool
-	skipHash bool
-
+	forceV1     bool
 	symKeyValue string
 	pemKeyFile  string
+)
+
+// get & put flags
+var (
+	skipHash bool
 
 	awsAccessKey string
 	awsSecretKey string
@@ -52,21 +55,25 @@ var (
 	vaultToken    string
 	vaultAddress  string
 	vaultCaCert   string
-
-	rsaPrivKey string
-	rsaPubKey  string
 )
 
-// command line args
+// get & put args
 var (
 	remotePath string
 	localPath  string
-	inFile     string
-	outFile    string
+)
+
+// encrypt & decrypt args
+var (
+	inFile  string
+	outFile string
 )
 
 func main() {
 	configFile = os.Getenv("S3BACKUP_YAML")
+	if configFile != "" {
+		log.Println("Loading defaults from", configFile)
+	}
 	cmdVersion := &cli.Command{
 		Name:   "version",
 		Usage:  "Print version and exit",
@@ -76,7 +83,6 @@ func main() {
 		Name:      "put",
 		Usage:     "Upload file to S3 bucket using local credentials",
 		Arguments: putArgs(),
-		Before:    setLocalRemote,
 		Action:    basicPut,
 		Flags:     basicFlags(true),
 	}
@@ -84,7 +90,6 @@ func main() {
 		Name:      "get",
 		Usage:     "Download file from S3 bucket using local credentials",
 		Arguments: getArgs(),
-		Before:    setLocalRemote,
 		Action:    basicGet,
 		Flags:     basicFlags(false),
 	}
@@ -92,7 +97,6 @@ func main() {
 		Name:      "vault-put",
 		Usage:     "Upload file to S3 bucket using credentials from vault",
 		Arguments: putArgs(),
-		Before:    setLocalRemote,
 		Action:    vaultPut,
 		Flags:     vaultFlags(true),
 	}
@@ -100,7 +104,6 @@ func main() {
 		Name:      "vault-get",
 		Usage:     "Download file from S3 bucket using credentials from vault",
 		Arguments: putArgs(),
-		Before:    setLocalRemote,
 		Action:    vaultGet,
 		Flags:     vaultFlags(false),
 	}
@@ -124,7 +127,6 @@ func main() {
 		Name:      "encrypt",
 		Usage:     "Encrypt a local file",
 		Arguments: inOutArgs(),
-		Before:    setInOutFiles,
 		Action:    encryptLocalFile,
 		Flags:     cipherFlags(true),
 	}
@@ -132,7 +134,6 @@ func main() {
 		Name:      "decrypt",
 		Usage:     "Decrypt a local file",
 		Arguments: inOutArgs(),
-		Before:    setInOutFiles,
 		Action:    decryptLocalFile,
 		Flags:     cipherFlags(false),
 	}
@@ -141,7 +142,6 @@ func main() {
 		Usage:   "S3 backup script in a single binary",
 		Version: version(),
 		Commands: []*cli.Command{
-			cmdVersion,
 			cmdBasicPut,
 			cmdBasicGet,
 			cmdVaultPut,
@@ -149,6 +149,7 @@ func main() {
 			cmdKeygen,
 			cmdEncrypt,
 			cmdDecrypt,
+			cmdVersion,
 		},
 	}
 
@@ -204,13 +205,13 @@ func inOutArgs() []cli.Argument {
 			Name:        "in-file",
 			UsageText:   "input_file_path",
 			Config:      cli.StringConfig{TrimSpace: true},
-			Destination: &remotePath,
+			Destination: &inFile,
 		},
 		&cli.StringArg{
 			Name:        "out-file",
 			UsageText:   "output_file_path",
 			Config:      cli.StringConfig{TrimSpace: true},
-			Destination: &localPath,
+			Destination: &outFile,
 		},
 	}
 }
@@ -231,82 +232,6 @@ func maybeFromEnvOrYaml(yamlKey string, envVars ...string) cli.ValueSourceChain 
 		return cli.NewValueSourceChain(sources...)
 	}
 	return cli.ValueSourceChain{}
-}
-
-func basicFlags(encrypt bool) []cli.Flag {
-	sym := "decryption"
-	asym := "private"
-	check := "verify"
-	if encrypt {
-		sym = "encryption"
-		asym = "public"
-		check = "create"
-	}
-	flags := []cli.Flag{
-		&cli.StringFlag{
-			Name:        "symKey",
-			Aliases:     []string{"sym"},
-			Usage:       fmt.Sprintf("Password or base64-encoded key to use for symmetric AES %s; use \"ask\" to provide it via an interactive prompt (optional)", sym),
-			Destination: &symKeyValue,
-			Sources:     maybeFromEnvOrYaml("symKey"),
-		},
-		&cli.StringFlag{
-			Name:        "pemKey",
-			Aliases:     []string{"pem"},
-			Usage:       fmt.Sprintf("Path to PEM-encoded %s key `FILE` (optional)", asym),
-			Destination: &pemKeyFile,
-			Sources:     maybeFromEnvOrYaml("pemKey"),
-		},
-		&cli.StringFlag{
-			Name:        "accessKey",
-			Usage:       "AWS Access Key ID (if not using default AWS credentials)",
-			Destination: &awsAccessKey,
-			Sources:     maybeFromEnvOrYaml("accessKey"),
-		},
-		&cli.StringFlag{
-			Name:        "secretKey",
-			Usage:       "AWS Secret Key (required when accessKey is provided)",
-			Destination: &awsSecretKey,
-			Sources:     maybeFromEnvOrYaml("secretKey"),
-		},
-		&cli.StringFlag{
-			Name:        "token",
-			Usage:       "AWS Token (effective only when accessKey is provided, depends on your AWS setup)",
-			Destination: &awsToken,
-			Sources:     maybeFromEnvOrYaml("token"),
-		},
-		&cli.StringFlag{
-			Name:        "region",
-			Usage:       "AWS Region (we use AWS defaults if not provided)",
-			Destination: &awsRegion,
-			Sources:     maybeFromEnvOrYaml("region"),
-		},
-		&cli.StringFlag{
-			Name:        "endpoint",
-			Usage:       "Custom AWS Endpoint `URL` (optional)",
-			Destination: &awsEndpoint,
-			Sources:     maybeFromEnvOrYaml("endpoint"),
-		},
-		&cli.BoolFlag{
-			Name:        "nocheck",
-			Usage:       fmt.Sprintf("Do not %s backup checksums", check),
-			Destination: &skipHash,
-			Sources:     maybeFromEnvOrYaml("nocheck"),
-		},
-	}
-	if encrypt {
-		extras := []cli.Flag{
-			&cli.BoolFlag{
-				Name:        "oldPass",
-				Aliases:     []string{"old", "o"},
-				Usage:       "Maintain password compatiblilty with older s3backup releases",
-				Destination: &forceV1,
-				Sources:     maybeFromEnvOrYaml("oldPass"),
-			},
-		}
-		flags = slices.Concat(extras, flags)
-	}
-	return flags
 }
 
 func cipherFlags(encrypt bool) []cli.Flag {
@@ -345,6 +270,52 @@ func cipherFlags(encrypt bool) []cli.Flag {
 		flags = slices.Concat(extras, flags)
 	}
 	return flags
+}
+
+func basicFlags(encrypt bool) []cli.Flag {
+	check := "verify"
+	if encrypt {
+		check = "create"
+	}
+	flags := []cli.Flag{
+		&cli.StringFlag{
+			Name:        "accessKey",
+			Usage:       "AWS Access Key ID (if not using default AWS credentials)",
+			Destination: &awsAccessKey,
+			Sources:     maybeFromEnvOrYaml("accessKey"),
+		},
+		&cli.StringFlag{
+			Name:        "secretKey",
+			Usage:       "AWS Secret Key (required when accessKey is provided)",
+			Destination: &awsSecretKey,
+			Sources:     maybeFromEnvOrYaml("secretKey"),
+		},
+		&cli.StringFlag{
+			Name:        "token",
+			Usage:       "AWS Token (effective only when accessKey is provided, depends on your AWS setup)",
+			Destination: &awsToken,
+			Sources:     maybeFromEnvOrYaml("token"),
+		},
+		&cli.StringFlag{
+			Name:        "region",
+			Usage:       "AWS Region (we use AWS defaults if not provided)",
+			Destination: &awsRegion,
+			Sources:     maybeFromEnvOrYaml("region"),
+		},
+		&cli.StringFlag{
+			Name:        "endpoint",
+			Usage:       "Custom AWS Endpoint `URL` (optional)",
+			Destination: &awsEndpoint,
+			Sources:     maybeFromEnvOrYaml("endpoint"),
+		},
+		&cli.BoolFlag{
+			Name:        "nocheck",
+			Usage:       fmt.Sprintf("Do not %s backup checksums", check),
+			Destination: &skipHash,
+			Sources:     maybeFromEnvOrYaml("nocheck"),
+		},
+	}
+	return slices.Concat(cipherFlags(encrypt), flags)
 }
 
 func vaultFlags(encrypt bool) []cli.Flag {
@@ -414,28 +385,114 @@ func vaultFlags(encrypt bool) []cli.Flag {
 func genKeyFlags() []cli.Flag {
 	return []cli.Flag{
 		&cli.StringFlag{
-			Name:        "priv",
-			Usage:       "Private key `FILE` for RSA key pair",
-			Value:       "private.pem",
-			Destination: &rsaPrivKey,
+			Name:  "priv",
+			Usage: "Private key `FILE` for RSA key pair",
+			Value: "private.pem",
 		},
 		&cli.StringFlag{
-			Name:        "pub",
-			Usage:       "Public key `FILE` for RSA key pair",
-			Value:       "public.pem",
-			Destination: &rsaPubKey,
+			Name:  "pub",
+			Usage: "Public key `FILE` for RSA key pair",
+			Value: "public.pem",
 		},
 	}
 }
 
 // ============================================================
-// CLI args
+// CLI commands
 // ============================================================
 
-func setLocalRemote(ctx context.Context, _ *cli.Command) (context.Context, error) {
-	var err error
-	remotePath, localPath, err = checkPaths(remotePath, localPath)
-	return ctx, err
+func printVersion(context.Context, *cli.Command) error {
+	fmt.Println(version())
+	return nil
+}
+
+func basicPut(ctx context.Context, _ *cli.Command) error {
+	remote, local, err := checkPaths(remotePath, localPath)
+	if err != nil {
+		return err
+	}
+	c, err := newClient()
+	if err != nil {
+		return err
+	}
+	return c.PutLocalFile(ctx, remote, local)
+}
+
+func basicGet(ctx context.Context, _ *cli.Command) error {
+	remote, local, err := checkPaths(remotePath, localPath)
+	if err != nil {
+		return err
+	}
+	c, err := newClient()
+	if err != nil {
+		return err
+	}
+	return c.GetRemoteFile(ctx, remote, local)
+}
+
+func vaultPut(ctx context.Context, _ *cli.Command) error {
+	if err := initWithVault(ctx, true); err != nil {
+		return err
+	}
+	defer removePemKeyFile(pemKeyFile)
+	return basicPut(ctx, nil)
+}
+
+func vaultGet(ctx context.Context, _ *cli.Command) error {
+	if err := initWithVault(ctx, false); err != nil {
+		return err
+	}
+	defer removePemKeyFile(pemKeyFile)
+	return basicGet(ctx, nil)
+}
+
+func genSecretKey(context.Context, *cli.Command) error {
+	fmt.Println(crypto.GenerateAESKeyString())
+	return nil
+}
+
+func genKeyPair(_ context.Context, cmd *cli.Command) error {
+	return crypto.GenerateRSAKeyPair(cmd.String("priv"), cmd.String("pub"))
+}
+
+func encryptLocalFile(context.Context, *cli.Command) error {
+	if err := checkInOutFiles(inFile, outFile); err != nil {
+		return err
+	}
+	cipher, err := requiredCipher()
+	if err != nil {
+		return err
+	}
+	return cipher.Encrypt(inFile, outFile)
+}
+
+func decryptLocalFile(context.Context, *cli.Command) error {
+	if err := checkInOutFiles(inFile, outFile); err != nil {
+		return err
+	}
+	cipher, err := requiredCipher()
+	if err != nil {
+		return err
+	}
+	return cipher.Decrypt(inFile, outFile)
+}
+
+// ============================================================
+// Common actions
+// ============================================================
+
+func version() string {
+	if tag != "" && commit != "" {
+		return fmt.Sprintf("%s (%s)", tag, commit)
+	}
+	if info, ok := debug.ReadBuildInfo(); ok {
+		for _, setting := range info.Settings {
+			if setting.Key == "vcs.revision" {
+				return setting.Value
+			}
+		}
+	}
+	return "unknown"
 }
 
 func checkPaths(inRemote, inLocal string) (outRemote string, outLocal string, err error) {
@@ -461,95 +518,11 @@ func checkPaths(inRemote, inLocal string) (outRemote string, outLocal string, er
 	return
 }
 
-func setInOutFiles(ctx context.Context, _ *cli.Command) (context.Context, error) {
-	if inFile == "" || outFile == "" {
-		return ctx, errors.New("need both input and output files")
+func checkInOutFiles(inputFile, outputFile string) error {
+	if inputFile == "" || outputFile == "" {
+		return errors.New("need both input and output files")
 	}
-	return ctx, nil
-}
-
-// ============================================================
-// CLI commands
-// ============================================================
-
-func printVersion(context.Context, *cli.Command) error {
-	fmt.Println(version())
 	return nil
-}
-
-func basicPut(ctx context.Context, _ *cli.Command) error {
-	c, err := newClient()
-	if err != nil {
-		return err
-	}
-	return c.PutLocalFile(ctx, remotePath, localPath)
-}
-
-func basicGet(ctx context.Context, _ *cli.Command) error {
-	c, err := newClient()
-	if err != nil {
-		return err
-	}
-	return c.GetRemoteFile(ctx, remotePath, localPath)
-}
-
-func vaultPut(ctx context.Context, _ *cli.Command) error {
-	if err := initWithVault(ctx, true); err != nil {
-		return err
-	}
-	defer removePemKeyFile(pemKeyFile)
-	return basicPut(ctx, nil)
-}
-
-func vaultGet(ctx context.Context, _ *cli.Command) error {
-	if err := initWithVault(ctx, false); err != nil {
-		return err
-	}
-	defer removePemKeyFile(pemKeyFile)
-	return basicGet(ctx, nil)
-}
-
-func genSecretKey(context.Context, *cli.Command) error {
-	fmt.Println(crypto.GenerateAESKeyString())
-	return nil
-}
-
-func genKeyPair(context.Context, *cli.Command) error {
-	return crypto.GenerateRSAKeyPair(rsaPrivKey, rsaPubKey)
-}
-
-func encryptLocalFile(context.Context, *cli.Command) error {
-	cipher, err := requiredCipher()
-	if err != nil {
-		return err
-	}
-	return cipher.Encrypt(inFile, outFile)
-}
-
-func decryptLocalFile(context.Context, *cli.Command) error {
-	cipher, err := requiredCipher()
-	if err != nil {
-		return err
-	}
-	return cipher.Decrypt(inFile, outFile)
-}
-
-// ============================================================
-// Common actions
-// ============================================================
-
-func version() string {
-	if tag != "" && commit != "" {
-		return fmt.Sprintf("%s (%s)", tag, commit)
-	}
-	if info, ok := debug.ReadBuildInfo(); ok {
-		for _, setting := range info.Settings {
-			if setting.Key == "vcs.revision" {
-				return setting.Value
-			}
-		}
-	}
-	return "unknown"
 }
 
 func newClient() (*client.Client, error) {
