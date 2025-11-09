@@ -101,7 +101,7 @@ func TestLookupWithAppRole(t *testing.T) {
 	cfg, err := vault.Lookup(t.Context())
 	assert.NilError(t, err)
 
-	assert.Equal(t, true, cfg.ForceV1)
+	assert.Equal(t, true, cfg.UseOldPass)
 	assert.Equal(t, "use me to encrypt", cfg.CipherKey)
 	assert.Equal(t, "aws access", cfg.S3AccessKey)
 	assert.Equal(t, "aws secret", cfg.S3SecretKey)
@@ -130,7 +130,7 @@ func TestLookupWithToken(t *testing.T) {
 	cfg, err := vault.Lookup(t.Context())
 	assert.NilError(t, err)
 
-	assert.Equal(t, true, cfg.ForceV1)
+	assert.Equal(t, true, cfg.UseOldPass)
 	assert.Equal(t, "use me to encrypt", cfg.CipherKey)
 	assert.Equal(t, "aws access", cfg.S3AccessKey)
 	assert.Equal(t, "aws secret", cfg.S3SecretKey)
