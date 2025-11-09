@@ -59,7 +59,7 @@ USAGE:
    s3backup put [options] local_file_path s3://bucket/objectkey 
 
 OPTIONS:
-   --oldPass, --old, -o           Maintain password compatiblilty with older s3backup releases
+   --oldPass, --old, -o           Maintain password compatibility with older s3backup releases
    --symKey string, --sym string  Password or base64-encoded key to use for symmetric AES
                                   encryption; use "ask" to provide it via an interactive prompt
    --pemKey FILE, --pem FILE      Path to PEM-encoded public key FILE

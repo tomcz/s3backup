@@ -207,7 +207,7 @@ func cipherFlags(encrypt bool) []cli.Flag {
 			&cli.BoolFlag{
 				Name:        "oldPass",
 				Aliases:     []string{"old", "o"},
-				Usage:       "Maintain password compatiblilty with older s3backup releases",
+				Usage:       "Maintain password compatibility with older s3backup releases",
 				Destination: &forceV1,
 				Sources:     maybeFromEnvOrYaml("oldPass"),
 			},
