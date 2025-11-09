@@ -11,6 +11,8 @@ import (
 	"slices"
 
 	"github.com/AlecAivazis/survey/v2"
+	"github.com/urfave/cli-altsrc/v3"
+	"github.com/urfave/cli-altsrc/v3/yaml"
 	"github.com/urfave/cli/v3"
 
 	"github.com/tomcz/s3backup/v2/internal/client"
@@ -24,6 +26,9 @@ var (
 	commit string
 	tag    string
 )
+
+// from S3BACKUP_YAML env var
+var configFile string
 
 // command line flags
 var (
@@ -61,6 +66,7 @@ var (
 )
 
 func main() {
+	configFile = os.Getenv("S3BACKUP_YAML")
 	cmdVersion := &cli.Command{
 		Name:   "version",
 		Usage:  "Print version and exit",
@@ -213,6 +219,20 @@ func inOutArgs() []cli.Argument {
 // CLI flags
 // ============================================================
 
+func maybeFromEnvOrYaml(yamlKey string, envVars ...string) cli.ValueSourceChain {
+	var sources []cli.ValueSource
+	for _, envVar := range envVars {
+		sources = append(sources, cli.EnvVar(envVar))
+	}
+	if configFile != "" {
+		sources = append(sources, yaml.YAML(yamlKey, altsrc.StringSourcer(configFile)))
+	}
+	if len(sources) > 0 {
+		return cli.NewValueSourceChain(sources...)
+	}
+	return cli.ValueSourceChain{}
+}
+
 func basicFlags(encrypt bool) []cli.Flag {
 	sym := "decryption"
 	asym := "private"
@@ -228,42 +248,50 @@ func basicFlags(encrypt bool) []cli.Flag {
 			Aliases:     []string{"sym"},
 			Usage:       fmt.Sprintf("Password or base64-encoded key to use for symmetric AES %s; use \"ask\" to provide it via an interactive prompt (optional)", sym),
 			Destination: &symKeyValue,
+			Sources:     maybeFromEnvOrYaml("symKey"),
 		},
 		&cli.StringFlag{
 			Name:        "pemKey",
 			Aliases:     []string{"pem"},
 			Usage:       fmt.Sprintf("Path to PEM-encoded %s key `FILE` (optional)", asym),
 			Destination: &pemKeyFile,
+			Sources:     maybeFromEnvOrYaml("pemKey"),
 		},
 		&cli.StringFlag{
 			Name:        "accessKey",
 			Usage:       "AWS Access Key ID (if not using default AWS credentials)",
 			Destination: &awsAccessKey,
+			Sources:     maybeFromEnvOrYaml("accessKey"),
 		},
 		&cli.StringFlag{
 			Name:        "secretKey",
 			Usage:       "AWS Secret Key (required when accessKey is provided)",
 			Destination: &awsSecretKey,
+			Sources:     maybeFromEnvOrYaml("secretKey"),
 		},
 		&cli.StringFlag{
 			Name:        "token",
 			Usage:       "AWS Token (effective only when accessKey is provided, depends on your AWS setup)",
 			Destination: &awsToken,
+			Sources:     maybeFromEnvOrYaml("token"),
 		},
 		&cli.StringFlag{
 			Name:        "region",
 			Usage:       "AWS Region (we use AWS defaults if not provided)",
 			Destination: &awsRegion,
+			Sources:     maybeFromEnvOrYaml("region"),
 		},
 		&cli.StringFlag{
 			Name:        "endpoint",
 			Usage:       "Custom AWS Endpoint `URL` (optional)",
 			Destination: &awsEndpoint,
+			Sources:     maybeFromEnvOrYaml("endpoint"),
 		},
 		&cli.BoolFlag{
 			Name:        "nocheck",
 			Usage:       fmt.Sprintf("Do not %s backup checksums", check),
 			Destination: &skipHash,
+			Sources:     maybeFromEnvOrYaml("nocheck"),
 		},
 	}
 	if encrypt {
@@ -273,6 +301,7 @@ func basicFlags(encrypt bool) []cli.Flag {
 				Aliases:     []string{"old", "o"},
 				Usage:       "Maintain password compatiblilty with older s3backup releases",
 				Destination: &forceV1,
+				Sources:     maybeFromEnvOrYaml("oldPass"),
 			},
 		}
 		flags = slices.Concat(extras, flags)
@@ -293,12 +322,14 @@ func cipherFlags(encrypt bool) []cli.Flag {
 			Aliases:     []string{"sym"},
 			Usage:       fmt.Sprintf("Password or base64-encoded key to use for symmetric AES %s; use \"ask\" to provide it via an interactive prompt", sym),
 			Destination: &symKeyValue,
+			Sources:     maybeFromEnvOrYaml("symKey"),
 		},
 		&cli.StringFlag{
 			Name:        "pemKey",
 			Aliases:     []string{"pem"},
 			Usage:       fmt.Sprintf("Path to PEM-encoded %s key `FILE`", asym),
 			Destination: &pemKeyFile,
+			Sources:     maybeFromEnvOrYaml("pemKey"),
 		},
 	}
 	if encrypt {
@@ -308,6 +339,7 @@ func cipherFlags(encrypt bool) []cli.Flag {
 				Aliases:     []string{"old", "o"},
 				Usage:       "Maintain password compatiblilty with older s3backup releases",
 				Destination: &forceV1,
+				Sources:     maybeFromEnvOrYaml("oldPass"),
 			},
 		}
 		flags = slices.Concat(extras, flags)
@@ -326,49 +358,55 @@ func vaultFlags(encrypt bool) []cli.Flag {
 			Usage:       "Vault secret path containing backup credentials (required)",
 			Required:    true,
 			Destination: &vaultPath,
+			Sources:     maybeFromEnvOrYaml("path"),
 		},
 		&cli.BoolFlag{
 			Name:        "kv2",
 			Usage:       "Vault secret path represents a key/value version 2 secrets engine",
 			Destination: &vaultIsKV2,
+			Sources:     maybeFromEnvOrYaml("kv2"),
 		},
 		&cli.StringFlag{
 			Name:        "mount",
 			Usage:       "Vault approle mount path (default: approle)",
 			Destination: &vaultMount,
+			Sources:     maybeFromEnvOrYaml("mount"),
 		},
 		&cli.StringFlag{
 			Name:        "role",
 			Usage:       "Vault role_id to retrieve backup credentials (either role & secret, or token)",
-			Sources:     cli.EnvVars("VAULT_ROLE_ID"),
 			Destination: &vaultRoleID,
+			Sources:     maybeFromEnvOrYaml("role", "VAULT_ROLE_ID"),
 		},
 		&cli.StringFlag{
 			Name:        "secret",
 			Usage:       "Vault secret_id to retrieve backup credentials (either role & secret, or token)",
-			Sources:     cli.EnvVars("VAULT_SECRET_ID"),
 			Destination: &vaultSecretID,
+			Sources:     maybeFromEnvOrYaml("secret", "VAULT_SECRET_ID"),
 		},
 		&cli.StringFlag{
 			Name:        "token",
 			Usage:       "Vault token to retrieve backup credentials (either role & secret, or token)",
-			Sources:     cli.EnvVars("VAULT_TOKEN"),
 			Destination: &vaultToken,
+			Sources:     maybeFromEnvOrYaml("token", "VAULT_TOKEN"),
 		},
 		&cli.StringFlag{
 			Name:        "caCert",
 			Usage:       "Vault root certificate `FILE` (optional, or use one of VAULT_CACERT, VAULT_CACERT_BYTES, VAULT_CAPATH env vars)",
 			Destination: &vaultCaCert,
+			Sources:     maybeFromEnvOrYaml("caCert"),
 		},
 		&cli.StringFlag{
 			Name:        "vault",
 			Usage:       "Vault service `URL` (or use VAULT_ADDR env var)",
 			Destination: &vaultAddress,
+			Sources:     maybeFromEnvOrYaml("vault"),
 		},
 		&cli.BoolFlag{
 			Name:        "nocheck",
 			Usage:       fmt.Sprintf("Do not %s backup checksums", check),
 			Destination: &skipHash,
+			Sources:     maybeFromEnvOrYaml("nocheck"),
 		},
 	}
 }

@@ -9,6 +9,7 @@ require (
 	github.com/hashicorp/vault-client-go v0.4.3
 	github.com/johannesboyne/gofakes3 v0.0.0-20241026070602-0da3aa9c32ca
 	github.com/matryer/moq v0.5.3
+	github.com/urfave/cli-altsrc/v3 v3.0.1
 	github.com/urfave/cli/v3 v3.5.0
 	golang.org/x/crypto v0.43.0
 	gotest.tools/v3 v3.5.1
@@ -36,4 +37,5 @@ require (
 	golang.org/x/text v0.30.0 // indirect
 	golang.org/x/time v0.14.0 // indirect
 	golang.org/x/tools v0.37.0 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
