@@ -1,9 +1,0 @@
-{
-  "nocheck": true,
-  "symKey": "wibble",
-  "accessKey": "test_accessKey",
-  "secretKey": "test_secretKey",
-  "token": "test_token",
-  "region": "test_region",
-  "endpoint": "test_endpoint"
-}

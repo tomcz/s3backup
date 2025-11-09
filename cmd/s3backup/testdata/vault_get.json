@@ -1,6 +1,0 @@
-{
-  "path": "secret/wibble/wobble",
-  "role": "test_role_id",
-  "secret": "test_secret_id",
-  "vault": "test_vault_url"
-}
