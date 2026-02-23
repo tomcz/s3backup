@@ -1,6 +1,6 @@
 module github.com/tomcz/s3backup/v2
 
-go 1.25
+go 1.26
 
 require (
 	github.com/AlecAivazis/survey/v2 v2.3.7

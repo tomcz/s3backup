@@ -105,7 +105,7 @@ func (v Vault) lookup(ctx context.Context, client *vault.Client) (*Config, error
 	return &cfg, nil
 }
 
-func (v Vault) getData(secret *vault.Response[map[string]interface{}]) any {
+func (v Vault) getData(secret *vault.Response[map[string]any]) any {
 	if secret == nil || secret.Data == nil {
 		return nil
 	}

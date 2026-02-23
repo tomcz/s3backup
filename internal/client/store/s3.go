@@ -42,13 +42,13 @@ func (a AwsS3) Store() (client.Store, error) {
 	}
 	if a.Region != "" {
 		cfg = append(cfg, &aws.Config{
-			Region: aws.String(a.Region),
+			Region: new(a.Region),
 		})
 	}
 	if a.Endpoint != "" {
 		cfg = append(cfg, &aws.Config{
-			Endpoint:         aws.String(a.Endpoint),
-			S3ForcePathStyle: aws.Bool(true), // gofakes3 and DigitalOcean's Spaces need this
+			Endpoint:         new(a.Endpoint),
+			S3ForcePathStyle: new(true), // gofakes3 and DigitalOcean's Spaces need this
 		})
 	}
 	awsSession, err := session.NewSession(cfg...)
@@ -72,13 +72,13 @@ func (s *s3store) UploadFile(ctx context.Context, remotePath, localPath, checksu
 
 	uploader := s3manager.NewUploaderWithClient(s.api)
 	input := &s3manager.UploadInput{
-		Bucket: aws.String(bucket),
-		Key:    aws.String(objectKey),
+		Bucket: new(bucket),
+		Key:    new(objectKey),
 		Body:   file,
 	}
 	if checksum != "" {
 		input.Metadata = map[string]*string{
-			checksumKey: aws.String(checksum),
+			checksumKey: new(checksum),
 		}
 	}
 	_, err = uploader.UploadWithContext(ctx, input)
@@ -102,7 +102,7 @@ func (s *s3store) DownloadFile(ctx context.Context, remotePath, localPath string
 
 	var checksum string
 	downloader := s3manager.NewDownloaderWithClient(s.api)
-	req := &s3.GetObjectInput{Bucket: aws.String(bucket), Key: aws.String(objectKey)}
+	req := &s3.GetObjectInput{Bucket: new(bucket), Key: new(objectKey)}
 	opt := request.WithGetResponseHeader(fmt.Sprintf("x-amz-meta-%s", checksumKey), &checksum)
 	_, err = downloader.DownloadWithContext(ctx, file, req, s3manager.WithDownloaderRequestOptions(opt))
 	if err != nil {

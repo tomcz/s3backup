@@ -177,5 +177,5 @@ OPTIONS:
 
 ## Build
 
-1. Install Go 1.25 from https://golang.org/
+1. Install Go 1.26 from https://golang.org/
 2. Build the binaries: `make build`

@@ -7,7 +7,6 @@ import (
 	"path"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"        //nolint:staticcheck
 	"github.com/aws/aws-sdk-go/service/s3" //nolint:staticcheck
 	"github.com/johannesboyne/gofakes3"
 	"github.com/johannesboyne/gofakes3/backend/s3mem"
@@ -39,7 +38,7 @@ func TestRoundTripUploadDownload_withChecksum(t *testing.T) {
 	assert.NilError(t, err, "failed to create S3 client")
 
 	impl := store.(*s3store)
-	_, err = impl.api.CreateBucket(&s3.CreateBucketInput{Bucket: aws.String("test-bucket")})
+	_, err = impl.api.CreateBucket(&s3.CreateBucketInput{Bucket: new("test-bucket")})
 	assert.NilError(t, err, "failed to create bucket")
 
 	err = store.UploadFile(t.Context(), "s3://test-bucket/test-file", uploadFile, "wibble")
@@ -81,7 +80,7 @@ func TestRoundTripUploadDownload_withoutChecksum(t *testing.T) {
 	assert.NilError(t, err, "failed to create S3 client")
 
 	impl := store.(*s3store)
-	_, err = impl.api.CreateBucket(&s3.CreateBucketInput{Bucket: aws.String("test-bucket")})
+	_, err = impl.api.CreateBucket(&s3.CreateBucketInput{Bucket: new("test-bucket")})
 	assert.NilError(t, err, "failed to create bucket")
 
 	err = store.UploadFile(t.Context(), "s3://test-bucket/test-file", uploadFile, "")
