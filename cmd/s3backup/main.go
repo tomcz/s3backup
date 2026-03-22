@@ -9,6 +9,7 @@ import (
 	"os/signal"
 	"runtime/debug"
 	"slices"
+	"syscall"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/urfave/cli-altsrc/v3"
@@ -153,7 +154,7 @@ func main() {
 		},
 	}
 
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
 	if err := app.Run(ctx, os.Args); err != nil {
