@@ -4,13 +4,14 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"                  //nolint:staticcheck
-	"github.com/aws/aws-sdk-go/aws/credentials"      //nolint:staticcheck
-	"github.com/aws/aws-sdk-go/aws/request"          //nolint:staticcheck
-	"github.com/aws/aws-sdk-go/aws/session"          //nolint:staticcheck
-	"github.com/aws/aws-sdk-go/service/s3"           //nolint:staticcheck
-	"github.com/aws/aws-sdk-go/service/s3/s3manager" //nolint:staticcheck
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
+	"github.com/aws/aws-sdk-go-v2/feature/s3/transfermanager"
+	"github.com/aws/aws-sdk-go-v2/feature/s3/transfermanager/types"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 
 	"github.com/tomcz/s3backup/v2/internal/client"
 )
@@ -26,36 +27,31 @@ type AwsS3 struct {
 }
 
 type s3store struct {
-	api *s3.S3
+	client   *s3.Client // for tests
+	transfer *transfermanager.Client
 }
 
 func (a AwsS3) Store() (client.Store, error) {
-	var cfg []*aws.Config
+	var opts []func(*config.LoadOptions) error
 	if a.AccessKey != "" && a.SecretKey != "" {
-		cfg = append(cfg, &aws.Config{
-			Credentials: credentials.NewStaticCredentials(
-				a.AccessKey,
-				a.SecretKey,
-				a.Token,
-			),
-		})
+		provider := credentials.NewStaticCredentialsProvider(a.AccessKey, a.SecretKey, a.Token)
+		opts = append(opts, config.WithCredentialsProvider(provider))
 	}
 	if a.Region != "" {
-		cfg = append(cfg, &aws.Config{
-			Region: new(a.Region),
-		})
+		opts = append(opts, config.WithRegion(a.Region))
 	}
 	if a.Endpoint != "" {
-		cfg = append(cfg, &aws.Config{
-			Endpoint:         new(a.Endpoint),
-			S3ForcePathStyle: new(true), // gofakes3 and DigitalOcean's Spaces need this
-		})
+		opts = append(opts, config.WithBaseEndpoint(a.Endpoint))
 	}
-	awsSession, err := session.NewSession(cfg...)
+	sdkConfig, err := config.LoadDefaultConfig(context.Background(), opts...)
 	if err != nil {
 		return nil, err
 	}
-	return &s3store{s3.New(awsSession)}, nil
+	s3Client := s3.NewFromConfig(sdkConfig)
+	return &s3store{
+		client:   s3Client,
+		transfer: transfermanager.New(s3Client),
+	}, nil
 }
 
 func (s *s3store) UploadFile(ctx context.Context, remotePath, localPath, checksum string) error {
@@ -70,18 +66,18 @@ func (s *s3store) UploadFile(ctx context.Context, remotePath, localPath, checksu
 	}
 	defer file.Close()
 
-	uploader := s3manager.NewUploaderWithClient(s.api)
-	input := &s3manager.UploadInput{
-		Bucket: new(bucket),
-		Key:    new(objectKey),
+	req := &transfermanager.UploadObjectInput{
+		Bucket: aws.String(bucket),
+		Key:    aws.String(objectKey),
 		Body:   file,
+		ACL:    types.ObjectCannedACLPrivate,
 	}
 	if checksum != "" {
-		input.Metadata = map[string]*string{
-			checksumKey: new(checksum),
+		req.Metadata = map[string]string{
+			checksumKey: checksum,
 		}
 	}
-	_, err = uploader.UploadWithContext(ctx, input)
+	_, err = s.transfer.UploadObject(ctx, req)
 	if err != nil {
 		return fmt.Errorf("failed to upload file: %w", err)
 	}
@@ -100,13 +96,15 @@ func (s *s3store) DownloadFile(ctx context.Context, remotePath, localPath string
 	}
 	defer file.Close()
 
-	var checksum string
-	downloader := s3manager.NewDownloaderWithClient(s.api)
-	req := &s3.GetObjectInput{Bucket: new(bucket), Key: new(objectKey)}
-	opt := request.WithGetResponseHeader(fmt.Sprintf("x-amz-meta-%s", checksumKey), &checksum)
-	_, err = downloader.DownloadWithContext(ctx, file, req, s3manager.WithDownloaderRequestOptions(opt))
+	req := &transfermanager.DownloadObjectInput{
+		Bucket:   aws.String(bucket),
+		Key:      aws.String(objectKey),
+		WriterAt: file,
+	}
+	res, err := s.transfer.DownloadObject(ctx, req)
 	if err != nil {
 		return "", fmt.Errorf("download failed: %w", err)
 	}
-	return checksum, nil
+	// metadata keys are all normalized to lower-case
+	return res.Metadata[strings.ToLower(checksumKey)], nil
 }
