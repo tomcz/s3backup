@@ -12,11 +12,12 @@ func IsRemote(path string) bool {
 }
 
 func splitRemotePath(remotePath string) (bucket string, objectKey string, err error) {
-	if md := s3PathPattern.FindStringSubmatch(remotePath); md != nil {
-		bucket = md[1]
-		objectKey = md[2]
-	} else {
+	md := s3PathPattern.FindStringSubmatch(remotePath)
+	if md == nil {
 		err = fmt.Errorf("%q is not a valid S3 path", remotePath)
+		return
 	}
-	return // bucket, objectKey, err
+	bucket = md[1]
+	objectKey = md[2]
+	return
 }
