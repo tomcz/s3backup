@@ -6,8 +6,8 @@ require (
 	github.com/aws/aws-sdk-go-v2 v1.41.5
 	github.com/aws/aws-sdk-go-v2/config v1.32.14
 	github.com/aws/aws-sdk-go-v2/credentials v1.19.14
-	github.com/aws/aws-sdk-go-v2/feature/s3/transfermanager v0.1.14
-	github.com/aws/aws-sdk-go-v2/service/s3 v1.98.0
+	github.com/aws/aws-sdk-go-v2/feature/s3/transfermanager v0.1.15
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.99.0
 	github.com/go-viper/mapstructure/v2 v2.5.0
 	github.com/hashicorp/vault-client-go v0.4.3
 	github.com/johannesboyne/gofakes3 v0.0.0-20250916175020-ebf3e50324d3
