@@ -7,7 +7,7 @@ LDFLAGS := ${LDFLAGS} -X main.tag=${GIT_TAG}
 OUTFILE ?= s3backup
 
 .PHONY: precommit
-precommit: clean generate format lint test compile
+precommit: clean generate tidy format lint test compile
 
 .PHONY: build
 build: clean compile
@@ -22,6 +22,10 @@ clean:
 
 target:
 	mkdir target
+
+.PHONY: tidy
+tidy:
+	go mod tidy
 
 .PHONY: format
 format:

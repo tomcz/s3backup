@@ -9,12 +9,13 @@ import (
 	"os/signal"
 	"runtime/debug"
 	"slices"
+	"strings"
 	"syscall"
 
-	"github.com/AlecAivazis/survey/v2"
 	"github.com/urfave/cli-altsrc/v3"
 	"github.com/urfave/cli-altsrc/v3/yaml"
 	"github.com/urfave/cli/v3"
+	"golang.org/x/term"
 
 	"github.com/tomcz/s3backup/v2/internal/client"
 	"github.com/tomcz/s3backup/v2/internal/client/crypto"
@@ -555,9 +556,16 @@ func newClient() (*client.Client, error) {
 
 func optionalCipher() (client.Cipher, error) {
 	if symKeyValue == "ask" {
-		prompt := &survey.Password{Message: "Enter password or base64-encoded key:"}
-		if err := survey.AskOne(prompt, &symKeyValue, survey.WithValidator(survey.Required)); err != nil {
+		fmt.Print("Enter password or base64-encoded key: ")
+		// hush goland, it's not redundant on Windows
+		//goland:noinspection GoRedundantConversion
+		password, err := term.ReadPassword(int(syscall.Stdin))
+		if err != nil {
 			return nil, err
+		}
+		symKeyValue = strings.TrimSpace(string(password))
+		if symKeyValue == "" {
+			return nil, errors.New("empty passwords are not allowed")
 		}
 	}
 	if symKeyValue != "" {
