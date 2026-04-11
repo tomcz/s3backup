@@ -14,6 +14,7 @@ import (
 const (
 	symV1Header   = "BSKv1"
 	symV2Header   = "BSKv2"
+	symV3Header   = "BSKv3"
 	asymHeader    = "BAKv1"
 	rsaPublicKey  = "PUBLIC KEY"
 	rsaPrivateKey = "PRIVATE KEY"

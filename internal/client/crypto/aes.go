@@ -11,6 +11,7 @@ import (
 	"slices"
 	"strings"
 
+	"golang.org/x/crypto/argon2"
 	"golang.org/x/crypto/scrypt"
 
 	"github.com/tomcz/s3backup/v2/internal/client"
@@ -18,12 +19,12 @@ import (
 
 const (
 	v2SaltSize = 16
-	v2KeyCost  = 1 << 20
+	v3SaltSize = 16
 )
 
 type aesCipher struct {
-	key   []byte
-	useV1 bool
+	key []byte
+	use string
 }
 
 func NewAESCipher(secretKey string, forceV1 bool) (client.Cipher, error) {
@@ -34,20 +35,20 @@ func NewAESCipher(secretKey string, forceV1 bool) (client.Cipher, error) {
 	key, err := base64.StdEncoding.DecodeString(secretKey)
 	if err == nil && len(key) == 32 {
 		return &aesCipher{
-			key:   key,
-			useV1: true,
+			key: key,
+			use: symV1Header,
 		}, nil
 	}
 	if forceV1 {
 		sum := sha256.Sum256([]byte(secretKey))
 		return &aesCipher{
-			key:   sum[:],
-			useV1: true,
+			key: sum[:],
+			use: symV1Header,
 		}, nil
 	}
 	return &aesCipher{
-		key:   []byte(secretKey),
-		useV1: false,
+		key: []byte(secretKey),
+		use: symV3Header,
 	}, nil
 }
 
@@ -114,19 +115,11 @@ func (c *aesCipher) Decrypt(cipherTextFile, plainTextFile string) error {
 }
 
 func (c *aesCipher) encryptCipher() (cipher.Block, []byte, error) {
-	if c.useV1 {
-		preamble := slices.Clone([]byte(symV1Header))
-		block, err := aes.NewCipher(c.key)
-		return block, preamble, err
+	if c.use == symV1Header {
+		return c.v1EncryptCipher()
 	}
-	salt := randomBytes(v2SaltSize)
-	key, err := c.v2Key(salt)
-	if err != nil {
-		return nil, nil, err
-	}
-	preamble := slices.Concat([]byte(symV2Header), salt)
-	block, err := aes.NewCipher(key)
-	return block, preamble, err
+	// use argon2 instead of scrypt for new archives
+	return c.v3EncryptCipher()
 }
 
 func (c *aesCipher) decryptCipher(file io.Reader) (cipher.Block, error) {
@@ -136,22 +129,30 @@ func (c *aesCipher) decryptCipher(file io.Reader) (cipher.Block, error) {
 	}
 	switch string(header) {
 	case symV1Header:
-		return c.v1Cipher()
+		return c.v1DecryptCipher()
 	case symV2Header:
-		return c.v2Cipher(file)
+		return c.v2DecryptCipher(file)
+	case symV3Header:
+		return c.v3DecryptCipher(file)
 	default:
 		return nil, fmt.Errorf(
-			"invalid file header %q, expected either %q or %q",
-			string(header), symV1Header, symV2Header,
+			"invalid file header %q, expected one of %s, %s, or %s",
+			string(header), symV1Header, symV2Header, symV3Header,
 		)
 	}
 }
 
-func (c *aesCipher) v1Cipher() (cipher.Block, error) {
+func (c *aesCipher) v1EncryptCipher() (cipher.Block, []byte, error) {
+	preamble := slices.Clone([]byte(symV1Header))
+	block, err := aes.NewCipher(c.key)
+	return block, preamble, err
+}
+
+func (c *aesCipher) v1DecryptCipher() (cipher.Block, error) {
 	return aes.NewCipher(c.key)
 }
 
-func (c *aesCipher) v2Cipher(file io.Reader) (cipher.Block, error) {
+func (c *aesCipher) v2DecryptCipher(file io.Reader) (cipher.Block, error) {
 	salt := make([]byte, v2SaltSize)
 	if _, err := file.Read(salt); err != nil {
 		return nil, err
@@ -164,5 +165,25 @@ func (c *aesCipher) v2Cipher(file io.Reader) (cipher.Block, error) {
 }
 
 func (c *aesCipher) v2Key(salt []byte) ([]byte, error) {
-	return scrypt.Key(c.key, salt, v2KeyCost, 8, 1, 32)
+	return scrypt.Key(c.key, salt, 1<<20, 8, 1, 32)
+}
+
+func (c *aesCipher) v3EncryptCipher() (cipher.Block, []byte, error) {
+	salt := randomBytes(v3SaltSize)
+	preamble := slices.Concat([]byte(symV3Header), salt)
+	block, err := aes.NewCipher(c.v3Key(salt))
+	return block, preamble, err
+}
+
+func (c *aesCipher) v3DecryptCipher(file io.Reader) (cipher.Block, error) {
+	salt := make([]byte, v3SaltSize)
+	if _, err := file.Read(salt); err != nil {
+		return nil, err
+	}
+	key := c.v3Key(salt)
+	return aes.NewCipher(key)
+}
+
+func (c *aesCipher) v3Key(salt []byte) []byte {
+	return argon2.IDKey(c.key, salt, 1, 64*1024, 4, 32)
 }

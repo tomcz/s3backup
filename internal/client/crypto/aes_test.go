@@ -18,8 +18,8 @@ func TestRoundTripAESEncryptDecrypt_Password_v1(t *testing.T) {
 	testRoundTrip(t, "password0", true, symV1Header)
 }
 
-func TestRoundTripAESEncryptDecrypt_Password_v2(t *testing.T) {
-	testRoundTrip(t, "password0", false, symV2Header)
+func TestRoundTripAESEncryptDecrypt_Password_v3(t *testing.T) {
+	testRoundTrip(t, "password0", false, symV3Header)
 }
 
 func testRoundTrip(t *testing.T, key string, forceV1 bool, expectedHeader string) {
