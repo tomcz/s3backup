@@ -3,7 +3,6 @@ package crypto
 import (
 	"crypto/aes"
 	"crypto/cipher"
-	"crypto/sha256"
 	"encoding/base64"
 	"fmt"
 	"io"
@@ -27,7 +26,7 @@ type aesCipher struct {
 	use string
 }
 
-func NewAESCipher(secretKey string, forceV1 bool) (client.Cipher, error) {
+func NewAESCipher(secretKey string) (client.Cipher, error) {
 	secretKey = strings.TrimSpace(secretKey)
 	if secretKey == "" {
 		return nil, fmt.Errorf("cannot use a blank secret key")
@@ -36,13 +35,6 @@ func NewAESCipher(secretKey string, forceV1 bool) (client.Cipher, error) {
 	if err == nil && len(key) == 32 {
 		return &aesCipher{
 			key: key,
-			use: symV1Header,
-		}, nil
-	}
-	if forceV1 {
-		sum := sha256.Sum256([]byte(secretKey))
-		return &aesCipher{
-			key: sum[:],
 			use: symV1Header,
 		}, nil
 	}
@@ -118,7 +110,9 @@ func (c *aesCipher) encryptCipher() (cipher.Block, []byte, error) {
 	if c.use == symV1Header {
 		return c.v1EncryptCipher()
 	}
-	// use argon2 instead of scrypt for new archives
+	// scrypt (i.e. symV2Header) key derivation for encryption keys
+	// has been replaced by argon2 (i.e. symV3Header). We still support
+	// scrypt-derived decryption keys so that we can read older archives.
 	return c.v3EncryptCipher()
 }
 

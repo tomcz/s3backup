@@ -34,7 +34,6 @@ var configFile string
 
 // cipher flags
 var (
-	useOldPass  bool
 	symKeyValue string
 	pemKeyFile  string
 )
@@ -203,18 +202,6 @@ func cipherFlags(encrypt bool) []cli.Flag {
 			Destination: &pemKeyFile,
 			Sources:     maybeFromYamlOrEnv("pemKey"),
 		},
-	}
-	if encrypt {
-		extras := []cli.Flag{
-			&cli.BoolFlag{
-				Name:        "oldPass",
-				Aliases:     []string{"old", "o"},
-				Usage:       "Maintain password compatibility with older s3backup releases",
-				Destination: &useOldPass,
-				Sources:     maybeFromYamlOrEnv("oldPass"),
-			},
-		}
-		flags = slices.Concat(extras, flags)
 	}
 	return flags
 }
@@ -569,7 +556,7 @@ func optionalCipher() (client.Cipher, error) {
 		}
 	}
 	if symKeyValue != "" {
-		return crypto.NewAESCipher(symKeyValue, useOldPass)
+		return crypto.NewAESCipher(symKeyValue)
 	}
 	if pemKeyFile != "" {
 		return crypto.NewRSACipher(pemKeyFile)
@@ -603,7 +590,6 @@ func initWithVault(ctx context.Context, encrypt bool) error {
 		}
 	}
 	symKeyValue = cfg.CipherKey
-	useOldPass = cfg.UseOldPass
 	awsAccessKey = cfg.S3AccessKey
 	awsSecretKey = cfg.S3SecretKey
 	awsToken = cfg.S3Token

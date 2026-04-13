@@ -11,18 +11,14 @@ import (
 )
 
 func TestRoundTripAESEncryptDecrypt_GeneratedKey(t *testing.T) {
-	testRoundTrip(t, GenerateAESKeyString(), false, symV1Header)
+	testRoundTrip(t, GenerateAESKeyString(), symV1Header)
 }
 
-func TestRoundTripAESEncryptDecrypt_Password_v1(t *testing.T) {
-	testRoundTrip(t, "password0", true, symV1Header)
+func TestRoundTripAESEncryptDecrypt_Password(t *testing.T) {
+	testRoundTrip(t, "password0", symV3Header)
 }
 
-func TestRoundTripAESEncryptDecrypt_Password_v3(t *testing.T) {
-	testRoundTrip(t, "password0", false, symV3Header)
-}
-
-func testRoundTrip(t *testing.T, key string, forceV1 bool, expectedHeader string) {
+func testRoundTrip(t *testing.T, key string, expectedHeader string) {
 	var builder strings.Builder
 	for range 100 {
 		builder.WriteString(rand.Text())
@@ -33,7 +29,7 @@ func testRoundTrip(t *testing.T, key string, forceV1 bool, expectedHeader string
 	err := os.WriteFile(file, []byte(expected), 0600)
 	assert.NilError(t, err, "Cannot create file to encrypt")
 
-	cipher, err := NewAESCipher(key, forceV1)
+	cipher, err := NewAESCipher(key)
 	assert.NilError(t, err, "Cannot create AES cipher")
 
 	encryptedFile := file + ".enc"
