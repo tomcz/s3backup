@@ -1,6 +1,6 @@
 module github.com/tomcz/s3backup/v2
 
-go 1.26
+go 1.27
 
 require (
 	github.com/aws/aws-sdk-go-v2 v1.45.1
@@ -10,13 +10,13 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.109.1
 	github.com/go-viper/mapstructure/v2 v2.5.0
 	github.com/hashicorp/vault-client-go v0.4.3
-	github.com/johannesboyne/gofakes3 v0.0.0-20250916175020-ebf3e50324d3
-	github.com/matryer/moq v0.5.3
+	github.com/johannesboyne/gofakes3 v1.2.0
+	github.com/matryer/moq v0.7.1
 	github.com/urfave/cli-altsrc/v3 v3.1.0
 	github.com/urfave/cli/v3 v3.11.0
 	golang.org/x/crypto v0.55.0
 	golang.org/x/term v0.45.0
-	gotest.tools/v3 v3.5.1
+	gotest.tools/v3 v3.5.2
 )
 
 require (
@@ -35,20 +35,20 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.40.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.47.1 // indirect
 	github.com/aws/smithy-go v1.28.1 // indirect
-	github.com/google/go-cmp v0.6.0 // indirect
+	github.com/google/go-cmp v0.7.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-retryablehttp v0.7.8 // indirect
 	github.com/hashicorp/go-rootcerts v1.0.2 // indirect
 	github.com/hashicorp/go-secure-stdlib/strutil v0.1.2 // indirect
-	github.com/mattn/go-colorable v0.1.14 // indirect
+	github.com/mattn/go-colorable v0.1.15 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/ryanuber/go-glob v1.0.0 // indirect
 	github.com/ryszard/goskiplist v0.0.0-20150312221310-2dfbae5fcf46 // indirect
 	go.shabbyrobe.org/gocovmerge v0.0.0-20230507111327-fa4f82cfbf4d // indirect
-	golang.org/x/mod v0.34.0 // indirect
-	golang.org/x/sync v0.20.0 // indirect
+	golang.org/x/mod v0.40.0 // indirect
+	golang.org/x/sync v0.22.0 // indirect
 	golang.org/x/sys v0.47.0 // indirect
 	golang.org/x/time v0.15.0 // indirect
-	golang.org/x/tools v0.43.0 // indirect
+	golang.org/x/tools v0.49.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
