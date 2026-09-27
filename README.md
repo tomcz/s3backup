@@ -177,4 +177,4 @@ OPTIONS:
 ## Build
 
 1. Install Go 1.27 from https://golang.org/
-2. Build the binaries: `make build`
+2. Build the binary: `make build`
