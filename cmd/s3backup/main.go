@@ -192,7 +192,7 @@ func cipherFlags(encrypt bool) []cli.Flag {
 		&cli.StringFlag{
 			Name:        "symKey",
 			Aliases:     []string{"sym"},
-			Usage:       fmt.Sprintf("Password or base64-encoded key to use for symmetric AES %s. Use \"ask\" as the value to provide a password via an interactive prompt", sym),
+			Usage:       fmt.Sprintf("Password or base64-encoded key to use for symmetric AES %s; use \"ask\" as the value to provide a password via an interactive prompt", sym),
 			Destination: &symKeyValue,
 			Sources:     maybeFromYamlOrEnv("symKey"),
 		},

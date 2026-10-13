@@ -56,11 +56,11 @@ NAME:
    s3backup put - Upload file to S3 bucket using local credentials
 
 USAGE:
-   s3backup put [options] local_file_path s3://bucket/objectkey 
+   s3backup put [options] local_file_path s3://bucket/objectkey
 
 OPTIONS:
    --symKey string, --sym string  Password or base64-encoded key to use for symmetric AES
-                                  encryption. Use "ask" as the value to provide a password
+                                  encryption; use "ask" as the value to provide a password
                                   via an interactive prompt
    --pemKey FILE, --pem FILE      Path to PEM-encoded public key FILE
    --accessKey string             AWS Access Key ID (if not using default AWS credentials)
@@ -82,11 +82,11 @@ NAME:
    s3backup get - Download file from S3 bucket using local credentials
 
 USAGE:
-   s3backup get [options] s3://bucket/objectkey local_file_path 
+   s3backup get [options] s3://bucket/objectkey local_file_path
 
 OPTIONS:
    --symKey string, --sym string  Password or base64-encoded key to use for symmetric AES
-                                  decryption. Use "ask" as the value to provide a password
+                                  decryption; use "ask" as the value to provide a password
                                   via an interactive prompt
    --pemKey FILE, --pem FILE      Path to PEM-encoded private key FILE
    --accessKey string             AWS Access Key ID (if not using default AWS credentials)
@@ -112,7 +112,7 @@ NAME:
    s3backup vault-put - Upload file to S3 bucket using credentials from vault
 
 USAGE:
-   s3backup vault-put [options] local_file_path s3://bucket/objectkey 
+   s3backup vault-put [options] local_file_path s3://bucket/objectkey
 
 OPTIONS:
    --path string    Vault secret path containing backup credentials (required)
@@ -140,7 +140,7 @@ NAME:
    s3backup vault-get - Download file from S3 bucket using credentials from vault
 
 USAGE:
-   s3backup vault-get [options] s3://bucket/objectkey local_file_path 
+   s3backup vault-get [options] s3://bucket/objectkey local_file_path
 
 OPTIONS:
    --path string    Vault secret path containing backup credentials (required)
