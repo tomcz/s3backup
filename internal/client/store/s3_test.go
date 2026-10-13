@@ -42,7 +42,7 @@ func TestRoundTripUploadDownload_withChecksum(t *testing.T) {
 	_, err = impl.client.CreateBucket(t.Context(), &s3.CreateBucketInput{Bucket: aws.String("test-bucket")})
 	assert.NilError(t, err, "failed to create bucket")
 
-	err = store.UploadFile(t.Context(), "s3://test-bucket/test-file", uploadFile, "wibble")
+	err = store.UploadFile(t.Context(), "s3://test-bucket/test-file", uploadFile, "wibble", false)
 	assert.NilError(t, err, "failed to upload file")
 
 	downloadFile := uploadFile + ".download"
@@ -84,7 +84,7 @@ func TestRoundTripUploadDownload_withoutChecksum(t *testing.T) {
 	_, err = impl.client.CreateBucket(t.Context(), &s3.CreateBucketInput{Bucket: aws.String("test-bucket")})
 	assert.NilError(t, err, "failed to create bucket")
 
-	err = store.UploadFile(t.Context(), "s3://test-bucket/test-file", uploadFile, "")
+	err = store.UploadFile(t.Context(), "s3://test-bucket/test-file", uploadFile, "", true)
 	assert.NilError(t, err, "failed to upload file")
 
 	downloadFile := uploadFile + ".download"

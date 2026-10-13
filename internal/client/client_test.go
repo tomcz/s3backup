@@ -68,10 +68,11 @@ func TestPutLocalFileWithoutEncryption(t *testing.T) {
 		},
 	}
 	store := &StoreStub{
-		UploadFileFunc: func(ctx context.Context, remotePath string, localPath string, checksum string) error {
+		UploadFileFunc: func(ctx context.Context, remotePath string, localPath string, checksum string, publicRead bool) error {
 			assert.Check(t, is.Equal("s3://foo/bar.txt", remotePath))
 			assert.Check(t, is.Equal("bar.txt", localPath))
 			assert.Check(t, is.Equal("woahahaha", checksum))
+			assert.Check(t, is.Equal(false, publicRead))
 			return nil
 		},
 	}
@@ -79,7 +80,7 @@ func TestPutLocalFileWithoutEncryption(t *testing.T) {
 		Hash:  hash,
 		Store: store,
 	}
-	assert.NilError(t, c.PutLocalFile(t.Context(), "s3://foo/bar.txt", "bar.txt"))
+	assert.NilError(t, c.PutLocalFile(t.Context(), "s3://foo/bar.txt", "bar.txt", false))
 }
 
 func TestPutLocalFileWithEncryption(t *testing.T) {
@@ -90,10 +91,11 @@ func TestPutLocalFileWithEncryption(t *testing.T) {
 		},
 	}
 	store := &StoreStub{
-		UploadFileFunc: func(ctx context.Context, remotePath string, localPath string, checksum string) error {
+		UploadFileFunc: func(ctx context.Context, remotePath string, localPath string, checksum string, publicRead bool) error {
 			assert.Check(t, is.Equal("s3://foo/bar.txt", remotePath))
 			assert.Check(t, is.Equal("bar.txt.tmp", localPath))
 			assert.Check(t, is.Equal("woahahaha", checksum))
+			assert.Check(t, is.Equal(true, publicRead))
 			return nil
 		},
 	}
@@ -109,5 +111,5 @@ func TestPutLocalFileWithEncryption(t *testing.T) {
 		Store:  store,
 		Cipher: cipher,
 	}
-	assert.NilError(t, c.PutLocalFile(t.Context(), "s3://foo/bar.txt", "bar.txt"))
+	assert.NilError(t, c.PutLocalFile(t.Context(), "s3://foo/bar.txt", "bar.txt", true))
 }

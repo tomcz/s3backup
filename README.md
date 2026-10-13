@@ -70,6 +70,8 @@ OPTIONS:
    --region string                AWS Region (we use AWS defaults if not provided)
    --endpoint URL                 Custom AWS Endpoint URL (optional)
    --nocheck                      Do not create backup checksums
+   --publicRead                   Set the 'public-read' ACL on the uploaded file
+                                  ('private' ACL is set by default)
    --help, -h                     show help
 ```
 
@@ -126,6 +128,8 @@ OPTIONS:
                     VAULT_CACERT_BYTES, VAULT_CAPATH env vars)
    --vault URL      Vault service URL (or use VAULT_ADDR env var)
    --nocheck        Do not create backup checksums
+   --publicRead     Set the 'public-read' ACL on the uploaded file
+                    ('private' ACL is set by default)
    --help, -h       show help
 ```
 

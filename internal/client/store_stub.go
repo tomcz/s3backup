@@ -21,7 +21,7 @@ var _ Store = &StoreStub{}
 //			DownloadFileFunc: func(ctx context.Context, remotePath string, localPath string) (string, error) {
 //				panic("stub out the DownloadFile method")
 //			},
-//			UploadFileFunc: func(ctx context.Context, remotePath string, localPath string, checksum string) error {
+//			UploadFileFunc: func(ctx context.Context, remotePath string, localPath string, checksum string, publicRead bool) error {
 //				panic("stub out the UploadFile method")
 //			},
 //		}
@@ -35,7 +35,7 @@ type StoreStub struct {
 	DownloadFileFunc func(ctx context.Context, remotePath string, localPath string) (string, error)
 
 	// UploadFileFunc stubs the UploadFile method.
-	UploadFileFunc func(ctx context.Context, remotePath string, localPath string, checksum string) error
+	UploadFileFunc func(ctx context.Context, remotePath string, localPath string, checksum string, publicRead bool) error
 
 	// calls tracks calls to the methods.
 	calls struct {
@@ -58,6 +58,8 @@ type StoreStub struct {
 			LocalPath string
 			// Checksum is the checksum argument value.
 			Checksum string
+			// PublicRead is the publicRead argument value.
+			PublicRead bool
 		}
 	}
 	lockDownloadFile sync.RWMutex
@@ -105,7 +107,7 @@ func (stub *StoreStub) DownloadFileCalls() []struct {
 }
 
 // UploadFile calls UploadFileFunc.
-func (stub *StoreStub) UploadFile(ctx context.Context, remotePath string, localPath string, checksum string) error {
+func (stub *StoreStub) UploadFile(ctx context.Context, remotePath string, localPath string, checksum string, publicRead bool) error {
 	if stub.UploadFileFunc == nil {
 		panic("StoreStub.UploadFileFunc: method is nil but Store.UploadFile was just called")
 	}
@@ -114,16 +116,18 @@ func (stub *StoreStub) UploadFile(ctx context.Context, remotePath string, localP
 		RemotePath string
 		LocalPath  string
 		Checksum   string
+		PublicRead bool
 	}{
 		Ctx:        ctx,
 		RemotePath: remotePath,
 		LocalPath:  localPath,
 		Checksum:   checksum,
+		PublicRead: publicRead,
 	}
 	stub.lockUploadFile.Lock()
 	stub.calls.UploadFile = append(stub.calls.UploadFile, callInfo)
 	stub.lockUploadFile.Unlock()
-	return stub.UploadFileFunc(ctx, remotePath, localPath, checksum)
+	return stub.UploadFileFunc(ctx, remotePath, localPath, checksum, publicRead)
 }
 
 // UploadFileCalls gets all the calls that were made to UploadFile.
@@ -135,12 +139,14 @@ func (stub *StoreStub) UploadFileCalls() []struct {
 	RemotePath string
 	LocalPath  string
 	Checksum   string
+	PublicRead bool
 } {
 	var calls []struct {
 		Ctx        context.Context
 		RemotePath string
 		LocalPath  string
 		Checksum   string
+		PublicRead bool
 	}
 	stub.lockUploadFile.RLock()
 	calls = stub.calls.UploadFile

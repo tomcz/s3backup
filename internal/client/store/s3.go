@@ -54,7 +54,7 @@ func (a AwsS3) Store() (client.Store, error) {
 	}, nil
 }
 
-func (s *s3store) UploadFile(ctx context.Context, remotePath, localPath, checksum string) error {
+func (s *s3store) UploadFile(ctx context.Context, remotePath, localPath, checksum string, publicRead bool) error {
 	bucket, objectKey, err := splitRemotePath(remotePath)
 	if err != nil {
 		return err
@@ -71,6 +71,9 @@ func (s *s3store) UploadFile(ctx context.Context, remotePath, localPath, checksu
 		Key:    aws.String(objectKey),
 		Body:   file,
 		ACL:    types.ObjectCannedACLPrivate,
+	}
+	if publicRead {
+		req.ACL = types.ObjectCannedACLPublicRead
 	}
 	if checksum != "" {
 		req.Metadata = map[string]string{

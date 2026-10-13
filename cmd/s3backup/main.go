@@ -40,7 +40,8 @@ var (
 
 // get & put flags
 var (
-	skipHash bool
+	skipHash   bool
+	publicRead bool
 
 	awsAccessKey string
 	awsSecretKey string
@@ -206,11 +207,31 @@ func cipherFlags(encrypt bool) []cli.Flag {
 	return flags
 }
 
-func basicFlags(encrypt bool) []cli.Flag {
+func booleanFlags(encrypt bool) []cli.Flag {
 	check := "verify"
 	if encrypt {
 		check = "create"
 	}
+	flags := []cli.Flag{
+		&cli.BoolFlag{
+			Name:        "nocheck",
+			Usage:       fmt.Sprintf("Do not %s backup checksums", check),
+			Destination: &skipHash,
+			Sources:     maybeFromYamlOrEnv("nocheck"),
+		},
+	}
+	if encrypt {
+		flags = append(flags, &cli.BoolFlag{
+			Name:        "publicRead",
+			Usage:       "Set the 'public-read' ACL on the uploaded file ('private' ACL is set by default)",
+			Destination: &publicRead,
+			Sources:     maybeFromYamlOrEnv("publicRead"),
+		})
+	}
+	return flags
+}
+
+func basicFlags(encrypt bool) []cli.Flag {
 	flags := []cli.Flag{
 		&cli.StringFlag{
 			Name:        "accessKey",
@@ -242,22 +263,12 @@ func basicFlags(encrypt bool) []cli.Flag {
 			Destination: &awsEndpoint,
 			Sources:     maybeFromYamlOrEnv("endpoint"),
 		},
-		&cli.BoolFlag{
-			Name:        "nocheck",
-			Usage:       fmt.Sprintf("Do not %s backup checksums", check),
-			Destination: &skipHash,
-			Sources:     maybeFromYamlOrEnv("nocheck"),
-		},
 	}
-	return slices.Concat(cipherFlags(encrypt), flags)
+	return slices.Concat(cipherFlags(encrypt), flags, booleanFlags(encrypt))
 }
 
 func vaultFlags(encrypt bool) []cli.Flag {
-	check := "verify"
-	if encrypt {
-		check = "create"
-	}
-	return []cli.Flag{
+	flags := []cli.Flag{
 		&cli.StringFlag{
 			Name:        "path",
 			Usage:       "Vault secret path containing backup credentials (required)",
@@ -307,13 +318,8 @@ func vaultFlags(encrypt bool) []cli.Flag {
 			Destination: &vaultAddress,
 			Sources:     maybeFromYamlOrEnv("vault"),
 		},
-		&cli.BoolFlag{
-			Name:        "nocheck",
-			Usage:       fmt.Sprintf("Do not %s backup checksums", check),
-			Destination: &skipHash,
-			Sources:     maybeFromYamlOrEnv("nocheck"),
-		},
 	}
+	return slices.Concat(flags, booleanFlags(encrypt))
 }
 
 func genKeyFlags() []cli.Flag {
@@ -404,7 +410,7 @@ func basicPut(ctx context.Context, _ *cli.Command) error {
 	if err != nil {
 		return err
 	}
-	return c.PutLocalFile(ctx, remote, local)
+	return c.PutLocalFile(ctx, remote, local, publicRead)
 }
 
 func basicGet(ctx context.Context, _ *cli.Command) error {

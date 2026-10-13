@@ -44,7 +44,7 @@ func (c *Client) GetRemoteFile(ctx context.Context, remotePath, localPath string
 	return nil
 }
 
-func (c *Client) PutLocalFile(ctx context.Context, remotePath, localPath string) error {
+func (c *Client) PutLocalFile(ctx context.Context, remotePath, localPath string, publicRead bool) error {
 	tempFile := localPath
 	if c.Cipher != nil {
 		tempFile += tempFileSuffix
@@ -67,7 +67,7 @@ func (c *Client) PutLocalFile(ctx context.Context, remotePath, localPath string)
 	}
 
 	log.Println("Uploading", tempFile, "as", remotePath)
-	return c.Store.UploadFile(ctx, remotePath, tempFile, checksum)
+	return c.Store.UploadFile(ctx, remotePath, tempFile, checksum, publicRead)
 }
 
 func remove(filePath string) {
