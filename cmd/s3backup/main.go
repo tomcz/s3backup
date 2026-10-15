@@ -111,7 +111,7 @@ func main() {
 	}
 	cmdGenAES := &cli.Command{
 		Name:   "aes",
-		Usage:  "Generate and print AES key",
+		Usage:  "Generate and print an AES key",
 		Action: genSecretKey,
 	}
 	cmdGenRSA := &cli.Command{
@@ -120,10 +120,16 @@ func main() {
 		Action: genKeyPair,
 		Flags:  genKeyFlags(),
 	}
+	cmdGenPass := &cli.Command{
+		Name:   "pass",
+		Usage:  "Generate and print a passphrase",
+		Action: genPassword,
+		Flags:  genPasswordFlags(),
+	}
 	cmdKeygen := &cli.Command{
 		Name:     "keygen",
-		Usage:    "Generate RSA and AES backup keys",
-		Commands: []*cli.Command{cmdGenAES, cmdGenRSA},
+		Usage:    "Generate backup keys (Password, AES, RSA)",
+		Commands: []*cli.Command{cmdGenPass, cmdGenAES, cmdGenRSA},
 	}
 	cmdEncrypt := &cli.Command{
 		Name:      "encrypt",
@@ -337,6 +343,17 @@ func genKeyFlags() []cli.Flag {
 	}
 }
 
+func genPasswordFlags() []cli.Flag {
+	return []cli.Flag{
+		&cli.Uint8Flag{
+			Name:    "words",
+			Aliases: []string{"w"},
+			Usage:   "Number of words in passphrase",
+			Value:   10,
+		},
+	}
+}
+
 // ============================================================
 // CLI args
 // ============================================================
@@ -448,6 +465,19 @@ func genSecretKey(context.Context, *cli.Command) error {
 
 func genKeyPair(_ context.Context, cmd *cli.Command) error {
 	return crypto.GenerateRSAKeyPair(cmd.String("priv"), cmd.String("pub"))
+}
+
+func genPassword(_ context.Context, cmd *cli.Command) error {
+	words := make([]string, cmd.Uint8("words"))
+	for i := range words {
+		word, err := crypto.RandomWord()
+		if err != nil {
+			return err
+		}
+		words[i] = word
+	}
+	fmt.Println(strings.Join(words, "-"))
+	return nil
 }
 
 func encryptLocalFile(context.Context, *cli.Command) error {

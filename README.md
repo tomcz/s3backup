@@ -34,7 +34,7 @@ COMMANDS:
    get        Download file from S3 bucket using local credentials
    vault-put  Upload file to S3 bucket using credentials from vault
    vault-get  Download file from S3 bucket using credentials from vault
-   keygen     Generate RSA and AES backup keys
+   keygen     Generate backup keys (Password, AES, RSA)
    encrypt    Encrypt a local file
    decrypt    Decrypt a local file
    version    Print version and exit
@@ -161,18 +161,19 @@ OPTIONS:
 
 ## Backup key generation
 
-To make things easier, `s3backup` also provides `keygen` commands to create 256-bit symmetric keys and 4096-bit RSA private/public key pairs suitable for use by `s3backup`.
+To make things easier, `s3backup` also provides `keygen` commands to create passwords, 256-bit symmetric keys, and 4096-bit RSA private/public key pairs suitable for use by `s3backup`.
 
 ```
 NAME:
-   s3backup keygen - Generate RSA and AES backup keys
+   s3backup keygen - Generate backup keys (Password, AES, RSA)
 
 USAGE:
    s3backup keygen [command [command options]]
 
 COMMANDS:
-   aes  Generate and print AES key
-   rsa  Generate RSA key pair files
+   pass  Generate and print a passphrase
+   aes   Generate and print an AES key
+   rsa   Generate RSA key pair files
 
 OPTIONS:
    --help, -h  show help
