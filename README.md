@@ -171,7 +171,7 @@ USAGE:
    s3backup keygen [command [command options]]
 
 COMMANDS:
-   pass  Generate and print a passphrase
+   pass  Generate and print a password
    aes   Generate and print an AES key
    rsa   Generate RSA key pair files
 

@@ -122,7 +122,7 @@ func main() {
 	}
 	cmdGenPass := &cli.Command{
 		Name:   "pass",
-		Usage:  "Generate and print a passphrase",
+		Usage:  "Generate and print a password",
 		Action: genPassword,
 		Flags:  genPasswordFlags(),
 	}
@@ -348,7 +348,7 @@ func genPasswordFlags() []cli.Flag {
 		&cli.Uint8Flag{
 			Name:    "words",
 			Aliases: []string{"w"},
-			Usage:   "Number of words in passphrase",
+			Usage:   "Number of words in password",
 			Value:   10,
 		},
 	}
