@@ -31,3 +31,8 @@ func TestCheckPaths(t *testing.T) {
 	assert.Equal(t, inLocal, outRemote)
 	assert.Equal(t, inRemote, outLocal)
 }
+
+func TestNewHash(t *testing.T) {
+	assert.Assert(t, newHash(false, true) != nil)
+	assert.Assert(t, newHash(true, true) == nil)
+}
