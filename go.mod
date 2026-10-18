@@ -3,6 +3,8 @@ module github.com/tomcz/s3backup/v2
 go 1.27
 
 require (
+	github.com/alecthomas/kong v1.16.1
+	github.com/alecthomas/kong-yaml v0.2.0
 	github.com/aws/aws-sdk-go-v2 v1.47.3
 	github.com/aws/aws-sdk-go-v2/config v1.33.9
 	github.com/aws/aws-sdk-go-v2/credentials v1.20.9
@@ -12,8 +14,6 @@ require (
 	github.com/hashicorp/vault-client-go v0.4.3
 	github.com/johannesboyne/gofakes3 v1.2.0
 	github.com/matryer/moq v0.8.1
-	github.com/urfave/cli-altsrc/v3 v3.1.0
-	github.com/urfave/cli/v3 v3.14.0
 	golang.org/x/crypto v0.58.0
 	golang.org/x/term v0.47.0
 	gotest.tools/v3 v3.5.2
@@ -40,10 +40,12 @@ require (
 	github.com/hashicorp/go-retryablehttp v0.7.8 // indirect
 	github.com/hashicorp/go-rootcerts v1.0.2 // indirect
 	github.com/hashicorp/go-secure-stdlib/strutil v0.1.2 // indirect
+	github.com/kr/text v0.2.0 // indirect
 	github.com/mattn/go-colorable v0.1.15 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/ryanuber/go-glob v1.0.0 // indirect
 	github.com/ryszard/goskiplist v0.0.0-20150312221310-2dfbae5fcf46 // indirect
+	github.com/stretchr/testify v1.12.1 // indirect
 	go.shabbyrobe.org/gocovmerge v0.0.0-20230507111327-fa4f82cfbf4d // indirect
 	golang.org/x/mod v0.42.0 // indirect
 	golang.org/x/sync v0.24.0 // indirect

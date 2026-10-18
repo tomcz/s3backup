@@ -23,76 +23,98 @@ You can download the latest release from [here](https://github.com/tomcz/s3backu
 ## Usage
 
 ```
-NAME:
-   s3backup - S3 backup script in a single binary
+Usage: s3backup <command> [flags]
 
-USAGE:
-   s3backup [global options] [command [command options]]
+S3 backup script in a single binary
 
-COMMANDS:
-   put        Upload file to S3 bucket using local credentials
-   get        Download file from S3 bucket using local credentials
-   vault-put  Upload file to S3 bucket using credentials from vault
-   vault-get  Download file from S3 bucket using credentials from vault
-   keygen     Generate backup keys (Password, AES, RSA)
-   encrypt    Encrypt a local file
-   decrypt    Decrypt a local file
-   verify     Verify a checksum against a local file
-   version    Print version and exit
-   help, h    Shows a list of commands or help for one command
+Flags:
+  -h, --help       Show context-sensitive help.
+  -v, --version    Print version and exit
 
-GLOBAL OPTIONS:
-   --help, -h     show help
-   --version, -v  print the version
+Commands:
+  put            Upload file to S3 bucket using local credentials
+  get            Download file from S3 bucket using local credentials
+  vault-put      Upload file to S3 bucket using credentials from vault
+  vault-get      Download file from S3 bucket using credentials from vault
+  keygen pass    Generate and print a password
+  keygen aes     Generate and print an AES key
+  keygen rsa     Generate RSA key pair files
+  encrypt        Encrypt a local file
+  decrypt        Decrypt a local file
+  verify         Verify a checksum against a local file
+  version        Print version and exit
+
+Run "s3backup <command> --help" for more information on a command.
 ```
 
 ### AWS S3 Credentials
 
-AWS S3 integration in `s3backup` can be configured from the command line, and/or an optional YAML configuration file provided by the `S3BACKUP_YAML` environment variable (in which its yaml key names match the option names), and using AWS environment variables and config files. [Click here](https://docs.aws.amazon.com/sdk-for-go/v1/developer-guide/configuring-sdk.html) for details on using default AWS credentials.
+AWS S3 integration in `s3backup` can be configured from the command line, and/or an optional YAML configuration file provided by the `S3BACKUP_YAML` environment variable (in which its YAML key names match the option names), and using AWS environment variables and config files. [Click here](https://docs.aws.amazon.com/sdk-for-go/v1/developer-guide/configuring-sdk.html) for details on using default AWS credentials.
 
 #### s3backup put
 
 ```
-NAME:
-   s3backup put - Upload file to S3 bucket using local credentials
+Usage: s3backup put <local-path> <s3://bucket/objectkey> [flags]
 
-USAGE:
-   s3backup put [options] local_file_path s3://bucket/objectkey 
+Upload file to S3 bucket using local credentials
 
-OPTIONS:
-   --symKey string, --sym string  Password or base64-encoded key to use for symmetric AES encryption; use "ask" as the value to provide a password via an interactive prompt
-   --pemKey FILE, --pem FILE      Path to PEM-encoded public key FILE
-   --accessKey string             AWS Access Key ID (if not using default AWS credentials)
-   --secretKey string             AWS Secret Key (required when accessKey is provided)
-   --token string                 AWS Token (effective only when accessKey is provided & only if required by your AWS setup)
-   --region string                AWS Region (we use AWS defaults if not provided)
-   --endpoint URL                 Custom AWS Endpoint URL (optional)
-   --publicRead                   Set the "public-read" ACL on the uploaded file ("private" ACL is set by default)
-   --nocheck                      Do not create backup checksums
-   --hex                          Create hex-encoded (rather than base64-encoded) backup checksums; unless nocheck is set
-   --help, -h                     show help
+Arguments:
+  <local-path>               Source file path
+  <s3://bucket/objectkey>    Destination S3 path
+
+Flags:
+  -h, --help                Show context-sensitive help.
+  -v, --version             Print version and exit
+
+  -c, --config-file=FILE    Path to a YAML configuration file ($S3BACKUP_YAML)
+      --symKey=STRING       Password or base64-encoded key to use for symmetric
+                            AES encryption; use "ask" as the value to provide a
+                            password via an interactive prompt
+      --pemKey=FILE         Path to PEM-encoded public key file
+      --accessKey=STRING    AWS Access Key ID (if not using default AWS
+                            credentials)
+      --secretKey=STRING    AWS Secret Key (required when accessKey is provided)
+      --token=STRING        AWS Token (effective only when accessKey is provided
+                            & only if required by your AWS setup)
+      --region=STRING       AWS Region (we use AWS defaults if not provided)
+      --endpoint=URL        Custom AWS Endpoint URL (optional)
+      --publicRead          Set the "public-read" ACL on the uploaded file
+                            ("private" ACL is set by default)
+      --nocheck             Do not create backup checksums
+      --hex                 Create hex-encoded (rather than base64-encoded)
+                            backup checksums; unless nocheck is set
 ```
 
 #### s3backup get
 
 ```
-NAME:
-   s3backup get - Download file from S3 bucket using local credentials
+Usage: s3backup get <s3://bucket/objectkey> <local-path> [flags]
 
-USAGE:
-   s3backup get [options] s3://bucket/objectkey local_file_path 
+Download file from S3 bucket using local credentials
 
-OPTIONS:
-   --symKey string, --sym string  Password or base64-encoded key to use for symmetric AES decryption; use "ask" as the value to provide a password via an interactive prompt
-   --pemKey FILE, --pem FILE      Path to PEM-encoded private key FILE
-   --accessKey string             AWS Access Key ID (if not using default AWS credentials)
-   --secretKey string             AWS Secret Key (required when accessKey is provided)
-   --token string                 AWS Token (effective only when accessKey is provided & only if required by your AWS setup)
-   --region string                AWS Region (we use AWS defaults if not provided)
-   --endpoint URL                 Custom AWS Endpoint URL (optional)
-   --nocheck                      Do not verify backup checksums
-   --hex                          Expect hex-encoded (rather than base64-encoded) backup checksums; unless nocheck is set
-   --help, -h                     show help
+Arguments:
+  <s3://bucket/objectkey>    Source S3 path
+  <local-path>               Destination file path
+
+Flags:
+  -h, --help                Show context-sensitive help.
+  -v, --version             Print version and exit
+
+  -c, --config-file=FILE    Path to a YAML configuration file ($S3BACKUP_YAML)
+      --symKey=STRING       Password or base64-encoded key to use for symmetric
+                            AES decryption; use "ask" as the value to provide a
+                            password via an interactive prompt
+      --pemKey=FILE         Path to PEM-encoded private key file
+      --accessKey=STRING    AWS Access Key ID (if not using default AWS
+                            credentials)
+      --secretKey=STRING    AWS Secret Key (required when accessKey is provided)
+      --token=STRING        AWS Token (effective only when accessKey is provided
+                            & only if required by your AWS setup)
+      --region=STRING       AWS Region (we use AWS defaults if not provided)
+      --endpoint=URL        Custom AWS Endpoint URL (optional)
+      --nocheck             Do not verify backup checksums
+      --hex                 Expect hex-encoded (rather than base64-encoded)
+                            backup checksums; unless nocheck is set
 ```
 
 ### HashiCorp Vault
@@ -104,48 +126,75 @@ Vault integration in `s3backup` can be configured from the command line, and/or 
 #### s3backup vault-put
 
 ```
-NAME:
-   s3backup vault-put - Upload file to S3 bucket using credentials from vault
+Usage: s3backup vault-put --path=STRING <local-path> <s3://bucket/objectkey> [flags]
 
-USAGE:
-   s3backup vault-put [options] local_file_path s3://bucket/objectkey 
+Upload file to S3 bucket using credentials from vault
 
-OPTIONS:
-   --path string    Vault secret path containing backup credentials (required)
-   --kv2            Vault secret path represents a key/value version 2 secrets engine
-   --mount string   Vault approle mount path (default: approle)
-   --role string    Vault role_id to retrieve backup credentials (either role & secret, or token) [$VAULT_ROLE_ID]
-   --secret string  Vault secret_id to retrieve backup credentials (either role & secret, or token) [$VAULT_SECRET_ID]
-   --token string   Vault token to retrieve backup credentials (either role & secret, or token) [$VAULT_TOKEN]
-   --caCert FILE    Vault root certificate FILE (optional, or use one of VAULT_CACERT, VAULT_CACERT_BYTES, VAULT_CAPATH env vars)
-   --vault URL      Vault service URL (or use VAULT_ADDR env var)
-   --publicRead     Set the "public-read" ACL on the uploaded file ("private" ACL is set by default)
-   --nocheck        Do not create backup checksums
-   --hex            Create hex-encoded (rather than base64-encoded) backup checksums; unless nocheck is set
-   --help, -h       show help
+Arguments:
+  <local-path>               Source file path
+  <s3://bucket/objectkey>    Destination S3 path
+
+Flags:
+  -h, --help                Show context-sensitive help.
+  -v, --version             Print version and exit
+
+  -c, --config-file=FILE    Path to a YAML configuration file ($S3BACKUP_YAML)
+      --path=STRING         Vault secret path containing backup credentials
+                            (required)
+      --kv2                 Vault secret path represents a key/value version 2
+                            secrets engine
+      --mount=STRING        Vault approle mount path (default: approle)
+      --role=STRING         Vault role_id to retrieve backup credentials (either
+                            role & secret, or token) ($VAULT_ROLE_ID)
+      --secret=STRING       Vault secret_id to retrieve backup credentials
+                            (either role & secret, or token) ($VAULT_SECRET_ID)
+      --token=STRING        Vault token to retrieve backup credentials (either
+                            role & secret, or token) ($VAULT_TOKEN)
+      --caCert=FILE         Vault root certificate file (optional, or use one of
+                            VAULT_CACERT, VAULT_CACERT_BYTES, VAULT_CAPATH env
+                            vars)
+      --vault=URL           Vault service url (or use VAULT_ADDR env var)
+      --publicRead          Set the "public-read" ACL on the uploaded file
+                            ("private" ACL is set by default)
+      --nocheck             Do not create backup checksums
+      --hex                 Create hex-encoded (rather than base64-encoded)
+                            backup checksums; unless nocheck is set
 ```
 
 #### s3backup vault-get
 
 ```
-NAME:
-   s3backup vault-get - Download file from S3 bucket using credentials from vault
+Usage: s3backup vault-get --path=STRING <s3://bucket/objectkey> <local-path> [flags]
 
-USAGE:
-   s3backup vault-get [options] s3://bucket/objectkey local_file_path 
+Download file from S3 bucket using credentials from vault
 
-OPTIONS:
-   --path string    Vault secret path containing backup credentials (required)
-   --kv2            Vault secret path represents a key/value version 2 secrets engine
-   --mount string   Vault approle mount path (default: approle)
-   --role string    Vault role_id to retrieve backup credentials (either role & secret, or token) [$VAULT_ROLE_ID]
-   --secret string  Vault secret_id to retrieve backup credentials (either role & secret, or token) [$VAULT_SECRET_ID]
-   --token string   Vault token to retrieve backup credentials (either role & secret, or token) [$VAULT_TOKEN]
-   --caCert FILE    Vault root certificate FILE (optional, or use one of VAULT_CACERT, VAULT_CACERT_BYTES, VAULT_CAPATH env vars)
-   --vault URL      Vault service URL (or use VAULT_ADDR env var)
-   --nocheck        Do not verify backup checksums
-   --hex            Expect hex-encoded (rather than base64-encoded) backup checksums; unless nocheck is set
-   --help, -h       show help
+Arguments:
+  <s3://bucket/objectkey>    Source S3 path
+  <local-path>               Destination file path
+
+Flags:
+  -h, --help                Show context-sensitive help.
+  -v, --version             Print version and exit
+
+  -c, --config-file=FILE    Path to a YAML configuration file ($S3BACKUP_YAML)
+      --path=STRING         Vault secret path containing backup credentials
+                            (required)
+      --kv2                 Vault secret path represents a key/value version 2
+                            secrets engine
+      --mount=STRING        Vault approle mount path (default: approle)
+      --role=STRING         Vault role_id to retrieve backup credentials (either
+                            role & secret, or token) ($VAULT_ROLE_ID)
+      --secret=STRING       Vault secret_id to retrieve backup credentials
+                            (either role & secret, or token) ($VAULT_SECRET_ID)
+      --token=STRING        Vault token to retrieve backup credentials (either
+                            role & secret, or token) ($VAULT_TOKEN)
+      --caCert=FILE         Vault root certificate file (optional, or use one of
+                            VAULT_CACERT, VAULT_CACERT_BYTES, VAULT_CAPATH env
+                            vars)
+      --vault=URL           Vault service url (or use VAULT_ADDR env var)
+      --nocheck             Do not verify backup checksums
+      --hex                 Expect hex-encoded (rather than base64-encoded)
+                            backup checksums; unless nocheck is set
 ```
 
 ## Backup key generation
@@ -153,19 +202,18 @@ OPTIONS:
 To make things easier, `s3backup` also provides `keygen` commands to create passwords, 256-bit symmetric keys, and 4096-bit RSA private/public key pairs suitable for use by `s3backup`.
 
 ```
-NAME:
-   s3backup keygen - Generate backup keys (Password, AES, RSA)
+Usage: s3backup keygen <command> [flags]
 
-USAGE:
-   s3backup keygen [command [command options]]
+Generate backup keys (Password, AES, RSA)
 
-COMMANDS:
-   pass  Generate and print a password
-   aes   Generate and print an AES key
-   rsa   Generate RSA key pair files
+Flags:
+  -h, --help       Show context-sensitive help.
+  -v, --version    Print version and exit
 
-OPTIONS:
-   --help, -h  show help
+Commands:
+  keygen pass    Generate and print a password
+  keygen aes     Generate and print an AES key
+  keygen rsa     Generate RSA key pair files
 ```
 
 ## Build
