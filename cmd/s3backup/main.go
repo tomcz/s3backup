@@ -41,6 +41,7 @@ var (
 // get & put flags
 var (
 	skipHash   bool
+	hexEncode  bool
 	publicRead bool
 
 	awsAccessKey string
@@ -215,26 +216,34 @@ func cipherFlags(encrypt bool) []cli.Flag {
 
 func booleanFlags(encrypt bool) []cli.Flag {
 	check := "verify"
+	encode := "Expect"
 	if encrypt {
 		check = "create"
+		encode = "Create"
 	}
-	flags := []cli.Flag{
+	var flags []cli.Flag
+	if encrypt {
+		flags = append(flags, &cli.BoolFlag{
+			Name:        "publicRead",
+			Usage:       "Set the \"public-read\" ACL on the uploaded file (\"private\" ACL is set by default)",
+			Destination: &publicRead,
+			Sources:     maybeFromYamlOrEnv("publicRead"),
+		})
+	}
+	return append(flags,
 		&cli.BoolFlag{
 			Name:        "nocheck",
 			Usage:       fmt.Sprintf("Do not %s backup checksums", check),
 			Destination: &skipHash,
 			Sources:     maybeFromYamlOrEnv("nocheck"),
 		},
-	}
-	if encrypt {
-		flags = append(flags, &cli.BoolFlag{
-			Name:        "publicRead",
-			Usage:       "Set the 'public-read' ACL on the uploaded file ('private' ACL is set by default)",
-			Destination: &publicRead,
-			Sources:     maybeFromYamlOrEnv("publicRead"),
-		})
-	}
-	return flags
+		&cli.BoolFlag{
+			Name:        "hex",
+			Usage:       fmt.Sprintf("%s hex-encoded (rather than base64-encoded) backup checksums; unless nocheck is set", encode),
+			Destination: &hexEncode,
+			Sources:     maybeFromYamlOrEnv("hex"),
+		},
+	)
 }
 
 func basicFlags(encrypt bool) []cli.Flag {
@@ -566,7 +575,7 @@ func newClient() (*client.Client, error) {
 	}
 	var hash client.Hash
 	if !skipHash {
-		hash = crypto.NewHash()
+		hash = crypto.NewHash(hexEncode)
 	}
 	return &client.Client{
 		Hash:   hash,

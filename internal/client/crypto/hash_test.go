@@ -8,14 +8,30 @@ import (
 	"gotest.tools/v3/assert"
 )
 
-func TestVerifyHashOnSameFile(t *testing.T) {
+func TestVerifyHashOnSameFile_Base64(t *testing.T) {
 	buf := randomBytes(1024)
 
 	file := path.Join(t.TempDir(), "data")
 	err := os.WriteFile(file, buf, 0600)
 	assert.NilError(t, err, "Cannot create file to hash")
 
-	hash := NewHash()
+	hash := NewHash(false)
+
+	checksum, err := hash.Calculate(file)
+	assert.NilError(t, err, "Cannot create checksum")
+
+	err = hash.Verify(file, checksum)
+	assert.NilError(t, err, "Unexpected mismatch")
+}
+
+func TestVerifyHashOnSameFile_Hex(t *testing.T) {
+	buf := randomBytes(1024)
+
+	file := path.Join(t.TempDir(), "data")
+	err := os.WriteFile(file, buf, 0600)
+	assert.NilError(t, err, "Cannot create file to hash")
+
+	hash := NewHash(true)
 
 	checksum, err := hash.Calculate(file)
 	assert.NilError(t, err, "Cannot create checksum")
@@ -37,7 +53,7 @@ func TestVerifyHashOnDifferentFiles(t *testing.T) {
 	err = os.WriteFile(file2, buf2, 0600)
 	assert.NilError(t, err, "Cannot create file to hash")
 
-	hash := NewHash()
+	hash := NewHash(false)
 
 	checksum, err := hash.Calculate(file1)
 	assert.NilError(t, err, "Cannot create checksum")
@@ -47,7 +63,7 @@ func TestVerifyHashOnDifferentFiles(t *testing.T) {
 }
 
 func TestVerifyHashBlank(t *testing.T) {
-	hash := NewHash()
+	hash := NewHash(false)
 	err := hash.Verify("wibble", "")
 	assert.Error(t, err, "checksum: expected is blank")
 }
