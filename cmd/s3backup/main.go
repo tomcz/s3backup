@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"net/url"
 	"os"
 	"os/signal"
 	"runtime/debug"
@@ -63,22 +64,22 @@ type boolGetFlags struct {
 }
 
 type awsFlags struct {
-	AccessKey string `name:"accessKey" help:"AWS Access Key ID (if not using default AWS credentials)"`
-	SecretKey string `name:"secretKey" help:"AWS Secret Key (required when accessKey is provided)"`
-	Token     string `name:"token" help:"AWS Token (effective only when accessKey is provided & only if required by your AWS setup)"`
-	Region    string `name:"region" help:"AWS Region (we use AWS defaults if not provided)"`
-	Endpoint  string `name:"endpoint" placeholder:"URL" help:"Custom AWS Endpoint URL (optional)"`
+	AccessKey string   `name:"accessKey" help:"AWS Access Key ID (if not using default AWS credentials)"`
+	SecretKey string   `name:"secretKey" help:"AWS Secret Key (required when accessKey is provided)"`
+	Token     string   `name:"token" help:"AWS Token (effective only when accessKey is provided & only if required by your AWS setup)"`
+	Region    string   `name:"region" help:"AWS Region (we use AWS defaults if not provided)"`
+	Endpoint  *url.URL `name:"endpoint" placeholder:"URL" help:"Custom AWS Endpoint URL (optional)"`
 }
 
 type vaultFlags struct {
-	Path     string `name:"path" required:"" help:"Vault secret path containing backup credentials (required)"`
-	IsKV2    bool   `name:"kv2" help:"Vault secret path represents a key/value version 2 secrets engine"`
-	Mount    string `name:"mount" help:"Vault approle mount path (default: approle)"`
-	RoleID   string `name:"role" env:"VAULT_ROLE_ID" help:"Vault role_id to retrieve backup credentials (either role & secret, or token)"`
-	SecretID string `name:"secret" env:"VAULT_SECRET_ID" help:"Vault secret_id to retrieve backup credentials (either role & secret, or token)"`
-	Token    string `name:"token" env:"VAULT_TOKEN" help:"Vault token to retrieve backup credentials (either role & secret, or token)"`
-	CaCert   string `name:"caCert" placeholder:"FILE" type:"existingfile" help:"Vault root certificate file (optional, or use one of VAULT_CACERT, VAULT_CACERT_BYTES, VAULT_CAPATH env vars)"`
-	VaultURL string `name:"vault" placeholder:"URL" help:"Vault service url (or use VAULT_ADDR env var)"`
+	Path     string   `name:"path" required:"" help:"Vault secret path containing backup credentials (required)"`
+	IsKV2    bool     `name:"kv2" help:"Vault secret path represents a key/value version 2 secrets engine"`
+	Mount    string   `name:"mount" help:"Vault approle mount path (default: approle)"`
+	RoleID   string   `name:"role" env:"VAULT_ROLE_ID" help:"Vault role_id to retrieve backup credentials (either role & secret, or token)"`
+	SecretID string   `name:"secret" env:"VAULT_SECRET_ID" help:"Vault secret_id to retrieve backup credentials (either role & secret, or token)"`
+	Token    string   `name:"token" env:"VAULT_TOKEN" help:"Vault token to retrieve backup credentials (either role & secret, or token)"`
+	CaCert   string   `name:"caCert" placeholder:"FILE" type:"existingfile" help:"Vault root certificate file (optional, or use one of VAULT_CACERT, VAULT_CACERT_BYTES, VAULT_CAPATH env vars)"`
+	VaultURL *url.URL `name:"vault" placeholder:"URL" help:"Vault service url (or use VAULT_ADDR env var)"`
 }
 
 type putCmd struct {
@@ -233,6 +234,14 @@ func (c *vaultPutCmd) Run(ctx context.Context) error {
 		return err
 	}
 
+	var endpoint *url.URL
+	if cfg.S3Endpoint != "" {
+		endpoint, err = url.Parse(cfg.S3Endpoint)
+		if err != nil {
+			return err
+		}
+	}
+
 	var pemKeyFile string
 	if cfg.PublicKey != "" {
 		pemKeyFile, err = createPemKeyFile("pub", cfg.PublicKey)
@@ -250,7 +259,7 @@ func (c *vaultPutCmd) Run(ctx context.Context) error {
 		SecretKey:    cfg.S3SecretKey,
 		Token:        cfg.S3Token,
 		Region:       cfg.S3Region,
-		Endpoint:     cfg.S3Endpoint,
+		Endpoint:     endpoint,
 		boolPutFlags: c.boolPutFlags,
 	}
 	return cmd.Run(ctx)
@@ -260,6 +269,14 @@ func (c *vaultGetCmd) Run(ctx context.Context) error {
 	cfg, err := c.Config(ctx)
 	if err != nil {
 		return err
+	}
+
+	var endpoint *url.URL
+	if cfg.S3Endpoint != "" {
+		endpoint, err = url.Parse(cfg.S3Endpoint)
+		if err != nil {
+			return err
+		}
 	}
 
 	var pemKeyFile string
@@ -279,7 +296,7 @@ func (c *vaultGetCmd) Run(ctx context.Context) error {
 		SecretKey:    cfg.S3SecretKey,
 		Token:        cfg.S3Token,
 		Region:       cfg.S3Region,
-		Endpoint:     cfg.S3Endpoint,
+		Endpoint:     endpoint,
 		boolGetFlags: c.boolGetFlags,
 	}
 	return cmd.Run(ctx)
@@ -381,7 +398,9 @@ func (f awsFlags) Client(co cipherOpts, ho hashOpts) (*client.Client, error) {
 		SecretKey: f.SecretKey,
 		Token:     f.Token,
 		Region:    f.Region,
-		Endpoint:  f.Endpoint,
+	}
+	if f.Endpoint != nil {
+		aws.Endpoint = f.Endpoint.String()
 	}
 	backend, err := aws.Store()
 	if err != nil {
@@ -456,7 +475,9 @@ func (f vaultFlags) Config(ctx context.Context) (*config.Config, error) {
 		RoleID:     f.RoleID,
 		SecretID:   f.SecretID,
 		CaCertFile: f.CaCert,
-		VaultAddr:  f.VaultURL,
+	}
+	if f.VaultURL != nil {
+		vault.VaultAddr = f.VaultURL.String()
 	}
 	return vault.Lookup(ctx)
 }
