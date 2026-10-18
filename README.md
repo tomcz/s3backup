@@ -37,6 +37,7 @@ COMMANDS:
    keygen     Generate backup keys (Password, AES, RSA)
    encrypt    Encrypt a local file
    decrypt    Decrypt a local file
+   verify     Verify a checksum against a local file
    version    Print version and exit
    help, h    Shows a list of commands or help for one command
 

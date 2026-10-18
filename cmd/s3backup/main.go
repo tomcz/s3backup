@@ -146,6 +146,13 @@ func main() {
 		Action:    decryptLocalFile,
 		Flags:     cipherFlags(false),
 	}
+	cmdVerify := &cli.Command{
+		Name:      "verify",
+		Usage:     "Verify a checksum against a local file",
+		Arguments: verifyArgs(),
+		Action:    verifyChecksum,
+		Flags:     verifyFlags(),
+	}
 	app := &cli.Command{
 		Name:    "s3backup",
 		Usage:   "S3 backup script in a single binary",
@@ -158,6 +165,7 @@ func main() {
 			cmdKeygen,
 			cmdEncrypt,
 			cmdDecrypt,
+			cmdVerify,
 			cmdVersion,
 		},
 	}
@@ -363,6 +371,16 @@ func genPasswordFlags() []cli.Flag {
 	}
 }
 
+func verifyFlags() []cli.Flag {
+	return []cli.Flag{
+		&cli.BoolFlag{
+			Name:        "hex",
+			Usage:       "Expect a hex-encoded (rather than base64-encoded) backup checksum",
+			Destination: &hexEncode,
+		},
+	}
+}
+
 // ============================================================
 // CLI args
 // ============================================================
@@ -414,6 +432,21 @@ func inOutArgs() []cli.Argument {
 			UsageText:   "output_file_path",
 			Config:      cli.StringConfig{TrimSpace: true},
 			Destination: &outFile,
+		},
+	}
+}
+
+func verifyArgs() []cli.Argument {
+	return []cli.Argument{
+		&cli.StringArg{
+			Name:      "file_path",
+			UsageText: "file_path",
+			Config:    cli.StringConfig{TrimSpace: true},
+		},
+		&cli.StringArg{
+			Name:      "checksum",
+			UsageText: "checksum",
+			Config:    cli.StringConfig{TrimSpace: true},
 		},
 	}
 }
@@ -509,6 +542,13 @@ func decryptLocalFile(context.Context, *cli.Command) error {
 		return err
 	}
 	return cipher.Decrypt(inFile, outFile)
+}
+
+func verifyChecksum(_ context.Context, cmd *cli.Command) error {
+	h := crypto.NewHash(hexEncode)
+	filePath := cmd.StringArg("file_path")
+	checksum := cmd.StringArg("checksum")
+	return h.Verify(filePath, checksum)
 }
 
 // ============================================================
