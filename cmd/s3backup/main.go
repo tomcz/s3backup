@@ -234,6 +234,10 @@ func (c *vaultPutCmd) Run(ctx context.Context) error {
 		}
 	}
 
+	if cfg.CipherKey != "" && cfg.PublicKey != "" {
+		return errors.New("cipher_key and public_key can't be used together")
+	}
+
 	var pemKeyFile string
 	if cfg.PublicKey != "" {
 		pemKeyFile, err = createPemKeyFile("pub", cfg.PublicKey)
@@ -269,6 +273,10 @@ func (c *vaultGetCmd) Run(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
+	}
+
+	if cfg.CipherKey != "" && cfg.PrivateKey != "" {
+		return errors.New("cipher_key and private_key can't be used together")
 	}
 
 	var pemKeyFile string
