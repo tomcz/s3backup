@@ -398,7 +398,7 @@ func (f awsFlags) Client(cipher client.Cipher, hash client.Hash) (*client.Client
 }
 
 func newHash(skipHash, hexEncode bool) client.Hash {
-	if skipHash {
+	if !skipHash {
 		return crypto.NewHash(hexEncode)
 	}
 	return nil
