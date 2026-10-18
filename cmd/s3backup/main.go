@@ -130,20 +130,20 @@ type keyGenCmd struct {
 }
 
 type encryptCmd struct {
-	InFile  string `arg:"" type:"existingfile" help:"File to encrypt"`
-	OutFile string `arg:"" type:"path" help:"Encrypted file"`
+	PlainTextFile  string `arg:"" type:"existingfile" help:"File to encrypt"`
+	CipherTextFile string `arg:"" type:"path" help:"Encrypted file"`
 	encryptFlags
 }
 
 type decryptCmd struct {
-	InFile  string `arg:"" type:"existingfile" help:"File to decrypt"`
-	OutFile string `arg:"" type:"path" help:"Decrypted file"`
+	CipherTextFile string `arg:"" type:"existingfile" help:"File to decrypt"`
+	PlainTextFile  string `arg:"" type:"path" help:"Decrypted file"`
 	decryptFlags
 }
 
 type verifyCmd struct {
-	FilePath string `arg:"" type:"existingfile"`
-	Checksum string `arg:""`
+	FilePath string `arg:"" type:"existingfile" help:"File to check"`
+	Checksum string `arg:"" help:"Expected backup checksum of file"`
 	Hex      bool   `help:"Expect a hex-encoded (rather than base64-encoded) backup checksum"`
 }
 
@@ -193,15 +193,11 @@ func (c *putCmd) Run(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	co := cipherOpts{
-		symKeyValue: c.SymKey,
-		pemKeyFile:  c.PemKey,
+	cipher, err := maybeCipher(c.SymKey, c.PemKey)
+	if err != nil {
+		return err
 	}
-	ho := hashOpts{
-		skipHash:  c.SkipHash,
-		hexEncode: c.HexEncode,
-	}
-	cl, err := c.Client(co, ho)
+	cl, err := c.Client(cipher, newHash(c.SkipHash, c.HexEncode))
 	if err != nil {
 		return err
 	}
@@ -213,15 +209,11 @@ func (c *getCmd) Run(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	co := cipherOpts{
-		symKeyValue: c.SymKey,
-		pemKeyFile:  c.PemKey,
+	cipher, err := maybeCipher(c.SymKey, c.PemKey)
+	if err != nil {
+		return err
 	}
-	ho := hashOpts{
-		skipHash:  c.SkipHash,
-		hexEncode: c.HexEncode,
-	}
-	cl, err := c.Client(co, ho)
+	cl, err := c.Client(cipher, newHash(c.SkipHash, c.HexEncode))
 	if err != nil {
 		return err
 	}
@@ -325,27 +317,19 @@ func (c *genPassCmd) Run() error {
 }
 
 func (c *encryptCmd) Run() error {
-	opts := cipherOpts{
-		symKeyValue: c.SymKey,
-		pemKeyFile:  c.PemKey,
-	}
-	cipher, err := opts.MustCipher()
+	cipher, err := mustCipher(c.SymKey, c.PemKey)
 	if err != nil {
 		return err
 	}
-	return cipher.Encrypt(c.InFile, c.OutFile)
+	return cipher.Encrypt(c.PlainTextFile, c.CipherTextFile)
 }
 
 func (c *decryptCmd) Run() error {
-	opts := cipherOpts{
-		symKeyValue: c.SymKey,
-		pemKeyFile:  c.PemKey,
-	}
-	cipher, err := opts.MustCipher()
+	cipher, err := mustCipher(c.SymKey, c.PemKey)
 	if err != nil {
 		return err
 	}
-	return cipher.Decrypt(c.InFile, c.OutFile)
+	return cipher.Decrypt(c.CipherTextFile, c.PlainTextFile)
 }
 
 func (c *verifyCmd) Run() error {
@@ -392,7 +376,7 @@ func checkPaths(inRemote, inLocal string) (outRemote string, outLocal string, er
 	return
 }
 
-func (f awsFlags) Client(co cipherOpts, ho hashOpts) (*client.Client, error) {
+func (f awsFlags) Client(cipher client.Cipher, hash client.Hash) (*client.Client, error) {
 	aws := store.AwsS3{
 		AccessKey: f.AccessKey,
 		SecretKey: f.SecretKey,
@@ -406,37 +390,22 @@ func (f awsFlags) Client(co cipherOpts, ho hashOpts) (*client.Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	cipher, err := co.MaybeCipher()
-	if err != nil {
-		return nil, err
-	}
 	return &client.Client{
-		Hash:   ho.Hash(),
+		Hash:   hash,
 		Cipher: cipher,
 		Store:  backend,
 	}, nil
 }
 
-type hashOpts struct {
-	skipHash  bool
-	hexEncode bool
-}
-
-func (o hashOpts) Hash() client.Hash {
-	if !o.skipHash {
-		return crypto.NewHash(o.hexEncode)
+func newHash(skipHash, hexEncode bool) client.Hash {
+	if skipHash {
+		return crypto.NewHash(hexEncode)
 	}
 	return nil
 }
 
-type cipherOpts struct {
-	symKeyValue string
-	pemKeyFile  string
-}
-
-func (o cipherOpts) MaybeCipher() (client.Cipher, error) {
-	symKey := o.symKeyValue
-	if symKey == "ask" {
+func maybeCipher(symKeyValue, pemKeyFile string) (client.Cipher, error) {
+	if symKeyValue == "ask" {
 		fmt.Print("Enter password or base64-encoded key: ")
 		// hush goland, it's not redundant on Windows
 		//goland:noinspection GoRedundantConversion
@@ -444,22 +413,22 @@ func (o cipherOpts) MaybeCipher() (client.Cipher, error) {
 		if err != nil {
 			return nil, err
 		}
-		symKey = strings.TrimSpace(string(password))
-		if symKey == "" {
+		symKeyValue = strings.TrimSpace(string(password))
+		if symKeyValue == "" {
 			return nil, errors.New("empty passwords are not allowed")
 		}
 	}
-	if symKey != "" {
-		return crypto.NewAESCipher(symKey)
+	if symKeyValue != "" {
+		return crypto.NewAESCipher(symKeyValue)
 	}
-	if o.pemKeyFile != "" {
-		return crypto.NewRSACipher(o.pemKeyFile)
+	if pemKeyFile != "" {
+		return crypto.NewRSACipher(pemKeyFile)
 	}
 	return nil, nil
 }
 
-func (o cipherOpts) MustCipher() (client.Cipher, error) {
-	cipher, err := o.MaybeCipher()
+func mustCipher(symKeyValue, pemKeyFile string) (client.Cipher, error) {
+	cipher, err := maybeCipher(symKeyValue, pemKeyFile)
 	if err != nil || cipher != nil {
 		return cipher, err
 	}
