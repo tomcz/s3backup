@@ -43,13 +43,13 @@ type configFlags struct {
 }
 
 type encryptFlags struct {
-	SymKey string `name:"symKey" aliases:"sym" help:"Password or base64-encoded key to use for symmetric AES encryption; use \"ask\" as the value to provide a password via an interactive prompt"`
-	PemKey string `name:"pemKey" aliases:"pem" placeholder:"FILE" type:"existingfile" help:"Path to PEM-encoded public key file"`
+	SymKey string `name:"symKey" aliases:"sym" xor:"symKey,pemKey" help:"Password or base64-encoded key to use for symmetric AES encryption; use \"ask\" as the value to provide a password via an interactive prompt"`
+	PemKey string `name:"pemKey" aliases:"pem" xor:"symKey,pemKey" placeholder:"FILE" type:"existingfile" help:"Path to PEM-encoded public key file"`
 }
 
 type decryptFlags struct {
-	SymKey string `name:"symKey" aliases:"sym" help:"Password or base64-encoded key to use for symmetric AES decryption; use \"ask\" as the value to provide a password via an interactive prompt"`
-	PemKey string `name:"pemKey" aliases:"pem" placeholder:"FILE" type:"existingfile" help:"Path to PEM-encoded private key file"`
+	SymKey string `name:"symKey" aliases:"sym" xor:"symKey,pemKey" help:"Password or base64-encoded key to use for symmetric AES decryption; use \"ask\" as the value to provide a password via an interactive prompt"`
+	PemKey string `name:"pemKey" aliases:"pem" xor:"symKey,pemKey" placeholder:"FILE" type:"existingfile" help:"Path to PEM-encoded private key file"`
 }
 
 type boolPutFlags struct {
