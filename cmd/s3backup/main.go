@@ -54,13 +54,13 @@ type decryptFlags struct {
 
 type boolPutFlags struct {
 	PublicRead bool `name:"publicRead" help:"Set the \"public-read\" ACL on the uploaded file (\"private\" ACL is set by default)"`
-	SkipHash   bool `name:"nocheck" help:"Do not create backup checksums"`
-	HexEncode  bool `name:"hex" help:"Create hex-encoded (rather than base64-encoded) backup checksums; unless nocheck is set"`
+	SkipHash   bool `name:"nocheck" xor:"checksum" help:"Do not create backup checksums"`
+	HexEncode  bool `name:"hex" xor:"checksum" help:"Create hex-encoded (rather than base64-encoded) backup checksums; unless nocheck is set"`
 }
 
 type boolGetFlags struct {
-	SkipHash  bool `name:"nocheck" help:"Do not verify backup checksums"`
-	HexEncode bool `name:"hex" help:"Expect hex-encoded (rather than base64-encoded) backup checksums; unless nocheck is set"`
+	SkipHash  bool `name:"nocheck" xor:"checksum" help:"Do not verify backup checksums"`
+	HexEncode bool `name:"hex" xor:"checksum" help:"Expect hex-encoded (rather than base64-encoded) backup checksums; unless nocheck is set"`
 }
 
 type awsFlags struct {
