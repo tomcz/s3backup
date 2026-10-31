@@ -10,6 +10,7 @@ import (
 	"os/signal"
 	"runtime/debug"
 	"strings"
+	"sync"
 	"syscall"
 
 	"github.com/alecthomas/kong"
@@ -349,7 +350,7 @@ func (c *verifyCmd) Run() error {
 // Common actions
 // ============================================================
 
-func version() string {
+var version = sync.OnceValue(func() string {
 	if tag != "" && commit != "" {
 		return fmt.Sprintf("%s (%s)", tag, commit)
 	}
@@ -359,7 +360,7 @@ func version() string {
 		}
 	}
 	return "unknown"
-}
+})
 
 func checkPaths(inRemote, inLocal string) (outRemote string, outLocal string, err error) {
 	if inRemote == "" || inLocal == "" {
