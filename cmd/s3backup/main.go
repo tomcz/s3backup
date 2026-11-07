@@ -121,7 +121,8 @@ type genRsaCmd struct {
 }
 
 type genPassCmd struct {
-	Words uint8 `short:"w" default:"10" help:"Number of words in password"`
+	Words uint `short:"w" default:"10" help:"Number of words in password"`
+	Upper bool `short:"u" help:"Upper-case one word at random"`
 }
 
 type keyGenCmd struct {
@@ -313,6 +314,9 @@ func (c *genRsaCmd) Run() error {
 }
 
 func (c *genPassCmd) Run() error {
+	if c.Words == 0 {
+		c.Words = 10 // no funny business
+	}
 	words := make([]string, c.Words)
 	for i := range words {
 		word, err := crypto.RandomWord()
@@ -320,6 +324,13 @@ func (c *genPassCmd) Run() error {
 			return err
 		}
 		words[i] = word
+	}
+	if c.Upper {
+		idx, err := crypto.RandomInt(len(words))
+		if err != nil {
+			return err
+		}
+		words[idx] = strings.ToUpper(words[idx])
 	}
 	fmt.Println(strings.Join(words, "-"))
 	return nil

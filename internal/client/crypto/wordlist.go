@@ -5,13 +5,21 @@ import (
 	"math/big"
 )
 
-func RandomWord() (string, error) {
-	maxInt := big.NewInt(int64(len(wordList)))
+func RandomInt(maxNum int) (int, error) {
+	maxInt := big.NewInt(int64(maxNum))
 	num, err := rand.Int(rand.Reader, maxInt)
+	if err != nil {
+		return 0, err
+	}
+	return int(num.Int64()), nil
+}
+
+func RandomWord() (string, error) {
+	idx, err := RandomInt(len(wordList))
 	if err != nil {
 		return "", err
 	}
-	return wordList[num.Int64()], nil
+	return wordList[idx], nil
 }
 
 // BIP 39 English word list
