@@ -366,11 +366,11 @@ var version = sync.OnceValue(func() string {
 		return fmt.Sprintf("%s (%s)", tag, commit)
 	}
 	if info, ok := debug.ReadBuildInfo(); ok {
-		if rev := info.Main.Version; rev != "" {
+		if rev := info.Main.Version; rev != "" && rev != "(devel)" {
 			return rev
 		}
 	}
-	return "unknown"
+	return "local"
 })
 
 func checkPaths(inRemote, inLocal string) (outRemote string, outLocal string, err error) {
