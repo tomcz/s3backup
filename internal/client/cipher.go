@@ -1,6 +1,6 @@
 package client
 
-//go:generate go run github.com/matryer/moq -out ciper_stub.go . Cipher:CipherStub
+//go:generate go tool moq -out ciper_stub.go . Cipher:CipherStub
 
 type Cipher interface {
 	Encrypt(plainTextFile, cipherTextFile string) error

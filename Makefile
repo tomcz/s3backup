@@ -42,7 +42,7 @@ test:
 .PHONY: generate
 generate:
 	go generate ./internal/...
-	./tools/stubs.sh
+	./stubborn.sh
 
 .PHONY: compile
 compile: target

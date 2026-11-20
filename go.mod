@@ -13,7 +13,6 @@ require (
 	github.com/go-viper/mapstructure/v2 v2.5.0
 	github.com/hashicorp/vault-client-go v0.4.3
 	github.com/johannesboyne/gofakes3 v1.2.0
-	github.com/matryer/moq v0.8.1
 	golang.org/x/crypto v0.58.0
 	golang.org/x/term v0.47.0
 	gotest.tools/v3 v3.5.2
@@ -41,6 +40,7 @@ require (
 	github.com/hashicorp/go-rootcerts v1.1.0 // indirect
 	github.com/hashicorp/go-secure-stdlib/strutil v0.1.2 // indirect
 	github.com/kr/text v0.2.0 // indirect
+	github.com/matryer/moq v0.8.1 // indirect
 	github.com/mattn/go-colorable v0.1.16 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/ryanuber/go-glob v1.0.0 // indirect
@@ -54,3 +54,5 @@ require (
 	golang.org/x/tools v0.52.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
+tool github.com/matryer/moq
